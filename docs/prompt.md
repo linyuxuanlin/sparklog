@@ -1,0 +1,1 @@
+你听说过Memos吗？@https://github.com/usememos/memos 我想参考这个项目的UI，做一个自己的应用“妙想 SparkLog”。与Memos的区别是，SparkLog把笔记数据储存在私有的GitHub仓库中，网页是纯静态的，可托管在cloudflare pages上。在网页上可以连接Github仓库，在网页上创建并编辑笔记，在网页上也可以渲染展示出对应GitHub仓库中的所有笔记内容供浏览。其他的特点是，每次编辑时可以选择笔记公开或私密，笔记内也可也带图片，上传图片到笔记中时，会在仓库内创建assets目录存放图片或其他附件。请先思考项目的整体架构，先完成readme，并列出一步步完成的计划todo内容存放在TODO.md中，先不要开始写代码。
