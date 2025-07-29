@@ -137,20 +137,7 @@ npm run dev
    - 权限：私有仓库，只有用户自己可以访问
    - 内容：笔记文件、图片、附件、元数据等
 
-3. **获取Client ID和Client Secret**
-   - 创建完成后，记录下Client ID
-   - 点击"Generate a new client secret"生成Client Secret
-   - 将这两个值配置到Cloudflare Pages的环境变量中
 
-#### 2. 配置环境变量
-
-在Cloudflare Pages项目设置中添加以下环境变量：
-
-```
-VITE_GITHUB_CLIENT_ID=your_github_client_id
-VITE_GITHUB_CLIENT_SECRET=your_github_client_secret
-VITE_APP_URL=https://your-project-name.pages.dev
-```
 
 #### 3. 创建笔记存储仓库
 
@@ -176,11 +163,6 @@ VITE_APP_URL=https://your-project-name.pages.dev
    └── README.md            # 仓库说明
    ```
 
-3. **仓库权限**
-   - 私有仓库：只有你能访问和修改
-   - 数据安全：所有笔记内容都存储在你的私有仓库中
-   - 版本控制：支持Git历史记录和回滚
-
 #### 4. 权限说明
 
 - **OAuth权限**: `repo` (私有仓库访问)
@@ -198,14 +180,16 @@ VITE_APP_URL=https://your-project-name.pages.dev
    - 跳转到GitHub授权页面
    - 确认授权应用访问你的仓库
 
-3. **选择仓库**
-   - 选择用于存储笔记的GitHub仓库
-   - 或创建新的私有仓库
+3. **选择笔记仓库**
+   - 从列表中选择现有的私有仓库用于存储笔记
+   - 或创建新的私有仓库（如`sparklog-notes`、`my-notes`等）
+   - **注意**：这里选择的是存放笔记数据的私有仓库，与部署应用的公开仓库不同
 
-4. **开始使用**
-   - 创建你的第一篇笔记
-   - 设置笔记为公开或私密
-   - 上传图片和附件
+4. **初始化完成**
+   - 应用会自动在笔记仓库中创建必要的目录结构
+   - 开始创建你的第一篇笔记！
+
+
 
 #### 6. 故障排除
 
@@ -232,30 +216,6 @@ VITE_APP_URL=https://your-project-name.pages.dev
    - 重新部署应用以应用新的环境变量
 
 ## 📖 使用指南
-
-### 首次使用
-
-1. **访问应用**
-   - 打开部署好的SparkLog应用
-   - 确保已正确配置GitHub OAuth应用
-
-2. **连接GitHub**
-   - 点击"连接GitHub"按钮
-   - 跳转到GitHub授权页面
-   - 确认授权应用访问你的私有仓库
-
-3. **选择笔记仓库**
-   - 从列表中选择现有的私有仓库用于存储笔记
-   - 或创建新的私有仓库（如`sparklog-notes`、`my-notes`等）
-   - **注意**：这里选择的是存放笔记数据的私有仓库，与部署应用的公开仓库不同
-
-4. **初始化完成**
-   - 应用会自动在笔记仓库中创建必要的目录结构
-   - 开始创建你的第一篇笔记！
-
-**仓库说明：**
-- **部署仓库**：你Fork的SparkLog公开仓库，存放应用代码，用于Cloudflare Pages部署
-- **笔记仓库**：私有仓库，存放你的笔记数据，只有你能访问
 
 ### 创建笔记
 
@@ -398,22 +358,7 @@ VITE_APP_URL=https://your-project-name.pages.dev
 VITE_DEBUG=false
 ```
 
-### GitHub OAuth应用配置
 
-1. **应用信息设置**
-   - Application name: `SparkLog`
-   - Homepage URL: `https://your-project-name.pages.dev`
-   - Application description: `基于GitHub仓库的静态笔记应用`
-   - Authorization callback URL: `https://your-project-name.pages.dev/auth/callback`
-
-2. **权限设置**
-   - 权限范围: `repo` (私有仓库访问)
-   - 用户权限: `read:user` (读取用户信息)
-
-3. **安全设置**
-   - 确保应用为私有状态
-   - 定期轮换Client Secret
-   - 监控应用使用情况
 
 ### 环境变量说明
 
@@ -444,40 +389,171 @@ sparklog/
 
 ## 🏗️ 技术架构
 
+### 整体架构
+
+SparkLog采用纯前端架构，所有数据存储在GitHub仓库中，通过GitHub API进行数据操作。
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   用户浏览器     │    │   Cloudflare    │    │   GitHub API    │
+│                 │    │     Pages       │    │                 │
+│  React App      │◄──►│   静态托管      │◄──►│   仓库存储      │
+│  (SPA)          │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
 ### 前端技术栈
 - **框架**: React 18 + TypeScript
 - **样式**: Tailwind CSS + Headless UI
 - **状态管理**: Zustand
 - **路由**: React Router
-- **编辑器**: Monaco Editor / CodeMirror
+- **编辑器**: Monaco Editor
 - **Markdown渲染**: React Markdown
 - **图标**: Lucide React
 
-### 核心功能模块
-1. **GitHub集成模块**
-   - GitHub OAuth认证
-   - GitHub API调用
-   - 仓库内容读写
+### 数据存储架构
 
-2. **笔记管理模块**
-   - 笔记CRUD操作
-   - Markdown编辑器
-   - 标签管理
-   - 搜索功能
+#### GitHub仓库结构
+```
+sparklog-repo/
+├── notes/                    # 笔记目录
+│   ├── public/              # 公开笔记
+│   └── private/             # 私密笔记
+├── assets/                   # 资源文件
+│   ├── images/              # 图片文件
+│   └── attachments/         # 其他附件
+├── metadata/                 # 元数据
+│   ├── tags.json            # 标签数据
+│   ├── settings.json        # 应用设置
+│   └── index.json           # 笔记索引
+└── README.md                # 仓库说明
+```
 
-3. **文件管理模块**
-   - 图片上传
-   - 文件存储
-   - 资源管理
+#### 笔记数据结构
+```typescript
+interface Note {
+  id: string;                    // 笔记唯一标识
+  title: string;                 // 标题
+  content: string;               // Markdown内容
+  tags: string[];                // 标签列表
+  isPublic: boolean;             // 是否公开
+  createdAt: string;             // 创建时间
+  updatedAt: string;             // 更新时间
+  author: string;                // 作者
+  wordCount: number;             // 字数统计
+  readTime: number;              // 阅读时间（分钟）
+}
+```
 
-4. **权限控制模块**
-   - 公开/私密设置
-   - 访问控制
+### 认证架构
 
-5. **UI组件模块**
-   - 响应式设计
-   - 主题切换
-   - 组件库
+#### GitHub OAuth流程
+1. **用户点击登录** → 重定向到GitHub OAuth页面
+2. **用户授权** → GitHub重定向回应用，携带授权码
+3. **获取Token** → 使用授权码换取访问令牌
+4. **存储Token** → 将令牌安全存储在localStorage中
+5. **API调用** → 使用令牌调用GitHub API
+
+#### 权限控制
+- **仓库权限**: `repo` (私有仓库访问)
+- **Token存储**: 使用localStorage + 加密
+- **Token刷新**: 自动处理token过期
+
+### 核心模块设计
+
+#### 1. GitHub服务模块
+```typescript
+class GitHubService {
+  // 认证相关
+  authenticate(code: string): Promise<void>
+  logout(): void
+  isAuthenticated(): boolean
+  
+  // 仓库操作
+  getRepositories(): Promise<Repository[]>
+  getRepositoryContent(path: string): Promise<string>
+  createFile(path: string, content: string, message: string): Promise<void>
+  updateFile(path: string, content: string, message: string, sha: string): Promise<void>
+  deleteFile(path: string, message: string, sha: string): Promise<void>
+  
+  // 文件上传
+  uploadImage(file: File): Promise<string>
+  uploadAttachment(file: File): Promise<string>
+}
+```
+
+#### 2. 笔记管理模块
+```typescript
+class NoteService {
+  // CRUD操作
+  createNote(note: Note): Promise<void>
+  updateNote(id: string, note: Partial<Note>): Promise<void>
+  deleteNote(id: string): Promise<void>
+  getNote(id: string): Promise<Note>
+  getNotes(filters?: NoteFilters): Promise<Note[]>
+  
+  // 搜索功能
+  searchNotes(query: string): Promise<Note[]>
+  
+  // 标签管理
+  getTags(): Promise<string[]>
+  addTag(tag: string): Promise<void>
+  removeTag(tag: string): Promise<void>
+}
+```
+
+### 技术难点和解决方案
+
+#### 1. GitHub API限制
+- **问题**: API调用频率限制
+- **解决方案**: 实现请求缓存和重试机制
+
+#### 2. 文件上传大小限制
+- **问题**: GitHub API文件大小限制
+- **解决方案**: 实现文件分片上传或使用Git LFS
+
+#### 3. 实时同步
+- **问题**: 静态应用无法实现真正实时同步
+- **解决方案**: 轮询机制 + 用户触发同步
+
+#### 4. 离线功能
+- **问题**: 纯静态应用离线功能有限
+- **解决方案**: Service Worker + localStorage缓存
+
+### 性能优化
+
+#### 代码分割
+```typescript
+// 路由级别的代码分割
+const NoteEditPage = lazy(() => import('./pages/NoteEditPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+
+// 组件级别的代码分割
+const MarkdownEditor = lazy(() => import('./components/MarkdownEditor'))
+```
+
+#### 缓存策略
+```typescript
+class CacheManager {
+  private cache = new Map<string, any>()
+  
+  async get<T>(key: string, fetcher: () => Promise<T>): Promise<T> {
+    if (this.cache.has(key)) {
+      return this.cache.get(key)
+    }
+    
+    const data = await fetcher()
+    this.cache.set(key, data)
+    return data
+  }
+}
+```
+
+#### 图片优化
+- **压缩**: 客户端图片压缩
+- **格式转换**: 自动转换为WebP格式
+- **懒加载**: 图片懒加载实现
+- **CDN**: 利用GitHub的CDN加速
 
 
 ## 🤝 贡献指南
