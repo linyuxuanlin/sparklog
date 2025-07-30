@@ -92,13 +92,12 @@ const SettingsPage: React.FC = () => {
       const authData = JSON.parse(auth)
       
       // 调试信息
-      if (debugMode) {
-        console.log('GitHub认证信息:', {
-          hasAccessToken: !!authData.accessToken,
-          username: authData.username,
-          connected: authData.connected
-        })
-      }
+      console.log('GitHub认证信息:', {
+        hasAccessToken: !!authData.accessToken,
+        accessToken: authData.accessToken ? `${authData.accessToken.substring(0, 10)}...` : 'none',
+        username: authData.username,
+        connected: authData.connected
+      })
       
       // 调用真实GitHub API获取用户仓库
       const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
@@ -110,6 +109,11 @@ const SettingsPage: React.FC = () => {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        console.error('GitHub API错误详情:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData
+        })
         throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
       }
       
@@ -398,6 +402,25 @@ const SettingsPage: React.FC = () => {
                    <BookOpen className="w-4 h-4 mr-2" />
                    刷新仓库
                  </button>
+                 
+                 {debugMode && (
+                   <button 
+                     onClick={() => {
+                       const auth = localStorage.getItem('sparklog_github_auth')
+                       if (auth) {
+                         const authData = JSON.parse(auth)
+                         console.log('当前认证状态:', authData)
+                         alert(`认证状态:\n- 有Token: ${!!authData.accessToken}\n- 用户名: ${authData.username}\n- 连接状态: ${authData.connected}`)
+                       } else {
+                         alert('未找到认证信息')
+                       }
+                     }}
+                     className="btn-secondary inline-flex items-center"
+                   >
+                     <BookOpen className="w-4 h-4 mr-2" />
+                     检查认证
+                   </button>
+                 )}
                </div>
 
                {/* 创建仓库表单 */}
