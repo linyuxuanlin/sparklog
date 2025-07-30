@@ -1,0 +1,13 @@
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[build.upload]
+format = "service-worker"
+
+[env.production]
+name = "sparklog"
+route = "your-project-name.pages.dev/*"
+
+[env.production.build]
+command = "npm run build" 
