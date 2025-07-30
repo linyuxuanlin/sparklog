@@ -4,9 +4,13 @@
     "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+<<<<<<< Updated upstream
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "types": ["node"]
+=======
+    "allowSyntheticDefaultImports": true
+>>>>>>> Stashed changes
   },
   "include": ["vite.config.ts"]
 } 
