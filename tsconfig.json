@@ -26,11 +26,6 @@
       "@/*": ["src/*"],
       "@/components/*": ["src/components/*"],
       "@/pages/*": ["src/pages/*"],
-      "@/hooks/*": ["src/hooks/*"],
-      "@/services/*": ["src/services/*"],
-      "@/stores/*": ["src/stores/*"],
-      "@/types/*": ["src/types/*"],
-      "@/utils/*": ["src/utils/*"],
       "@/styles/*": ["src/styles/*"]
     }
   },
