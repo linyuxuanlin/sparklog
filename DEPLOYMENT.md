@@ -15,6 +15,8 @@
 - **Build output directory**: `dist`
 - **Root directory**: `/`
 
+**重要**：确保wrangler.toml文件包含`pages_build_output_dir = "dist"`
+
 ### 3. 环境变量（可选）
 如果需要GitHub OAuth功能，添加以下环境变量：
 ```

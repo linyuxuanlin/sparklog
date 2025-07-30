@@ -1,0 +1,14 @@
+{
+  "build": {
+    "command": "npm run build",
+    "output": "dist"
+  },
+  "routes": [
+    {
+      "pattern": "/*",
+      "headers": {
+        "X-Frame-Options": "DENY"
+      }
+    }
+  ]
+} 
