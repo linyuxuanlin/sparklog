@@ -1,5 +1,4 @@
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import Sidebar from './Sidebar'
@@ -12,8 +11,6 @@ const Layout = () => {
         <Sidebar />
         <main className="flex-1 p-6">
 =======
-=======
->>>>>>> Stashed changes
 import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
@@ -26,9 +23,6 @@ const Layout: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <Header />
         <main className="flex-1 overflow-auto p-6">
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
 >>>>>>> Stashed changes
           <Outlet />
         </main>
