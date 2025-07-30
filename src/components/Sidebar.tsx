@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Link, useLocation } from 'react-router-dom'
 import { Home, FileText, Settings } from 'lucide-react'
 
@@ -42,6 +43,8 @@ const Sidebar = () => {
       </nav>
     </aside>
 =======
+=======
+>>>>>>> Stashed changes
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Plus, Home, Settings, BookOpen } from 'lucide-react'
@@ -88,6 +91,9 @@ const Sidebar: React.FC = () => {
         </ul>
       </nav>
     </div>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   )
 }

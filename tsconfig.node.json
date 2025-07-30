@@ -5,9 +5,13 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "types": ["node"]
+=======
+    "allowSyntheticDefaultImports": true
+>>>>>>> Stashed changes
 =======
     "allowSyntheticDefaultImports": true
 >>>>>>> Stashed changes

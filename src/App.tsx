@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import HomePage from './pages/HomePage'
@@ -15,6 +16,8 @@ function App() {
           <Route path="auth" element={<AuthPage />} />
           <Route path="notes" element={<NotesPage />} />
 =======
+=======
+>>>>>>> Stashed changes
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from '@/components/Layout'
@@ -33,6 +36,9 @@ function App() {
           <Route path="note/new" element={<NoteEditPage />} />
           <Route path="note/:id" element={<NoteEditPage />} />
           <Route path="settings" element={<SettingsPage />} />
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         </Route>
       </Routes>

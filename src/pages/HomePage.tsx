@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Link } from 'react-router-dom'
 import { Sparkles, Github, FileText, Shield } from 'lucide-react'
 
@@ -69,6 +70,8 @@ const HomePage = () => {
           <p className="text-gray-600 dark:text-gray-300">
             支持笔记公开/私密设置，保护你的隐私
 =======
+=======
+>>>>>>> Stashed changes
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, BookOpen, Settings, Github } from 'lucide-react'
@@ -131,11 +134,15 @@ const HomePage: React.FC = () => {
           </div>
           <p className="text-gray-600">
             支持公开和私密笔记设置，灵活控制内容访问权限。
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
           </p>
         </div>
       </div>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
@@ -146,6 +153,8 @@ const HomePage: React.FC = () => {
           <p>2. 选择现有的私有仓库或创建新的仓库用于存储笔记</p>
           <p>3. 开始创建你的第一篇笔记！</p>
 =======
+=======
+>>>>>>> Stashed changes
       <div className="mt-12 text-center">
         <h2 className="text-2xl font-semibold mb-4">快速开始</h2>
         <div className="bg-gray-50 rounded-lg p-6 max-w-2xl mx-auto">
@@ -163,6 +172,9 @@ const HomePage: React.FC = () => {
               <span>开始创建你的第一篇笔记！</span>
             </li>
           </ol>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         </div>
       </div>

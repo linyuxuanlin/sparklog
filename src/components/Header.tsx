@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Link } from 'react-router-dom'
 import { Sparkles, Github } from 'lucide-react'
 
@@ -28,6 +29,8 @@ const Header = () => {
           </div>
         </div>
 =======
+=======
+>>>>>>> Stashed changes
 import React from 'react'
 import { Search, User } from 'lucide-react'
 
@@ -51,6 +54,9 @@ const Header: React.FC = () => {
             <User className="w-5 h-5" />
           </button>
         </div>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       </div>
     </header>
