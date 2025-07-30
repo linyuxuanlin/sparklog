@@ -9,9 +9,10 @@ const AuthCallbackPage: React.FC = () => {
   const [message, setMessage] = useState('正在处理GitHub授权...')
 
   useEffect(() => {
-    const code = searchParams.get('code')
-    const error = searchParams.get('error')
-    const state = searchParams.get('state')
+    const handleOAuth = async () => {
+      const code = searchParams.get('code')
+      const error = searchParams.get('error')
+      const state = searchParams.get('state')
 
     if (error) {
       setStatus('error')
@@ -38,37 +39,74 @@ const AuthCallbackPage: React.FC = () => {
 
     // const config = JSON.parse(savedConfig) // 暂时注释，实际应用中会用到
     
-    // 模拟OAuth token交换过程
-    // 在实际应用中，这里应该调用后端API进行token交换
-    setTimeout(async () => {
-      try {
-        // 模拟获取用户信息
-        // 在实际应用中，这里应该用access token调用GitHub API获取用户信息
-        const mockUserInfo = {
-          login: 'testuser',
-          name: 'Test User',
-          avatar_url: 'https://github.com/github.png'
+    // 实现真实的OAuth token交换
+    try {
+      const config = JSON.parse(savedConfig)
+      
+      // 调用GitHub API进行token交换
+      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          client_id: config.clientId,
+          client_secret: config.clientSecret,
+          code: code,
+          redirect_uri: `${window.location.origin}/auth/callback`
+        })
+      })
+      
+      if (!tokenResponse.ok) {
+        throw new Error('Token交换失败')
+      }
+      
+      const tokenData = await tokenResponse.json()
+      
+      if (tokenData.error) {
+        throw new Error(`OAuth错误: ${tokenData.error_description || tokenData.error}`)
+      }
+      
+      const accessToken = tokenData.access_token
+      
+      // 使用access token获取用户信息
+      const userResponse = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `token ${accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
         }
-        
-        // 保存授权码和连接状态
-        localStorage.setItem('sparklog_github_auth', JSON.stringify({
-          code,
-          state,
-          accessToken: 'mock_access_token', // 实际应用中应该是真实的access token
-          username: mockUserInfo.login,
-          connected: true,
-          connectedAt: new Date().toISOString()
-        }))
-        
-        setStatus('success')
-        setMessage('GitHub连接成功！')
-        setTimeout(() => navigate('/settings'), 2000)
-      } catch (error) {
+      })
+      
+      if (!userResponse.ok) {
+        throw new Error('获取用户信息失败')
+      }
+      
+      const userInfo = await userResponse.json()
+      
+      // 保存真实的授权信息
+      localStorage.setItem('sparklog_github_auth', JSON.stringify({
+        code,
+        state,
+        accessToken: accessToken,
+        username: userInfo.login,
+        userInfo: userInfo,
+        connected: true,
+        connectedAt: new Date().toISOString()
+      }))
+      
+      setStatus('success')
+      setMessage('GitHub连接成功！')
+      setTimeout(() => navigate('/settings'), 2000)
+          } catch (error) {
+        console.error('OAuth错误:', error)
         setStatus('error')
-        setMessage('连接失败，请重试')
+        setMessage(`连接失败: ${error instanceof Error ? error.message : '请重试'}`)
         setTimeout(() => navigate('/settings'), 3000)
       }
-    }, 2000)
+    }
+    
+    handleOAuth()
   }, [searchParams, navigate])
 
   return (

@@ -34,7 +34,7 @@ const SettingsPage: React.FC = () => {
 
   const handleConnectGitHub = () => {
     if (!clientId || !clientSecret) {
-      alert('请先填写GitHub Client ID和Client Secret')
+      showMessage('请先填写GitHub Client ID和Client Secret', 'error')
       return
     }
     
@@ -91,6 +91,15 @@ const SettingsPage: React.FC = () => {
       
       const authData = JSON.parse(auth)
       
+      // 调试信息
+      if (debugMode) {
+        console.log('GitHub认证信息:', {
+          hasAccessToken: !!authData.accessToken,
+          username: authData.username,
+          connected: authData.connected
+        })
+      }
+      
       // 调用真实GitHub API获取用户仓库
       const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
         headers: {
@@ -100,7 +109,8 @@ const SettingsPage: React.FC = () => {
       })
       
       if (!response.ok) {
-        throw new Error(`GitHub API错误: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
       }
       
       const repos = await response.json()
@@ -157,6 +167,16 @@ const SettingsPage: React.FC = () => {
       }
       
       const authData = JSON.parse(auth)
+      
+      // 调试信息
+      if (debugMode) {
+        console.log('创建仓库认证信息:', {
+          hasAccessToken: !!authData.accessToken,
+          username: authData.username,
+          repoName: trimmedName,
+          isPrivate: newRepoPrivate
+        })
+      }
       
       // 调用真实GitHub API创建仓库
       const response = await fetch('https://api.github.com/user/repos', {
