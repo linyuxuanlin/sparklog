@@ -15,7 +15,10 @@
 - **Build output directory**: `dist`
 - **Root directory**: `/`
 
-**重要**：确保wrangler.toml文件包含`pages_build_output_dir = "dist"`
+**重要**：
+- wrangler.toml文件只包含`pages_build_output_dir = "dist"`
+- 不要在wrangler.toml中使用`[build]`配置
+- 构建命令在Cloudflare Pages界面中设置
 
 ### 3. 环境变量（可选）
 如果需要GitHub OAuth功能，添加以下环境变量：
