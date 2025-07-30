@@ -74,7 +74,19 @@ ${content.trim()}
 私密: ${isPrivate ? '是' : '否'}
 `
 
-      // 调用GitHub API保存笔记
+      // 检查是否为演示模式
+      if (authData.accessToken.startsWith('mock_')) {
+        // 演示模式：模拟保存笔记
+        await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟网络延迟
+        
+        showMessage('演示模式：笔记保存成功！', 'success')
+        setTimeout(() => {
+          navigate('/notes')
+        }, 1500)
+        return
+      }
+      
+      // 真实GitHub API调用（需要服务器端支持）
       const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${selectedRepo}/contents/${filePath}`, {
         method: 'PUT',
         headers: {

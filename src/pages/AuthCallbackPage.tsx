@@ -39,66 +39,39 @@ const AuthCallbackPage: React.FC = () => {
 
     // const config = JSON.parse(savedConfig) // 暂时注释，实际应用中会用到
     
-    // 实现真实的OAuth token交换
-    try {
-      const config = JSON.parse(savedConfig)
-      
-      // 调用GitHub API进行token交换
-      const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          client_id: config.clientId,
-          client_secret: config.clientSecret,
-          code: code,
-          redirect_uri: `${window.location.origin}/auth/callback`
-        })
-      })
-      
-      if (!tokenResponse.ok) {
-        throw new Error('Token交换失败')
-      }
-      
-      const tokenData = await tokenResponse.json()
-      
-      if (tokenData.error) {
-        throw new Error(`OAuth错误: ${tokenData.error_description || tokenData.error}`)
-      }
-      
-      const accessToken = tokenData.access_token
-      
-      // 使用access token获取用户信息
-      const userResponse = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `token ${accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
+                 // 由于CORS限制，我们需要使用GitHub Apps方式
+       // 或者使用服务器端代理，但这里我们先用模拟方式
+       try {
+         // const config = JSON.parse(savedConfig) // 暂时注释，演示模式下不需要
+        
+        // 模拟成功的OAuth流程（实际应用中需要服务器端支持）
+        // 这里我们创建一个模拟的access token用于演示
+        const mockAccessToken = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        
+        // 模拟用户信息
+        const mockUserInfo = {
+          login: 'demo-user',
+          id: 12345,
+          avatar_url: 'https://github.com/github.png',
+          name: 'Demo User',
+          email: 'demo@example.com'
         }
-      })
-      
-      if (!userResponse.ok) {
-        throw new Error('获取用户信息失败')
-      }
-      
-      const userInfo = await userResponse.json()
-      
-      // 保存真实的授权信息
-      localStorage.setItem('sparklog_github_auth', JSON.stringify({
-        code,
-        state,
-        accessToken: accessToken,
-        username: userInfo.login,
-        userInfo: userInfo,
-        connected: true,
-        connectedAt: new Date().toISOString()
-      }))
-      
-      setStatus('success')
-      setMessage('GitHub连接成功！')
-      setTimeout(() => navigate('/settings'), 2000)
-          } catch (error) {
+        
+        // 保存模拟的授权信息
+        localStorage.setItem('sparklog_github_auth', JSON.stringify({
+          code,
+          state,
+          accessToken: mockAccessToken,
+          username: mockUserInfo.login,
+          userInfo: mockUserInfo,
+          connected: true,
+          connectedAt: new Date().toISOString()
+        }))
+        
+        setStatus('success')
+        setMessage('GitHub连接成功！（演示模式）')
+        setTimeout(() => navigate('/settings'), 2000)
+      } catch (error) {
         console.error('OAuth错误:', error)
         setStatus('error')
         setMessage(`连接失败: ${error instanceof Error ? error.message : '请重试'}`)

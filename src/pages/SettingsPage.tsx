@@ -99,26 +99,42 @@ const SettingsPage: React.FC = () => {
         connected: authData.connected
       })
       
-      // 调用真实GitHub API获取用户仓库
-      const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-        headers: {
-          'Authorization': `token ${authData.accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('GitHub API错误详情:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorData: errorData
-        })
-        throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
-      }
-      
-      const repos = await response.json()
-      const repoNames = repos.map((repo: any) => repo.name)
+             // 检查是否为演示模式
+       if (authData.accessToken.startsWith('mock_')) {
+         // 演示模式：返回模拟仓库
+         const mockRepos = [
+           'my-notes',
+           'personal-blog',
+           'project-docs',
+           'learning-notes',
+           'work-notes'
+         ]
+         setRepositories(mockRepos)
+         setIsLoadingRepos(false)
+         showMessage(`演示模式：加载了 ${mockRepos.length} 个模拟仓库`, 'success')
+         return
+       }
+       
+       // 真实GitHub API调用（需要服务器端支持）
+       const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+         headers: {
+           'Authorization': `token ${authData.accessToken}`,
+           'Accept': 'application/vnd.github.v3+json'
+         }
+       })
+       
+       if (!response.ok) {
+         const errorData = await response.json().catch(() => ({}))
+         console.error('GitHub API错误详情:', {
+           status: response.status,
+           statusText: response.statusText,
+           errorData: errorData
+         })
+         throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
+       }
+       
+       const repos = await response.json()
+       const repoNames = repos.map((repo: any) => repo.name)
       
       setRepositories(repoNames)
       setIsLoadingRepos(false)
@@ -182,28 +198,49 @@ const SettingsPage: React.FC = () => {
         })
       }
       
-      // 调用真实GitHub API创建仓库
-      const response = await fetch('https://api.github.com/user/repos', {
-        method: 'POST',
-        headers: {
-          'Authorization': `token ${authData.accessToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: trimmedName,
-          description: 'SparkLog笔记仓库',
-          private: newRepoPrivate,
-          auto_init: true
-        })
-      })
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(`创建仓库失败: ${errorData.message || response.statusText}`)
-      }
-      
-      await response.json() // 获取响应但不使用，确保请求完成
+             // 检查是否为演示模式
+       if (authData.accessToken.startsWith('mock_')) {
+         // 演示模式：模拟创建仓库
+         await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟网络延迟
+         
+         // 更新仓库列表
+         setRepositories(prev => [...prev, trimmedName])
+         setSelectedRepo(trimmedName)
+         
+         // 保存选择的仓库到localStorage
+         localStorage.setItem('sparklog_selected_repo', trimmedName)
+         
+         // 关闭创建表单
+         setShowCreateRepo(false)
+         setNewRepoName('')
+         setNewRepoPrivate(true)
+         
+         showMessage(`演示模式：仓库 "${trimmedName}" 创建成功！`, 'success')
+         return
+       }
+       
+       // 真实GitHub API调用（需要服务器端支持）
+       const response = await fetch('https://api.github.com/user/repos', {
+         method: 'POST',
+         headers: {
+           'Authorization': `token ${authData.accessToken}`,
+           'Accept': 'application/vnd.github.v3+json',
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           name: trimmedName,
+           description: 'SparkLog笔记仓库',
+           private: newRepoPrivate,
+           auto_init: true
+         })
+       })
+       
+       if (!response.ok) {
+         const errorData = await response.json()
+         throw new Error(`创建仓库失败: ${errorData.message || response.statusText}`)
+       }
+       
+       await response.json() // 获取响应但不使用，确保请求完成
       
       // 更新仓库列表
       setRepositories(prev => [...prev, trimmedName])
@@ -269,22 +306,27 @@ const SettingsPage: React.FC = () => {
             <h2 className="text-lg font-semibold">GitHub连接</h2>
           </div>
           
-          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">配置步骤：</h3>
-            <ol className="text-sm text-blue-800 space-y-1">
-              <li>1. 点击下方按钮前往GitHub创建OAuth应用</li>
-              <li>2. 设置回调URL为：<code className="bg-blue-100 px-1 rounded">{window.location.origin}/auth/callback</code></li>
-              <li>3. 复制Client ID和Client Secret到下方输入框</li>
-              <li>4. 点击"连接GitHub"按钮</li>
-            </ol>
-            <button 
-              onClick={openGitHubOAuthPage}
-              className="mt-3 inline-flex items-center text-sm text-blue-700 hover:text-blue-900"
-            >
-              <ExternalLink className="w-4 h-4 mr-1" />
-              前往GitHub OAuth应用设置
-            </button>
-          </div>
+                     <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+             <h3 className="text-sm font-medium text-blue-900 mb-2">配置步骤：</h3>
+             <ol className="text-sm text-blue-800 space-y-1">
+               <li>1. 点击下方按钮前往GitHub创建OAuth应用</li>
+               <li>2. 设置回调URL为：<code className="bg-blue-100 px-1 rounded">{window.location.origin}/auth/callback</code></li>
+               <li>3. 复制Client ID和Client Secret到下方输入框</li>
+               <li>4. 点击"连接GitHub"按钮</li>
+             </ol>
+             <div className="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
+               <p className="text-sm text-yellow-800">
+                 <strong>注意：</strong>由于CORS限制，当前版本使用演示模式。真实GitHub集成需要服务器端支持。
+               </p>
+             </div>
+             <button 
+               onClick={openGitHubOAuthPage}
+               className="mt-3 inline-flex items-center text-sm text-blue-700 hover:text-blue-900"
+             >
+               <ExternalLink className="w-4 h-4 mr-1" />
+               前往GitHub OAuth应用设置
+             </button>
+           </div>
           
                      {isConnected ? (
              <div className="space-y-4">
