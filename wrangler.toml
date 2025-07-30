@@ -2,8 +2,4 @@ name = "sparklog"
 compatibility_date = "2024-01-01"
 
 [build]
-command = "npm run build"
-output = "dist"
-
-[site]
-bucket = "dist" 
+command = "npm run build" 
