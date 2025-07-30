@@ -1,13 +1,24 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings } from 'lucide-react'
+import { useGitHub } from '@/hooks/useGitHub'
 
 const NotesPage: React.FC = () => {
-  // 模拟GitHub连接状态 - 实际应该从状态管理获取
-  const isGitHubConnected = false
+  const { isConnected, isLoading } = useGitHub()
   const notes = [] // 模拟笔记数据
 
-  if (!isGitHubConnected) {
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">检查GitHub连接状态...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isConnected) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">

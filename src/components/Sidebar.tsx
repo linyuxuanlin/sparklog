@@ -15,8 +15,10 @@ const Sidebar: React.FC = () => {
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
       <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900">SparkLog</h1>
-        <p className="text-sm text-gray-500">妙想笔记</p>
+        <Link to="/" className="block">
+          <h1 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">SparkLog</h1>
+          <p className="text-sm text-gray-500">妙想笔记</p>
+        </Link>
       </div>
       
       <nav className="flex-1 p-4">

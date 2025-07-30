@@ -11,6 +11,7 @@ const AuthCallbackPage: React.FC = () => {
   useEffect(() => {
     const code = searchParams.get('code')
     const error = searchParams.get('error')
+    const state = searchParams.get('state')
 
     if (error) {
       setStatus('error')
@@ -26,9 +27,28 @@ const AuthCallbackPage: React.FC = () => {
       return
     }
 
-    // 这里应该调用后端API或处理OAuth token交换
-    // 目前只是模拟成功
+    // 获取保存的GitHub配置
+    const savedConfig = localStorage.getItem('sparklog_github_config')
+    if (!savedConfig) {
+      setStatus('error')
+      setMessage('未找到GitHub配置，请重新设置')
+      setTimeout(() => navigate('/settings'), 3000)
+      return
+    }
+
+    // const config = JSON.parse(savedConfig) // 暂时注释，实际应用中会用到
+    
+    // 模拟OAuth token交换过程
+    // 在实际应用中，这里应该调用后端API进行token交换
     setTimeout(() => {
+      // 保存授权码和连接状态
+      localStorage.setItem('sparklog_github_auth', JSON.stringify({
+        code,
+        state,
+        connected: true,
+        connectedAt: new Date().toISOString()
+      }))
+      
       setStatus('success')
       setMessage('GitHub连接成功！')
       setTimeout(() => navigate('/'), 2000)
