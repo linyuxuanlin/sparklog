@@ -16,6 +16,8 @@ const SettingsPage: React.FC = () => {
   const [newRepoName, setNewRepoName] = useState('')
   const [newRepoPrivate, setNewRepoPrivate] = useState(true)
   const [isCreatingRepo, setIsCreatingRepo] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
 
   // 加载保存的配置
   useEffect(() => {
@@ -58,6 +60,16 @@ const SettingsPage: React.FC = () => {
     window.open('https://github.com/settings/applications/new', '_blank')
   }
 
+  // 显示消息提示
+  const showMessage = (text: string, type: 'success' | 'error') => {
+    setMessage(text)
+    setMessageType(type)
+    setTimeout(() => {
+      setMessage('')
+      setMessageType('')
+    }, 5000)
+  }
+
   // 加载用户真实GitHub仓库
   const loadRepositories = async () => {
     if (!isConnected) return
@@ -77,35 +89,29 @@ const SettingsPage: React.FC = () => {
         throw new Error('未找到授权信息')
       }
       
-      // const authData = JSON.parse(auth) // 暂时注释，实际应用中会用到
+      const authData = JSON.parse(auth)
       
-      // 模拟调用GitHub API获取用户仓库
-      // 在实际应用中，这里应该调用GitHub API
-      // const response = await fetch('https://api.github.com/user/repos', {
-      //   headers: {
-      //     'Authorization': `token ${authData.accessToken}`,
-      //     'Accept': 'application/vnd.github.v3+json'
-      //   }
-      // })
+      // 调用真实GitHub API获取用户仓库
+      const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
       
-      // 模拟API调用延迟和响应
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      if (!response.ok) {
+        throw new Error(`GitHub API错误: ${response.status}`)
+      }
       
-      // 模拟从GitHub API返回的仓库列表
-      const mockRepos = [
-        { name: 'my-notes', private: false },
-        { name: 'sparklog-notes', private: false },
-        { name: 'personal-journal', private: true },
-        { name: 'work-notes', private: false },
-        { name: 'blog-content', private: false },
-        { name: 'study-notes', private: true }
-      ]
+      const repos = await response.json()
+      const repoNames = repos.map((repo: any) => repo.name)
       
-      setRepositories(mockRepos.map(repo => repo.name))
+      setRepositories(repoNames)
       setIsLoadingRepos(false)
+      showMessage(`成功加载 ${repoNames.length} 个仓库`, 'success')
     } catch (error) {
       console.error('加载仓库失败:', error)
-      alert('加载仓库失败，请检查GitHub连接状态')
+      showMessage('加载仓库失败，请检查GitHub连接状态', 'error')
       setIsLoadingRepos(false)
     }
   }
@@ -127,7 +133,7 @@ const SettingsPage: React.FC = () => {
   // 创建新仓库
   const createNewRepository = async () => {
     if (!newRepoName.trim()) {
-      alert('请输入仓库名称')
+      showMessage('请输入仓库名称', 'error')
       return
     }
     
@@ -135,7 +141,7 @@ const SettingsPage: React.FC = () => {
     
     // 验证仓库名称格式
     if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
-      alert('仓库名称只能包含字母、数字、下划线和连字符')
+      showMessage('仓库名称只能包含字母、数字、下划线和连字符', 'error')
       return
     }
     
@@ -150,28 +156,32 @@ const SettingsPage: React.FC = () => {
         throw new Error('未找到GitHub配置或授权信息')
       }
       
-      // 模拟调用GitHub API创建仓库
-      // 在实际应用中，这里应该调用GitHub API
-      // const authData = JSON.parse(auth)
-      // const response = await fetch('https://api.github.com/user/repos', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `token ${authData.accessToken}`,
-      //     'Accept': 'application/vnd.github.v3+json',
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     name: trimmedName,
-      //     description: 'SparkLog笔记仓库',
-      //     private: newRepoPrivate,
-      //     auto_init: true
-      //   })
-      // })
+      const authData = JSON.parse(auth)
       
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 调用真实GitHub API创建仓库
+      const response = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          description: 'SparkLog笔记仓库',
+          private: newRepoPrivate,
+          auto_init: true
+        })
+      })
       
-      // 模拟成功创建
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`创建仓库失败: ${errorData.message || response.statusText}`)
+      }
+      
+      await response.json() // 获取响应但不使用，确保请求完成
+      
+      // 更新仓库列表
       setRepositories(prev => [...prev, trimmedName])
       setSelectedRepo(trimmedName)
       
@@ -183,10 +193,10 @@ const SettingsPage: React.FC = () => {
       setNewRepoName('')
       setNewRepoPrivate(true)
       
-      alert(`仓库 "${trimmedName}" 创建成功！`)
+      showMessage(`仓库 "${trimmedName}" 创建成功！`, 'success')
     } catch (error) {
       console.error('创建仓库失败:', error)
-      alert('创建仓库失败，请重试')
+      showMessage(`创建仓库失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
     } finally {
       setIsCreatingRepo(false)
     }
@@ -207,6 +217,22 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* 消息提示 */}
+      {message && (
+        <div className={`mb-4 p-4 rounded-lg ${
+          messageType === 'success' 
+            ? 'bg-green-50 text-green-800 border border-green-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          <div className="flex items-center">
+            <div className={`w-4 h-4 rounded-full mr-3 ${
+              messageType === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            <span>{message}</span>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">设置</h1>
         <p className="text-gray-600">配置你的SparkLog应用</p>

@@ -13,55 +13,94 @@ const NoteEditPage: React.FC = () => {
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
 
   const handleCancel = () => {
     navigate('/')
   }
 
+  // 显示消息提示
+  const showMessage = (text: string, type: 'success' | 'error') => {
+    setMessage(text)
+    setMessageType(type)
+    setTimeout(() => {
+      setMessage('')
+      setMessageType('')
+    }, 5000)
+  }
+
   const handleSave = async () => {
     if (!title.trim()) {
-      alert('请输入笔记标题')
+      showMessage('请输入笔记标题', 'error')
       return
     }
     
     if (!content.trim()) {
-      alert('请输入笔记内容')
+      showMessage('请输入笔记内容', 'error')
+      return
+    }
+    
+    // 检查是否选择了仓库
+    const selectedRepo = localStorage.getItem('sparklog_selected_repo')
+    if (!selectedRepo) {
+      showMessage('请先在设置中选择一个笔记仓库', 'error')
       return
     }
     
     setIsSaving(true)
     
     try {
-      // 模拟保存笔记到GitHub
-      const note = {
-        id: isNewNote ? Date.now().toString() : id,
-        title: title.trim(),
-        content: content.trim(),
-        isPrivate,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      // 获取GitHub授权信息
+      const auth = localStorage.getItem('sparklog_github_auth')
+      if (!auth) {
+        throw new Error('未找到GitHub授权信息')
       }
       
-      // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const authData = JSON.parse(auth)
       
-      // 保存到localStorage作为临时存储
-      const savedNotes = JSON.parse(localStorage.getItem('sparklog_notes') || '[]')
-      const existingIndex = savedNotes.findIndex((n: any) => n.id === note.id)
+      // 创建笔记文件名
+      const fileName = `${title.trim().replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-')}.md`
+      const filePath = `notes/${fileName}`
       
-      if (existingIndex >= 0) {
-        savedNotes[existingIndex] = note
-      } else {
-        savedNotes.push(note)
+      // 创建笔记内容
+      const noteContent = `# ${title.trim()}
+
+${content.trim()}
+
+---
+创建时间: ${new Date().toISOString()}
+更新时间: ${new Date().toISOString()}
+私密: ${isPrivate ? '是' : '否'}
+`
+
+      // 调用GitHub API保存笔记
+      const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${selectedRepo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `${isNewNote ? '创建' : '更新'}笔记: ${title.trim()}`,
+          content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
+          branch: 'main'
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`保存失败: ${errorData.message || response.statusText}`)
       }
       
-      localStorage.setItem('sparklog_notes', JSON.stringify(savedNotes))
-      
-      alert('笔记保存成功！')
-      navigate('/notes')
+      showMessage('笔记保存成功！', 'success')
+      setTimeout(() => {
+        navigate('/notes')
+      }, 1500)
     } catch (error) {
-      alert('保存失败，请重试')
       console.error('保存笔记失败:', error)
+      showMessage(`保存失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -120,6 +159,22 @@ const NoteEditPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* 消息提示 */}
+      {message && (
+        <div className={`mb-4 p-4 rounded-lg ${
+          messageType === 'success' 
+            ? 'bg-green-50 text-green-800 border border-green-200' 
+            : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          <div className="flex items-center">
+            <div className={`w-4 h-4 rounded-full mr-3 ${
+              messageType === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            <span>{message}</span>
+          </div>
+        </div>
+      )}
+      
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
           {isNewNote ? '创建新笔记' : '编辑笔记'}

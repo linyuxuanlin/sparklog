@@ -40,18 +40,34 @@ const AuthCallbackPage: React.FC = () => {
     
     // 模拟OAuth token交换过程
     // 在实际应用中，这里应该调用后端API进行token交换
-    setTimeout(() => {
-      // 保存授权码和连接状态
-      localStorage.setItem('sparklog_github_auth', JSON.stringify({
-        code,
-        state,
-        connected: true,
-        connectedAt: new Date().toISOString()
-      }))
-      
-      setStatus('success')
-      setMessage('GitHub连接成功！')
-      setTimeout(() => navigate('/settings'), 2000)
+    setTimeout(async () => {
+      try {
+        // 模拟获取用户信息
+        // 在实际应用中，这里应该用access token调用GitHub API获取用户信息
+        const mockUserInfo = {
+          login: 'testuser',
+          name: 'Test User',
+          avatar_url: 'https://github.com/github.png'
+        }
+        
+        // 保存授权码和连接状态
+        localStorage.setItem('sparklog_github_auth', JSON.stringify({
+          code,
+          state,
+          accessToken: 'mock_access_token', // 实际应用中应该是真实的access token
+          username: mockUserInfo.login,
+          connected: true,
+          connectedAt: new Date().toISOString()
+        }))
+        
+        setStatus('success')
+        setMessage('GitHub连接成功！')
+        setTimeout(() => navigate('/settings'), 2000)
+      } catch (error) {
+        setStatus('error')
+        setMessage('连接失败，请重试')
+        setTimeout(() => navigate('/settings'), 3000)
+      }
     }, 2000)
   }, [searchParams, navigate])
 
