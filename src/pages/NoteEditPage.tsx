@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Github } from 'lucide-react'
+import { Github, Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 const NoteEditPage: React.FC = () => {
@@ -8,9 +8,63 @@ const NoteEditPage: React.FC = () => {
   const navigate = useNavigate()
   const { isConnected, isLoading } = useGitHub()
   const isNewNote = id === 'new'
+  
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   const handleCancel = () => {
     navigate('/')
+  }
+
+  const handleSave = async () => {
+    if (!title.trim()) {
+      alert('请输入笔记标题')
+      return
+    }
+    
+    if (!content.trim()) {
+      alert('请输入笔记内容')
+      return
+    }
+    
+    setIsSaving(true)
+    
+    try {
+      // 模拟保存笔记到GitHub
+      const note = {
+        id: isNewNote ? Date.now().toString() : id,
+        title: title.trim(),
+        content: content.trim(),
+        isPrivate,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 保存到localStorage作为临时存储
+      const savedNotes = JSON.parse(localStorage.getItem('sparklog_notes') || '[]')
+      const existingIndex = savedNotes.findIndex((n: any) => n.id === note.id)
+      
+      if (existingIndex >= 0) {
+        savedNotes[existingIndex] = note
+      } else {
+        savedNotes.push(note)
+      }
+      
+      localStorage.setItem('sparklog_notes', JSON.stringify(savedNotes))
+      
+      alert('笔记保存成功！')
+      navigate('/notes')
+    } catch (error) {
+      alert('保存失败，请重试')
+      console.error('保存笔记失败:', error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // 如果正在加载，显示加载状态
@@ -80,6 +134,8 @@ const NoteEditPage: React.FC = () => {
             </label>
             <input
               type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="输入笔记标题..."
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -90,6 +146,8 @@ const NoteEditPage: React.FC = () => {
               内容
             </label>
             <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="开始编写你的笔记..."
               rows={20}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
@@ -103,7 +161,8 @@ const NoteEditPage: React.FC = () => {
                   <input 
                     type="checkbox" 
                     className="sr-only peer"
-                    defaultChecked={false}
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
                   />
                   <div className="w-5 h-5 bg-gray-200 border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 transition-colors group-hover:bg-gray-100 peer-checked:group-hover:bg-blue-700">
                     <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
@@ -120,11 +179,28 @@ const NoteEditPage: React.FC = () => {
             <div className="flex space-x-3">
               <button 
                 onClick={handleCancel}
-                className="btn-secondary"
+                disabled={isSaving}
+                className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 取消
               </button>
-              <button className="btn-primary">保存笔记</button>
+              <button 
+                onClick={handleSave}
+                disabled={isSaving || !title.trim() || !content.trim()}
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    保存笔记
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

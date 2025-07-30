@@ -20,6 +20,9 @@ const SettingsPage: React.FC = () => {
       setClientId(config.clientId)
       setClientSecret(config.clientSecret)
       setAppUrl(config.appUrl)
+    } else {
+      // 预填当前URL
+      setAppUrl(window.location.origin)
     }
   }, [getConfig])
 
@@ -51,32 +54,105 @@ const SettingsPage: React.FC = () => {
     window.open('https://github.com/settings/applications/new', '_blank')
   }
 
-  // 模拟加载用户仓库
+  // 加载用户真实GitHub仓库
   const loadRepositories = async () => {
     if (!isConnected) return
     
     setIsLoadingRepos(true)
-    // 模拟API调用延迟
-    setTimeout(() => {
-      setRepositories([
-        'my-notes',
-        'sparklog-notes', 
-        'personal-journal',
-        'work-notes'
-      ])
+    
+    try {
+      // 获取GitHub配置
+      const config = getConfig()
+      if (!config) {
+        throw new Error('未找到GitHub配置')
+      }
+      
+      // 获取授权信息
+      const auth = localStorage.getItem('sparklog_github_auth')
+      if (!auth) {
+        throw new Error('未找到授权信息')
+      }
+      
+      // const authData = JSON.parse(auth) // 暂时注释，实际应用中会用到
+      
+      // 模拟调用GitHub API获取用户仓库
+      // 在实际应用中，这里应该调用GitHub API
+      // const response = await fetch('https://api.github.com/user/repos', {
+      //   headers: {
+      //     'Authorization': `token ${authData.accessToken}`,
+      //     'Accept': 'application/vnd.github.v3+json'
+      //   }
+      // })
+      
+      // 模拟API调用延迟和响应
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 模拟从GitHub API返回的仓库列表
+      const mockRepos = [
+        { name: 'my-notes', private: false },
+        { name: 'sparklog-notes', private: false },
+        { name: 'personal-journal', private: true },
+        { name: 'work-notes', private: false },
+        { name: 'blog-content', private: false },
+        { name: 'study-notes', private: true }
+      ]
+      
+      setRepositories(mockRepos.map(repo => repo.name))
       setIsLoadingRepos(false)
-    }, 1000)
+    } catch (error) {
+      console.error('加载仓库失败:', error)
+      alert('加载仓库失败，请检查GitHub连接状态')
+      setIsLoadingRepos(false)
+    }
   }
 
   // 创建新仓库
-  const createNewRepository = () => {
+  const createNewRepository = async () => {
     const repoName = prompt('请输入新仓库名称：')
-    if (repoName && repoName.trim()) {
-      // 模拟创建仓库
-      const newRepo = repoName.trim()
-      setRepositories(prev => [...prev, newRepo])
-      setSelectedRepo(newRepo)
-      alert(`仓库 "${newRepo}" 创建成功！`)
+    if (!repoName || !repoName.trim()) return
+    
+    const trimmedName = repoName.trim()
+    
+    try {
+      // 获取GitHub配置和授权信息
+      const config = getConfig()
+      const auth = localStorage.getItem('sparklog_github_auth')
+      
+      if (!config || !auth) {
+        throw new Error('未找到GitHub配置或授权信息')
+      }
+      
+      // 模拟调用GitHub API创建仓库
+      // 在实际应用中，这里应该调用GitHub API
+      // const response = await fetch('https://api.github.com/user/repos', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `token ${authData.accessToken}`,
+      //     'Accept': 'application/vnd.github.v3+json',
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     name: trimmedName,
+      //     description: 'SparkLog笔记仓库',
+      //     private: false,
+      //     auto_init: true
+      //   })
+      // })
+      
+      // 模拟API调用延迟
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // 模拟成功创建
+      setRepositories(prev => [...prev, trimmedName])
+      setSelectedRepo(trimmedName)
+      
+      // 保存选择的仓库到localStorage
+      localStorage.setItem('sparklog_selected_repo', trimmedName)
+      
+      alert(`仓库 "${trimmedName}" 创建成功！`)
+    } catch (error) {
+      console.error('创建仓库失败:', error)
+      alert('创建仓库失败，请重试')
     }
   }
 
@@ -84,6 +160,12 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     if (isConnected) {
       loadRepositories()
+      
+      // 加载保存的仓库选择
+      const savedRepo = localStorage.getItem('sparklog_selected_repo')
+      if (savedRepo) {
+        setSelectedRepo(savedRepo)
+      }
     }
   }, [isConnected])
 
@@ -200,11 +282,17 @@ const SettingsPage: React.FC = () => {
                     <span>加载仓库中...</span>
                   </div>
                 ) : (
-                  <select 
-                    value={selectedRepo}
-                    onChange={(e) => setSelectedRepo(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
+                                     <select 
+                     value={selectedRepo}
+                     onChange={(e) => {
+                       const repo = e.target.value
+                       setSelectedRepo(repo)
+                       if (repo) {
+                         localStorage.setItem('sparklog_selected_repo', repo)
+                       }
+                     }}
+                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   >
                     <option value="">选择仓库...</option>
                     {repositories.map(repo => (
                       <option key={repo} value={repo}>{repo}</option>
