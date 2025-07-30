@@ -51,7 +51,7 @@ const AuthCallbackPage: React.FC = () => {
       
       setStatus('success')
       setMessage('GitHub连接成功！')
-      setTimeout(() => navigate('/'), 2000)
+      setTimeout(() => navigate('/settings'), 2000)
     }, 2000)
   }, [searchParams, navigate])
 

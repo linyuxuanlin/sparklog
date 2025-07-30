@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Github, Key, Database, ExternalLink, LogOut } from 'lucide-react'
+import { Github, Key, Database, ExternalLink, LogOut, Plus, BookOpen } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 const SettingsPage: React.FC = () => {
@@ -8,6 +8,10 @@ const SettingsPage: React.FC = () => {
   const [clientSecret, setClientSecret] = useState('')
   const [appUrl, setAppUrl] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
+  const [selectedRepo, setSelectedRepo] = useState('')
+  const [repositories, setRepositories] = useState<string[]>([])
+  const [isLoadingRepos, setIsLoadingRepos] = useState(false)
+  const [debugMode, setDebugMode] = useState(false)
 
   // 加载保存的配置
   useEffect(() => {
@@ -47,6 +51,42 @@ const SettingsPage: React.FC = () => {
     window.open('https://github.com/settings/applications/new', '_blank')
   }
 
+  // 模拟加载用户仓库
+  const loadRepositories = async () => {
+    if (!isConnected) return
+    
+    setIsLoadingRepos(true)
+    // 模拟API调用延迟
+    setTimeout(() => {
+      setRepositories([
+        'my-notes',
+        'sparklog-notes', 
+        'personal-journal',
+        'work-notes'
+      ])
+      setIsLoadingRepos(false)
+    }, 1000)
+  }
+
+  // 创建新仓库
+  const createNewRepository = () => {
+    const repoName = prompt('请输入新仓库名称：')
+    if (repoName && repoName.trim()) {
+      // 模拟创建仓库
+      const newRepo = repoName.trim()
+      setRepositories(prev => [...prev, newRepo])
+      setSelectedRepo(newRepo)
+      alert(`仓库 "${newRepo}" 创建成功！`)
+    }
+  }
+
+  // 当连接状态改变时加载仓库
+  useEffect(() => {
+    if (isConnected) {
+      loadRepositories()
+    }
+  }, [isConnected])
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6">
@@ -78,23 +118,26 @@ const SettingsPage: React.FC = () => {
             </button>
           </div>
           
-          {isConnected ? (
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-green-800 font-medium">已连接GitHub</span>
-                </div>
-              </div>
-              
-              <button 
-                onClick={disconnect}
-                className="btn-secondary inline-flex items-center"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                断开连接
-              </button>
-            </div>
+                     {isConnected ? (
+             <div className="space-y-4">
+               <div className="p-4 bg-green-50 rounded-lg">
+                 <div className="flex items-center mb-2">
+                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                   <span className="text-green-800 font-medium">已连接GitHub</span>
+                 </div>
+                 <p className="text-sm text-green-700">
+                   GitHub连接成功！现在请选择或创建一个笔记仓库来开始使用。
+                 </p>
+               </div>
+               
+               <button 
+                 onClick={disconnect}
+                 className="btn-secondary inline-flex items-center"
+               >
+                 <LogOut className="w-4 h-4 mr-2" />
+                 断开连接
+               </button>
+             </div>
           ) : (
             <div className="space-y-4">
               <div>
@@ -140,20 +183,65 @@ const SettingsPage: React.FC = () => {
             <h2 className="text-lg font-semibold">笔记仓库</h2>
           </div>
           
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                选择笔记仓库
-              </label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option>请先连接GitHub</option>
-              </select>
+          {!isConnected ? (
+            <div className="text-center py-6">
+              <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">请先连接GitHub以管理笔记仓库</p>
             </div>
-            
-            <button className="btn-secondary">
-              创建新仓库
-            </button>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  选择笔记仓库
+                </label>
+                {isLoadingRepos ? (
+                  <div className="flex items-center space-x-2 text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span>加载仓库中...</span>
+                  </div>
+                ) : (
+                  <select 
+                    value={selectedRepo}
+                    onChange={(e) => setSelectedRepo(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">选择仓库...</option>
+                    {repositories.map(repo => (
+                      <option key={repo} value={repo}>{repo}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              
+              <div className="flex space-x-3">
+                <button 
+                  onClick={createNewRepository}
+                  className="btn-secondary inline-flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  创建新仓库
+                </button>
+                <button 
+                  onClick={loadRepositories}
+                  className="btn-secondary inline-flex items-center"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  刷新仓库
+                </button>
+              </div>
+              
+              {selectedRepo && (
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-sm text-green-800">
+                      已选择仓库：<strong>{selectedRepo}</strong>
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="card p-6">
@@ -169,16 +257,32 @@ const SettingsPage: React.FC = () => {
               </label>
               <input
                 type="url"
+                value={appUrl}
+                onChange={(e) => setAppUrl(e.target.value)}
                 placeholder="https://your-app.pages.dev"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                这是你的SparkLog应用的完整URL地址，用于GitHub OAuth回调。部署后请更新为你的实际域名。
+              </p>
             </div>
             
-            <div className="flex items-center">
-              <input type="checkbox" id="debug" className="mr-2" />
-              <label htmlFor="debug" className="text-sm text-gray-700">
-                启用调试模式
-              </label>
+            <div className="flex items-start">
+              <input 
+                type="checkbox" 
+                id="debug" 
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="mr-2 mt-1" 
+              />
+              <div>
+                <label htmlFor="debug" className="text-sm text-gray-700 font-medium">
+                  启用调试模式
+                </label>
+                <p className="text-xs text-gray-500 mt-1">
+                  启用后会在控制台显示详细的调试信息，包括API调用、状态变化等。仅在开发或故障排除时使用。
+                </p>
+              </div>
             </div>
           </div>
         </div>
