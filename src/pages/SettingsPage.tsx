@@ -4,8 +4,7 @@ import { useGitHub } from '@/hooks/useGitHub'
 
 const SettingsPage: React.FC = () => {
   const { isConnected, getConfig, disconnect } = useGitHub()
-  const [clientId, setClientId] = useState('')
-  const [clientSecret, setClientSecret] = useState('')
+  const [personalToken, setPersonalToken] = useState('')
   const [appUrl, setAppUrl] = useState('')
   const [isConnecting, setIsConnecting] = useState(false)
   const [selectedRepo, setSelectedRepo] = useState('')
@@ -23,8 +22,7 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     const config = getConfig()
     if (config) {
-      setClientId(config.clientId)
-      setClientSecret(config.clientSecret)
+      setPersonalToken(config.personalToken || '')
       setAppUrl(config.appUrl)
     } else {
       // 预填当前URL
@@ -32,32 +30,8 @@ const SettingsPage: React.FC = () => {
     }
   }, [getConfig])
 
-  const handleConnectGitHub = () => {
-    if (!clientId || !clientSecret) {
-      showMessage('请先填写GitHub Client ID和Client Secret', 'error')
-      return
-    }
-    
-    setIsConnecting(true)
-    
-    // 构建GitHub OAuth URL
-    const redirectUri = `${window.location.origin}/auth/callback`
-    const scope = 'repo'
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${Date.now()}`
-    
-    // 保存配置到localStorage
-    localStorage.setItem('sparklog_github_config', JSON.stringify({
-      clientId,
-      clientSecret,
-      appUrl
-    }))
-    
-    // 跳转到GitHub授权页面
-    window.location.href = githubAuthUrl
-  }
-
-  const openGitHubOAuthPage = () => {
-    window.open('https://github.com/settings/applications/new', '_blank')
+  const openGitHubTokenPage = () => {
+    window.open('https://github.com/settings/tokens/new', '_blank')
   }
 
   // 显示消息提示
@@ -70,6 +44,53 @@ const SettingsPage: React.FC = () => {
     }, 5000)
   }
 
+  const handleConnectGitHub = async () => {
+    if (!personalToken) {
+      showMessage('请先填写GitHub Personal Access Token', 'error')
+      return
+    }
+    
+    setIsConnecting(true)
+    
+    try {
+      // 验证token有效性
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          'Authorization': `token ${personalToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('Personal Access Token无效')
+      }
+      
+      const userInfo = await response.json()
+      
+      // 保存配置
+      localStorage.setItem('sparklog_github_config', JSON.stringify({
+        personalToken,
+        appUrl
+      }))
+      
+      // 保存认证信息
+      localStorage.setItem('sparklog_github_auth', JSON.stringify({
+        accessToken: personalToken,
+        username: userInfo.login,
+        userInfo: userInfo,
+        connected: true,
+        connectedAt: new Date().toISOString()
+      }))
+      
+      showMessage('GitHub连接成功！', 'success')
+    } catch (error) {
+      console.error('连接失败:', error)
+      showMessage(`连接失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
   // 加载用户真实GitHub仓库
   const loadRepositories = async () => {
     if (!isConnected) return
@@ -77,12 +98,6 @@ const SettingsPage: React.FC = () => {
     setIsLoadingRepos(true)
     
     try {
-      // 获取GitHub配置
-      const config = getConfig()
-      if (!config) {
-        throw new Error('未找到GitHub配置')
-      }
-      
       // 获取授权信息
       const auth = localStorage.getItem('sparklog_github_auth')
       if (!auth) {
@@ -94,54 +109,37 @@ const SettingsPage: React.FC = () => {
       // 调试信息
       console.log('GitHub认证信息:', {
         hasAccessToken: !!authData.accessToken,
-        accessToken: authData.accessToken ? `${authData.accessToken.substring(0, 10)}...` : 'none',
         username: authData.username,
         connected: authData.connected
       })
       
-             // 检查是否为演示模式
-       if (authData.accessToken.startsWith('mock_')) {
-         // 演示模式：返回模拟仓库
-         const mockRepos = [
-           'my-notes',
-           'personal-blog',
-           'project-docs',
-           'learning-notes',
-           'work-notes'
-         ]
-         setRepositories(mockRepos)
-         setIsLoadingRepos(false)
-         showMessage(`演示模式：加载了 ${mockRepos.length} 个模拟仓库`, 'success')
-         return
-       }
-       
-       // 真实GitHub API调用（需要服务器端支持）
-       const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-         headers: {
-           'Authorization': `token ${authData.accessToken}`,
-           'Accept': 'application/vnd.github.v3+json'
-         }
-       })
-       
-       if (!response.ok) {
-         const errorData = await response.json().catch(() => ({}))
-         console.error('GitHub API错误详情:', {
-           status: response.status,
-           statusText: response.statusText,
-           errorData: errorData
-         })
-         throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
-       }
-       
-       const repos = await response.json()
-       const repoNames = repos.map((repo: any) => repo.name)
+      // 调用GitHub API获取用户仓库
+      const response = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('GitHub API错误详情:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData
+        })
+        throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
+      }
+      
+      const repos = await response.json()
+      const repoNames = repos.map((repo: any) => repo.name)
       
       setRepositories(repoNames)
       setIsLoadingRepos(false)
       showMessage(`成功加载 ${repoNames.length} 个仓库`, 'success')
     } catch (error) {
       console.error('加载仓库失败:', error)
-      showMessage('加载仓库失败，请检查GitHub连接状态', 'error')
+      showMessage(`加载仓库失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
       setIsLoadingRepos(false)
     }
   }
@@ -178,12 +176,10 @@ const SettingsPage: React.FC = () => {
     try {
       setIsCreatingRepo(true)
       
-      // 获取GitHub配置和授权信息
-      const config = getConfig()
+      // 获取授权信息
       const auth = localStorage.getItem('sparklog_github_auth')
-      
-      if (!config || !auth) {
-        throw new Error('未找到GitHub配置或授权信息')
+      if (!auth) {
+        throw new Error('未找到授权信息')
       }
       
       const authData = JSON.parse(auth)
@@ -198,49 +194,28 @@ const SettingsPage: React.FC = () => {
         })
       }
       
-             // 检查是否为演示模式
-       if (authData.accessToken.startsWith('mock_')) {
-         // 演示模式：模拟创建仓库
-         await new Promise(resolve => setTimeout(resolve, 1000)) // 模拟网络延迟
-         
-         // 更新仓库列表
-         setRepositories(prev => [...prev, trimmedName])
-         setSelectedRepo(trimmedName)
-         
-         // 保存选择的仓库到localStorage
-         localStorage.setItem('sparklog_selected_repo', trimmedName)
-         
-         // 关闭创建表单
-         setShowCreateRepo(false)
-         setNewRepoName('')
-         setNewRepoPrivate(true)
-         
-         showMessage(`演示模式：仓库 "${trimmedName}" 创建成功！`, 'success')
-         return
-       }
-       
-       // 真实GitHub API调用（需要服务器端支持）
-       const response = await fetch('https://api.github.com/user/repos', {
-         method: 'POST',
-         headers: {
-           'Authorization': `token ${authData.accessToken}`,
-           'Accept': 'application/vnd.github.v3+json',
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-           name: trimmedName,
-           description: 'SparkLog笔记仓库',
-           private: newRepoPrivate,
-           auto_init: true
-         })
-       })
-       
-       if (!response.ok) {
-         const errorData = await response.json()
-         throw new Error(`创建仓库失败: ${errorData.message || response.statusText}`)
-       }
-       
-       await response.json() // 获取响应但不使用，确保请求完成
+      // 调用GitHub API创建仓库
+      const response = await fetch('https://api.github.com/user/repos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          description: 'SparkLog笔记仓库',
+          private: newRepoPrivate,
+          auto_init: true
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`创建仓库失败: ${errorData.message || response.statusText}`)
+      }
+      
+      await response.json() // 获取响应但不使用，确保请求完成
       
       // 更新仓库列表
       setRepositories(prev => [...prev, trimmedName])
@@ -306,79 +281,69 @@ const SettingsPage: React.FC = () => {
             <h2 className="text-lg font-semibold">GitHub连接</h2>
           </div>
           
-                     <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-             <h3 className="text-sm font-medium text-blue-900 mb-2">配置步骤：</h3>
-             <ol className="text-sm text-blue-800 space-y-1">
-               <li>1. 点击下方按钮前往GitHub创建OAuth应用</li>
-               <li>2. 设置回调URL为：<code className="bg-blue-100 px-1 rounded">{window.location.origin}/auth/callback</code></li>
-               <li>3. 复制Client ID和Client Secret到下方输入框</li>
-               <li>4. 点击"连接GitHub"按钮</li>
-             </ol>
-             <div className="mt-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-               <p className="text-sm text-yellow-800">
-                 <strong>注意：</strong>由于CORS限制，当前版本使用演示模式。真实GitHub集成需要服务器端支持。
-               </p>
-             </div>
-             <button 
-               onClick={openGitHubOAuthPage}
-               className="mt-3 inline-flex items-center text-sm text-blue-700 hover:text-blue-900"
-             >
-               <ExternalLink className="w-4 h-4 mr-1" />
-               前往GitHub OAuth应用设置
-             </button>
-           </div>
+          <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-900 mb-2">Personal Access Token配置步骤：</h3>
+            <ol className="text-sm text-blue-800 space-y-1">
+              <li>1. 点击下方按钮前往GitHub创建Personal Access Token</li>
+              <li>2. 选择权限：repo（完整控制私有仓库）</li>
+              <li>3. 复制生成的token到下方输入框</li>
+              <li>4. 点击"连接GitHub"按钮</li>
+            </ol>
+            <div className="mt-3 p-3 bg-green-50 rounded border border-green-200">
+              <p className="text-sm text-green-800">
+                <strong>优势：</strong>无需服务器端支持，直接使用GitHub API，无CORS限制
+              </p>
+            </div>
+            <button 
+              onClick={openGitHubTokenPage}
+              className="mt-3 inline-flex items-center text-sm text-blue-700 hover:text-blue-900"
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />
+              前往GitHub Personal Access Token设置
+            </button>
+          </div>
           
-                     {isConnected ? (
-             <div className="space-y-4">
-               <div className="p-4 bg-green-50 rounded-lg">
-                 <div className="flex items-center mb-2">
-                   <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                   <span className="text-green-800 font-medium">已连接GitHub</span>
-                 </div>
-                 <p className="text-sm text-green-700">
-                   GitHub连接成功！现在请选择或创建一个笔记仓库来开始使用。
-                 </p>
-               </div>
-               
-               <button 
-                 onClick={disconnect}
-                 className="btn-secondary inline-flex items-center"
-               >
-                 <LogOut className="w-4 h-4 mr-2" />
-                 断开连接
-               </button>
-             </div>
+          {isConnected ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="flex items-center mb-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                  <span className="text-green-800 font-medium">已连接GitHub</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  GitHub连接成功！现在请选择或创建一个笔记仓库来开始使用。
+                </p>
+              </div>
+              
+              <button 
+                onClick={disconnect}
+                className="btn-secondary inline-flex items-center"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                断开连接
+              </button>
+            </div>
           ) : (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GitHub Client ID
-                </label>
-                <input
-                  type="text"
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                  placeholder="输入你的GitHub OAuth Client ID"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  GitHub Client Secret
+                  GitHub Personal Access Token
                 </label>
                 <input
                   type="password"
-                  value={clientSecret}
-                  onChange={(e) => setClientSecret(e.target.value)}
-                  placeholder="输入你的GitHub OAuth Client Secret"
+                  value={personalToken}
+                  onChange={(e) => setPersonalToken(e.target.value)}
+                  placeholder="输入你的GitHub Personal Access Token"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  请确保token具有repo权限（完整控制私有仓库）
+                </p>
               </div>
               
               <button 
                 onClick={handleConnectGitHub}
-                disabled={isConnecting || !clientId || !clientSecret}
+                disabled={isConnecting || !personalToken}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isConnecting ? '连接中...' : '连接GitHub'}
@@ -410,17 +375,17 @@ const SettingsPage: React.FC = () => {
                     <span>加载仓库中...</span>
                   </div>
                 ) : (
-                                     <select 
-                     value={selectedRepo}
-                     onChange={(e) => {
-                       const repo = e.target.value
-                       setSelectedRepo(repo)
-                       if (repo) {
-                         localStorage.setItem('sparklog_selected_repo', repo)
-                       }
-                     }}
-                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                   >
+                  <select 
+                    value={selectedRepo}
+                    onChange={(e) => {
+                      const repo = e.target.value
+                      setSelectedRepo(repo)
+                      if (repo) {
+                        localStorage.setItem('sparklog_selected_repo', repo)
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
                     <option value="">选择仓库...</option>
                     {repositories.map(repo => (
                       <option key={repo} value={repo}>{repo}</option>
@@ -429,97 +394,97 @@ const SettingsPage: React.FC = () => {
                 )}
               </div>
               
-                             <div className="flex space-x-3">
-                 <button 
-                   onClick={showCreateRepositoryForm}
-                   className="btn-secondary inline-flex items-center"
-                 >
-                   <Plus className="w-4 h-4 mr-2" />
-                   创建新仓库
-                 </button>
-                 <button 
-                   onClick={loadRepositories}
-                   className="btn-secondary inline-flex items-center"
-                 >
-                   <BookOpen className="w-4 h-4 mr-2" />
-                   刷新仓库
-                 </button>
-                 
-                 {debugMode && (
-                   <button 
-                     onClick={() => {
-                       const auth = localStorage.getItem('sparklog_github_auth')
-                       if (auth) {
-                         const authData = JSON.parse(auth)
-                         console.log('当前认证状态:', authData)
-                         alert(`认证状态:\n- 有Token: ${!!authData.accessToken}\n- 用户名: ${authData.username}\n- 连接状态: ${authData.connected}`)
-                       } else {
-                         alert('未找到认证信息')
-                       }
-                     }}
-                     className="btn-secondary inline-flex items-center"
-                   >
-                     <BookOpen className="w-4 h-4 mr-2" />
-                     检查认证
-                   </button>
-                 )}
-               </div>
+              <div className="flex space-x-3">
+                <button 
+                  onClick={showCreateRepositoryForm}
+                  className="btn-secondary inline-flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  创建新仓库
+                </button>
+                <button 
+                  onClick={loadRepositories}
+                  className="btn-secondary inline-flex items-center"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  刷新仓库
+                </button>
+                
+                {debugMode && (
+                  <button 
+                    onClick={() => {
+                      const auth = localStorage.getItem('sparklog_github_auth')
+                      if (auth) {
+                        const authData = JSON.parse(auth)
+                        console.log('当前认证状态:', authData)
+                        alert(`认证状态:\n- 有Token: ${!!authData.accessToken}\n- 用户名: ${authData.username}\n- 连接状态: ${authData.connected}`)
+                      } else {
+                        alert('未找到认证信息')
+                      }
+                    }}
+                    className="btn-secondary inline-flex items-center"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    检查认证
+                  </button>
+                )}
+              </div>
 
-               {/* 创建仓库表单 */}
-               {showCreateRepo && (
-                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                   <h4 className="text-sm font-medium text-gray-900 mb-3">创建新仓库</h4>
-                   
-                   <div className="space-y-3">
-                     <div>
-                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                         仓库名称
-                       </label>
-                       <input
-                         type="text"
-                         value={newRepoName}
-                         onChange={(e) => setNewRepoName(e.target.value)}
-                         placeholder="输入仓库名称..."
-                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       />
-                       <p className="text-xs text-gray-500 mt-1">
-                         只能包含字母、数字、下划线和连字符
-                       </p>
-                     </div>
-                     
-                     <div className="flex items-center">
-                       <input
-                         type="checkbox"
-                         id="repo-private"
-                         checked={newRepoPrivate}
-                         onChange={(e) => setNewRepoPrivate(e.target.checked)}
-                         className="mr-2"
-                       />
-                       <label htmlFor="repo-private" className="text-sm text-gray-700">
-                         私有仓库
-                       </label>
-                     </div>
-                     
-                     <div className="flex space-x-2">
-                       <button
-                         onClick={createNewRepository}
-                         disabled={isCreatingRepo || !newRepoName.trim()}
-                         className="btn-primary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                       >
-                         {isCreatingRepo ? '创建中...' : '创建仓库'}
-                       </button>
-                       <button
-                         onClick={cancelCreateRepository}
-                         disabled={isCreatingRepo}
-                         className="btn-secondary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                       >
-                         取消
-                       </button>
-                     </div>
-                   </div>
-                 </div>
-               )}
-              
+              {/* 创建仓库表单 */}
+              {showCreateRepo && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">创建新仓库</h4>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        仓库名称
+                      </label>
+                      <input
+                        type="text"
+                        value={newRepoName}
+                        onChange={(e) => setNewRepoName(e.target.value)}
+                        placeholder="输入仓库名称..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        只能包含字母、数字、下划线和连字符
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="repo-private"
+                        checked={newRepoPrivate}
+                        onChange={(e) => setNewRepoPrivate(e.target.checked)}
+                        className="mr-2"
+                      />
+                      <label htmlFor="repo-private" className="text-sm text-gray-700">
+                        私有仓库
+                      </label>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={createNewRepository}
+                        disabled={isCreatingRepo || !newRepoName.trim()}
+                        className="btn-primary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isCreatingRepo ? '创建中...' : '创建仓库'}
+                      </button>
+                      <button
+                        onClick={cancelCreateRepository}
+                        disabled={isCreatingRepo}
+                        className="btn-secondary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        取消
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+             
               {selectedRepo && (
                 <div className="p-3 bg-green-50 rounded-lg">
                   <div className="flex items-center">
@@ -553,7 +518,7 @@ const SettingsPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="mt-1 text-xs text-gray-500">
-                这是你的SparkLog应用的完整URL地址，用于GitHub OAuth回调。部署后请更新为你的实际域名。
+                这是你的SparkLog应用的完整URL地址。部署后请更新为你的实际域名。
               </p>
             </div>
             

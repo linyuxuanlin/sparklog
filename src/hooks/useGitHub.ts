@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 
 interface GitHubAuth {
-  code: string
-  state: string
+  accessToken?: string
+  username?: string
+  userInfo?: any
   connected: boolean
   connectedAt: string
 }
 
 interface GitHubConfig {
-  clientId: string
-  clientSecret: string
+  personalToken?: string
+  clientId?: string
+  clientSecret?: string
   appUrl: string
 }
 
