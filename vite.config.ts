@@ -24,9 +24,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false, // 禁用sourcemap以减小文件大小
+    sourcemap: false,
     rollupOptions: {
       output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
@@ -38,11 +41,5 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-  },
-  // 确保正确处理TypeScript文件
-  esbuild: {
-    loader: 'tsx',
-    include: /src\/.*\.[tj]sx?$/,
-    exclude: [],
   },
 }) 

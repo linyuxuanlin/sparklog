@@ -1,0 +1,24 @@
+{
+  "build": {
+    "command": "npm run build",
+    "output": "dist",
+    "environment": {
+      "NODE_VERSION": "18"
+    }
+  },
+  "routes": [
+    {
+      "pattern": "/assets/*",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "pattern": "/*",
+      "headers": {
+        "X-Frame-Options": "DENY",
+        "X-Content-Type-Options": "nosniff"
+      }
+    }
+  ]
+} 

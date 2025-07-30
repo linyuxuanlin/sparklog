@@ -7,11 +7,20 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+/assets/*.js
+  Content-Type: application/javascript; charset=utf-8
+
+/assets/*.css
+  Content-Type: text/css; charset=utf-8
+
+/assets/*.svg
+  Content-Type: image/svg+xml; charset=utf-8
+
 /*.js
-  Content-Type: application/javascript
+  Content-Type: application/javascript; charset=utf-8
 
 /*.css
-  Content-Type: text/css
+  Content-Type: text/css; charset=utf-8
 
 /*.svg
-  Content-Type: image/svg+xml 
+  Content-Type: image/svg+xml; charset=utf-8 
