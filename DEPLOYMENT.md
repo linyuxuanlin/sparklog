@@ -17,8 +17,10 @@
 
 **重要**：
 - wrangler.toml文件只包含`pages_build_output_dir = "dist"`
-- 不要在wrangler.toml中使用`[build]`配置
-- 构建命令在Cloudflare Pages界面中设置
+- 构建命令在Cloudflare Pages界面中设置，或者通过`.cloudflare/pages.json`配置
+- 确保Cloudflare Pages界面中设置：
+  - **Build command**: `npm run build`
+  - **Build output directory**: `dist`
 
 ### 3. 环境变量（可选）
 如果需要GitHub OAuth功能，添加以下环境变量：
