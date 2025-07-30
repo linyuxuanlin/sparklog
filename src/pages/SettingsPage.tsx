@@ -12,6 +12,10 @@ const SettingsPage: React.FC = () => {
   const [repositories, setRepositories] = useState<string[]>([])
   const [isLoadingRepos, setIsLoadingRepos] = useState(false)
   const [debugMode, setDebugMode] = useState(false)
+  const [showCreateRepo, setShowCreateRepo] = useState(false)
+  const [newRepoName, setNewRepoName] = useState('')
+  const [newRepoPrivate, setNewRepoPrivate] = useState(true)
+  const [isCreatingRepo, setIsCreatingRepo] = useState(false)
 
   // 加载保存的配置
   useEffect(() => {
@@ -106,14 +110,38 @@ const SettingsPage: React.FC = () => {
     }
   }
 
+  // 显示创建仓库表单
+  const showCreateRepositoryForm = () => {
+    setShowCreateRepo(true)
+    setNewRepoName('')
+    setNewRepoPrivate(true)
+  }
+
+  // 取消创建仓库
+  const cancelCreateRepository = () => {
+    setShowCreateRepo(false)
+    setNewRepoName('')
+    setNewRepoPrivate(true)
+  }
+
   // 创建新仓库
   const createNewRepository = async () => {
-    const repoName = prompt('请输入新仓库名称：')
-    if (!repoName || !repoName.trim()) return
+    if (!newRepoName.trim()) {
+      alert('请输入仓库名称')
+      return
+    }
     
-    const trimmedName = repoName.trim()
+    const trimmedName = newRepoName.trim()
+    
+    // 验证仓库名称格式
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
+      alert('仓库名称只能包含字母、数字、下划线和连字符')
+      return
+    }
     
     try {
+      setIsCreatingRepo(true)
+      
       // 获取GitHub配置和授权信息
       const config = getConfig()
       const auth = localStorage.getItem('sparklog_github_auth')
@@ -124,6 +152,7 @@ const SettingsPage: React.FC = () => {
       
       // 模拟调用GitHub API创建仓库
       // 在实际应用中，这里应该调用GitHub API
+      // const authData = JSON.parse(auth)
       // const response = await fetch('https://api.github.com/user/repos', {
       //   method: 'POST',
       //   headers: {
@@ -134,13 +163,13 @@ const SettingsPage: React.FC = () => {
       //   body: JSON.stringify({
       //     name: trimmedName,
       //     description: 'SparkLog笔记仓库',
-      //     private: false,
+      //     private: newRepoPrivate,
       //     auto_init: true
       //   })
       // })
       
       // 模拟API调用延迟
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      await new Promise(resolve => setTimeout(resolve, 2000))
       
       // 模拟成功创建
       setRepositories(prev => [...prev, trimmedName])
@@ -149,10 +178,17 @@ const SettingsPage: React.FC = () => {
       // 保存选择的仓库到localStorage
       localStorage.setItem('sparklog_selected_repo', trimmedName)
       
+      // 关闭创建表单
+      setShowCreateRepo(false)
+      setNewRepoName('')
+      setNewRepoPrivate(true)
+      
       alert(`仓库 "${trimmedName}" 创建成功！`)
     } catch (error) {
       console.error('创建仓库失败:', error)
       alert('创建仓库失败，请重试')
+    } finally {
+      setIsCreatingRepo(false)
     }
   }
 
@@ -301,22 +337,77 @@ const SettingsPage: React.FC = () => {
                 )}
               </div>
               
-              <div className="flex space-x-3">
-                <button 
-                  onClick={createNewRepository}
-                  className="btn-secondary inline-flex items-center"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  创建新仓库
-                </button>
-                <button 
-                  onClick={loadRepositories}
-                  className="btn-secondary inline-flex items-center"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  刷新仓库
-                </button>
-              </div>
+                             <div className="flex space-x-3">
+                 <button 
+                   onClick={showCreateRepositoryForm}
+                   className="btn-secondary inline-flex items-center"
+                 >
+                   <Plus className="w-4 h-4 mr-2" />
+                   创建新仓库
+                 </button>
+                 <button 
+                   onClick={loadRepositories}
+                   className="btn-secondary inline-flex items-center"
+                 >
+                   <BookOpen className="w-4 h-4 mr-2" />
+                   刷新仓库
+                 </button>
+               </div>
+
+               {/* 创建仓库表单 */}
+               {showCreateRepo && (
+                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                   <h4 className="text-sm font-medium text-gray-900 mb-3">创建新仓库</h4>
+                   
+                   <div className="space-y-3">
+                     <div>
+                       <label className="block text-xs font-medium text-gray-700 mb-1">
+                         仓库名称
+                       </label>
+                       <input
+                         type="text"
+                         value={newRepoName}
+                         onChange={(e) => setNewRepoName(e.target.value)}
+                         placeholder="输入仓库名称..."
+                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       />
+                       <p className="text-xs text-gray-500 mt-1">
+                         只能包含字母、数字、下划线和连字符
+                       </p>
+                     </div>
+                     
+                     <div className="flex items-center">
+                       <input
+                         type="checkbox"
+                         id="repo-private"
+                         checked={newRepoPrivate}
+                         onChange={(e) => setNewRepoPrivate(e.target.checked)}
+                         className="mr-2"
+                       />
+                       <label htmlFor="repo-private" className="text-sm text-gray-700">
+                         私有仓库
+                       </label>
+                     </div>
+                     
+                     <div className="flex space-x-2">
+                       <button
+                         onClick={createNewRepository}
+                         disabled={isCreatingRepo || !newRepoName.trim()}
+                         className="btn-primary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                       >
+                         {isCreatingRepo ? '创建中...' : '创建仓库'}
+                       </button>
+                       <button
+                         onClick={cancelCreateRepository}
+                         disabled={isCreatingRepo}
+                         className="btn-secondary text-sm px-3 py-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                       >
+                         取消
+                       </button>
+                     </div>
+                   </div>
+                 </div>
+               )}
               
               {selectedRepo && (
                 <div className="p-3 bg-green-50 rounded-lg">
