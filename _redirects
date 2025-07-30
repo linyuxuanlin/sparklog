@@ -1,7 +1,0 @@
-# 单页应用路由支持
-/*    /index.html   200
-
-# 静态资源缓存
-/assets/*  /assets/:splat  200
-/js/*      /js/:splat      200
-/css/*     /css/:splat     200 

@@ -39,10 +39,4 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
-  // 添加 Cloudflare Pages 支持
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
-  },
-  // 确保正确的 MIME 类型
-  assetsInclude: ['**/*.js', '**/*.ts', '**/*.tsx'],
 }) 
