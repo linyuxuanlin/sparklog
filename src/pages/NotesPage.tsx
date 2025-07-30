@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings } from 'lucide-react'
+import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 const NotesPage: React.FC = () => {
   const { isConnected, isLoading } = useGitHub()
   const notes = [] // 模拟笔记数据
+  const [searchQuery, setSearchQuery] = useState('')
 
   if (isLoading) {
     return (
@@ -78,6 +79,20 @@ const NotesPage: React.FC = () => {
           </Link>
         </div>
 
+        {/* 搜索栏 */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="搜索笔记..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -109,6 +124,20 @@ const NotesPage: React.FC = () => {
           <Plus className="w-4 h-4 mr-2" />
           新建笔记
         </Link>
+      </div>
+
+      {/* 搜索栏 */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="搜索笔记..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4">
