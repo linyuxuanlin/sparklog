@@ -24,7 +24,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false, // 禁用sourcemap以减小文件大小
     rollupOptions: {
       output: {
         manualChunks: {
@@ -38,5 +38,11 @@ export default defineConfig({
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
+  // 确保正确处理TypeScript文件
+  esbuild: {
+    loader: 'tsx',
+    include: /src\/.*\.[tj]sx?$/,
+    exclude: [],
   },
 }) 
