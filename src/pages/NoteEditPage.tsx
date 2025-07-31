@@ -64,14 +64,15 @@ const NoteEditPage: React.FC = () => {
       const filePath = `notes/${fileName}`
       
       // 创建笔记内容
-      const noteContent = `# ${title.trim()}
+      const noteContent = `---
+created_at: ${new Date().toISOString()}
+updated_at: ${new Date().toISOString()}
+private: ${isPrivate}
+---
+
+# ${title.trim()}
 
 ${content.trim()}
-
----
-创建时间: ${new Date().toISOString()}
-更新时间: ${new Date().toISOString()}
-私密: ${isPrivate ? '是' : '否'}
 `
 
       // 调用GitHub API保存笔记

@@ -102,10 +102,48 @@ const NotesPage: React.FC = () => {
               const contentData = await contentResponse.json()
               const content = atob(contentData.content) // 解码Base64内容
               
-              // 解析笔记标题和内容
-              const lines = content.split('\n')
-              const title = lines[0].replace(/^#\s*/, '') || file.name.replace(/\.md$/, '')
-              const contentPreview = lines.slice(1).join('\n').trim().substring(0, 200) + '...'
+                             // 解析笔记标题和内容
+               const lines = content.split('\n')
+               
+               // 解析Frontmatter
+               let title = file.name.replace(/\.md$/, '')
+               let contentPreview = ''
+               let inFrontmatter = false
+               let frontmatterEndIndex = -1
+               
+               for (let i = 0; i < lines.length; i++) {
+                 const line = lines[i].trim()
+                 
+                 // 检测Frontmatter开始
+                 if (line === '---' && !inFrontmatter) {
+                   inFrontmatter = true
+                   continue
+                 }
+                 
+                 // 检测Frontmatter结束
+                 if (line === '---' && inFrontmatter) {
+                   frontmatterEndIndex = i
+                   break
+                 }
+               }
+               
+               // 提取标题和内容（跳过Frontmatter）
+               const contentLines = frontmatterEndIndex >= 0 
+                 ? lines.slice(frontmatterEndIndex + 1) 
+                 : lines
+               
+               // 查找第一个标题行
+               for (const line of contentLines) {
+                 if (line.startsWith('# ')) {
+                   title = line.replace(/^#\s*/, '')
+                   break
+                 }
+               }
+               
+               // 生成内容预览（排除Frontmatter和标题）
+               const previewLines = contentLines.filter(line => !line.startsWith('# '))
+               const previewText = previewLines.join('\n').trim()
+               contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
               
               return {
                 ...file,
@@ -141,9 +179,12 @@ const NotesPage: React.FC = () => {
   }, [isConnected])
 
   // 过滤笔记
-  const filteredNotes = notes.filter(note => 
-    note.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredNotes = notes.filter(note => {
+    const searchLower = searchQuery.toLowerCase()
+    const titleMatch = (note.parsedTitle || note.name).toLowerCase().includes(searchLower)
+    const contentMatch = note.contentPreview?.toLowerCase().includes(searchLower) || false
+    return titleMatch || contentMatch
+  })
 
   if (isLoading) {
     return (
