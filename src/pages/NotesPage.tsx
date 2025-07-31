@@ -17,6 +17,9 @@ interface Note {
   encoding?: string
   created_at?: string
   updated_at?: string
+  parsedTitle?: string
+  contentPreview?: string
+  fullContent?: string
 }
 
 const NotesPage: React.FC = () => {
@@ -79,14 +82,50 @@ const NotesPage: React.FC = () => {
       
       const files = await response.json()
       
-      // 过滤出.md文件
+      // 过滤出.md文件并获取内容
       const markdownFiles = files.filter((file: any) => 
         file.type === 'file' && file.name.endsWith('.md')
       )
       
-      setNotes(markdownFiles)
+      // 获取每个笔记的详细内容
+      const notesWithContent = await Promise.all(
+        markdownFiles.map(async (file: any) => {
+          try {
+            const contentResponse = await fetch(file.url, {
+              headers: {
+                'Authorization': `token ${authData.accessToken}`,
+                'Accept': 'application/vnd.github.v3+json'
+              }
+            })
+            
+            if (contentResponse.ok) {
+              const contentData = await contentResponse.json()
+              const content = atob(contentData.content) // 解码Base64内容
+              
+              // 解析笔记标题和内容
+              const lines = content.split('\n')
+              const title = lines[0].replace(/^#\s*/, '') || file.name.replace(/\.md$/, '')
+              const contentPreview = lines.slice(1).join('\n').trim().substring(0, 200) + '...'
+              
+              return {
+                ...file,
+                parsedTitle: title,
+                contentPreview: contentPreview,
+                fullContent: content
+              }
+            }
+            
+            return file
+          } catch (error) {
+            console.error(`获取笔记内容失败: ${file.name}`, error)
+            return file
+          }
+        })
+      )
+      
+      setNotes(notesWithContent)
       setIsLoadingNotes(false)
-      showMessage(`成功加载 ${markdownFiles.length} 个笔记`, 'success')
+      showMessage(`成功加载 ${notesWithContent.length} 个笔记`, 'success')
     } catch (error) {
       console.error('加载笔记失败:', error)
       showMessage(`加载笔记失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
@@ -245,10 +284,10 @@ const NotesPage: React.FC = () => {
       ) : (
         <div className="grid gap-4">
           {filteredNotes.map((note) => {
-            // 从文件名提取标题（去掉.md后缀）
-            const title = note.name.replace(/\.md$/, '')
+            // 使用解析的标题或文件名
+            const title = note.parsedTitle || note.name.replace(/\.md$/, '')
             // 从文件名提取日期（如果有日期格式）
-            const dateMatch = title.match(/(\d{4}-\d{2}-\d{2})/)
+            const dateMatch = note.name.match(/(\d{4}-\d{2}-\d{2})/)
             const date = dateMatch ? dateMatch[1] : '未知日期'
             
             return (
@@ -264,9 +303,14 @@ const NotesPage: React.FC = () => {
                         <span className="text-xs text-green-600">公开</span>
                       </div>
                     </div>
-                    <p className="text-gray-600 mb-3">
-                      笔记大小: {(note.size / 1024).toFixed(1)} KB
-                    </p>
+                    
+                    {/* 显示内容预览 */}
+                    {note.contentPreview && (
+                      <p className="text-gray-600 mb-3 line-clamp-3">
+                        {note.contentPreview}
+                      </p>
+                    )}
+                    
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
@@ -275,6 +319,9 @@ const NotesPage: React.FC = () => {
                       <div className="flex items-center">
                         <Tag className="w-4 h-4 mr-1" />
                         <span>Markdown</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span>{(note.size / 1024).toFixed(1)} KB</span>
                       </div>
                     </div>
                   </div>
