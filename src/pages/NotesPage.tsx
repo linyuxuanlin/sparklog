@@ -28,7 +28,7 @@ interface Note {
 }
 
 const NotesPage: React.FC = () => {
-  const { isConnected, isLoading } = useGitHub()
+  const { isConnected, isLoading, hasManagePermission } = useGitHub()
   const navigate = useNavigate()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
@@ -235,13 +235,13 @@ const NotesPage: React.FC = () => {
         }
       }
       
-      // 过滤笔记 - 未连接用户只能看到公开笔记
+      // 过滤笔记 - 根据权限显示笔记
       const visibleNotes = notesWithContent.filter(note => {
-        if (!isConnected) {
-          // 未连接用户只能看到公开笔记
+        if (!hasManagePermission()) {
+          // 非所有者只能看到公开笔记
           return !note.isPrivate
         }
-        // 已连接用户可以看到所有笔记（包括私密笔记）
+        // 所有者可以看到所有笔记（包括私密笔记）
         return true
       })
       

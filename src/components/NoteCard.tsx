@@ -1,6 +1,7 @@
 import React from 'react'
 import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2 } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
+import { useGitHub } from '@/hooks/useGitHub'
 
 interface Note {
   name: string
@@ -43,6 +44,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   confirmingDeleteId,
   deletingNoteId
 }) => {
+  const { hasManagePermission } = useGitHub()
   const title = note.parsedTitle || note.name.replace(/\.md$/, '')
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
@@ -120,25 +122,29 @@ const NoteCard: React.FC<NoteCardProps> = ({
             </>
           ) : (
             <>
-              <button
-                onClick={() => onEdit(note)}
-                className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
-                title="编辑笔记"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDelete(note)}
-                disabled={isDeletingNote}
-                className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="删除笔记"
-              >
-                {isDeletingNote ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-              </button>
+              {hasManagePermission() && (
+                <>
+                  <button
+                    onClick={() => onEdit(note)}
+                    className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
+                    title="编辑笔记"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(note)}
+                    disabled={isDeletingNote}
+                    className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="删除笔记"
+                  >
+                    {isDeletingNote ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                </>
+              )}
               <a
                 href={note.html_url}
                 target="_blank"
