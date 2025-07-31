@@ -56,41 +56,25 @@ const NotesPage: React.FC = () => {
       let authData: any = null
       let selectedRepo: string | null = null
       
-      if (isConnected) {
-        // 获取授权信息
-        const auth = localStorage.getItem('sparklog_github_auth')
-        if (!auth) {
-          throw new Error('未找到授权信息')
-        }
-        
-        authData = JSON.parse(auth)
-        
-        // 获取选择的仓库
-        selectedRepo = localStorage.getItem('sparklog_selected_repo')
-        if (!selectedRepo) {
-          throw new Error('未选择笔记仓库')
-        }
-      } else {
-        // 未连接用户，使用默认的公开仓库配置
-        const defaultConfig = getDefaultRepoConfig()
-        
-        if (!defaultConfig) {
-          throw new Error('未配置默认仓库，请设置环境变量或连接GitHub')
-        }
-        
-        selectedRepo = defaultConfig.repo
-        authData = { 
-          username: defaultConfig.owner,
-          accessToken: getDefaultGitHubToken() // 使用环境变量中的token
-        }
-        
-        // 调试信息
-        console.log('未连接用户配置:', {
-          owner: defaultConfig.owner,
-          repo: defaultConfig.repo,
-          hasToken: !!authData.accessToken
-        })
+      // 获取默认仓库配置
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库，请设置环境变量')
       }
+      
+      // 基础配置使用环境变量
+      selectedRepo = defaultConfig.repo
+      authData = { 
+        username: defaultConfig.owner,
+        accessToken: getDefaultGitHubToken() // 使用环境变量中的token
+      }
+      
+      // 调试信息
+      console.log('基础配置:', {
+        owner: defaultConfig.owner,
+        repo: defaultConfig.repo,
+        hasToken: !!authData.accessToken
+      })
       
       // 如果是管理员且已登录，使用GitHub Token
       if (isLoggedIn()) {
