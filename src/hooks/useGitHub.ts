@@ -54,11 +54,17 @@ export const useGitHub = () => {
     return isConnected && isOwner
   }
 
+  // 检查是否已登录GitHub
+  const isLoggedIn = () => {
+    return isConnected
+  }
+
   return {
     isConnected,
     isLoading,
     isOwner,
     hasManagePermission,
+    isLoggedIn,
     getConfig,
     disconnect
   }

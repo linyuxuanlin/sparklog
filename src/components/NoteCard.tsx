@@ -44,7 +44,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   confirmingDeleteId,
   deletingNoteId
 }) => {
-  const { hasManagePermission } = useGitHub()
+  const { isLoggedIn } = useGitHub()
   const title = note.parsedTitle || note.name.replace(/\.md$/, '')
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
@@ -122,7 +122,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
             </>
           ) : (
             <>
-              {hasManagePermission() && (
+              {isLoggedIn() && (
                 <>
                   <button
                     onClick={() => onEdit(note)}

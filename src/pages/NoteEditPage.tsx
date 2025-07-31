@@ -6,7 +6,7 @@ import { useGitHub } from '@/hooks/useGitHub'
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
-  const { isConnected, isLoading: isGitHubLoading, hasManagePermission } = useGitHub()
+  const { isConnected, isLoading: isGitHubLoading, isLoggedIn } = useGitHub()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
@@ -20,11 +20,11 @@ const NoteEditPage: React.FC = () => {
 
   // 权限检查
   useEffect(() => {
-    if (!hasManagePermission()) {
+    if (!isLoggedIn()) {
       navigate('/notes')
       return
     }
-  }, [hasManagePermission, navigate])
+  }, [isLoggedIn, navigate])
 
   // 加载现有笔记
   useEffect(() => {

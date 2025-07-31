@@ -14,37 +14,22 @@ const AuthCallbackPage: React.FC = () => {
       const error = searchParams.get('error')
       const state = searchParams.get('state')
 
-    if (error) {
-      setStatus('error')
-      setMessage('授权失败：' + error)
-      setTimeout(() => navigate('/settings'), 3000)
-      return
-    }
+      if (error) {
+        setStatus('error')
+        setMessage('授权失败：' + error)
+        setTimeout(() => navigate('/settings'), 3000)
+        return
+      }
 
-    if (!code) {
-      setStatus('error')
-      setMessage('未收到授权码')
-      setTimeout(() => navigate('/settings'), 3000)
-      return
-    }
+      if (!code) {
+        setStatus('error')
+        setMessage('未收到授权码')
+        setTimeout(() => navigate('/settings'), 3000)
+        return
+      }
 
-    // 获取保存的GitHub配置
-    const savedConfig = localStorage.getItem('sparklog_github_config')
-    if (!savedConfig) {
-      setStatus('error')
-      setMessage('未找到GitHub配置，请重新设置')
-      setTimeout(() => navigate('/settings'), 3000)
-      return
-    }
-
-    // const config = JSON.parse(savedConfig) // 暂时注释，实际应用中会用到
-    
-                 // 由于CORS限制，我们需要使用GitHub Apps方式
-       // 或者使用服务器端代理，但这里我们先用模拟方式
-       try {
-         // const config = JSON.parse(savedConfig) // 暂时注释，演示模式下不需要
-        
-        // 模拟成功的OAuth流程（实际应用中需要服务器端支持）
+      try {
+        // 由于CORS限制，我们使用Personal Access Token方式
         // 这里我们创建一个模拟的access token用于演示
         const mockAccessToken = `mock_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         

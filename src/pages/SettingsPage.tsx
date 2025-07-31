@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Github, BookOpen, Settings, ExternalLink, LogOut } from 'lucide-react'
+import { Github, BookOpen, Settings, ExternalLink, LogOut, LogIn } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig } from '@/config/defaultRepo'
 
@@ -21,6 +21,17 @@ const SettingsPage: React.FC = () => {
   const handleLogout = () => {
     disconnect()
     showMessage('已断开GitHub连接', 'success')
+  }
+
+  const handleLogin = () => {
+    // 重定向到GitHub OAuth授权页面
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID
+    const redirectUri = `${window.location.origin}/auth/callback`
+    const scope = 'repo'
+    
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`
+    
+    window.location.href = authUrl
   }
 
   const defaultConfig = getDefaultRepoConfig()
@@ -117,6 +128,13 @@ const SettingsPage: React.FC = () => {
                   <li>• 私密笔记：只有连接用户才能查看和管理</li>
                 </ul>
               </div>
+              <button
+                onClick={handleLogin}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                使用GitHub登录
+              </button>
             </div>
           )}
         </div>

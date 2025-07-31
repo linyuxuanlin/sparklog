@@ -5,11 +5,11 @@ import { useGitHub } from '@/hooks/useGitHub'
 
 const Sidebar: React.FC = () => {
   const location = useLocation()
-  const { hasManagePermission } = useGitHub()
+  const { isLoggedIn } = useGitHub()
 
   const menuItems = [
     { icon: BookOpen, label: '所有笔记', path: '/notes' },
-    ...(hasManagePermission() ? [{ icon: Plus, label: '新建笔记', path: '/note/new' }] : []),
+    ...(isLoggedIn() ? [{ icon: Plus, label: '新建笔记', path: '/note/new' }] : []),
     { icon: Settings, label: '设置', path: '/settings' },
   ]
 
