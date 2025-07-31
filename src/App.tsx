@@ -3,7 +3,6 @@ import Layout from '@/components/Layout'
 import NotesPage from '@/pages/NotesPage'
 import NoteEditPage from '@/pages/NoteEditPage'
 import SettingsPage from '@/pages/SettingsPage'
-import AuthCallbackPage from '@/pages/AuthCallbackPage'
 import { useGitHub } from '@/hooks/useGitHub'
 
 function App() {
@@ -24,7 +23,6 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Routes>
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/" element={<Layout />}>
           {/* 默认显示所有笔记页面，未连接用户也能看到公开笔记 */}
           <Route index element={<Navigate to="/notes" replace />} />

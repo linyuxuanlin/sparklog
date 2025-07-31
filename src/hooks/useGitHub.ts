@@ -1,19 +1,8 @@
 import { useState, useEffect } from 'react'
-import { getDefaultRepoConfig } from '@/config/defaultRepo'
 
-interface GitHubAuth {
-  accessToken?: string
-  username?: string
-  userInfo?: any
-  connected: boolean
-  connectedAt: string
-}
-
-interface GitHubConfig {
-  personalToken?: string
-  clientId?: string
-  clientSecret?: string
-  appUrl: string
+interface AdminAuth {
+  isAuthenticated: boolean
+  authenticatedAt: string
 }
 
 export const useGitHub = () => {
@@ -22,44 +11,48 @@ export const useGitHub = () => {
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
-    // 检查GitHub连接状态
-    const auth = localStorage.getItem('sparklog_github_auth')
+    // 检查管理员身份验证状态
+    const auth = localStorage.getItem('sparklog_admin_auth')
     console.log('useGitHub调试信息:', {
       hasAuth: !!auth,
       authData: auth ? JSON.parse(auth) : null
     })
     
     if (auth) {
-      const authData: GitHubAuth = JSON.parse(auth)
-      setIsConnected(authData.connected)
-      
-      // 检查是否为网站所有者
-      const defaultConfig = getDefaultRepoConfig()
-      if (defaultConfig && authData.username) {
-        setIsOwner(authData.username === defaultConfig.owner)
-      }
+      const authData: AdminAuth = JSON.parse(auth)
+      setIsConnected(authData.isAuthenticated)
+      setIsOwner(authData.isAuthenticated) // 如果通过密码验证，就是所有者
     }
     setIsLoading(false)
   }, [])
 
-  const getConfig = (): GitHubConfig | null => {
-    const config = localStorage.getItem('sparklog_github_config')
-    return config ? JSON.parse(config) : null
+  const authenticate = (password: string) => {
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+    if (password === adminPassword) {
+      const authData: AdminAuth = {
+        isAuthenticated: true,
+        authenticatedAt: new Date().toISOString()
+      }
+      localStorage.setItem('sparklog_admin_auth', JSON.stringify(authData))
+      setIsConnected(true)
+      setIsOwner(true)
+      return true
+    }
+    return false
   }
 
   const disconnect = () => {
-    localStorage.removeItem('sparklog_github_auth')
-    localStorage.removeItem('sparklog_github_config')
+    localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
   }
 
-  // 检查是否有管理权限（连接且是所有者）
+  // 检查是否有管理权限（已认证的管理员）
   const hasManagePermission = () => {
     return isConnected && isOwner
   }
 
-  // 检查是否已登录GitHub
+  // 检查是否已登录
   const isLoggedIn = () => {
     return isConnected
   }
@@ -70,7 +63,7 @@ export const useGitHub = () => {
     isOwner,
     hasManagePermission,
     isLoggedIn,
-    getConfig,
+    authenticate,
     disconnect
   }
 } 

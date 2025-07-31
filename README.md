@@ -48,6 +48,7 @@ npm run dev
 |--------|------|------|
 | `VITE_REPO_OWNER` | GitHub用户名 | ✅ |
 | `VITE_REPO_NAME` | 仓库名称 | ✅ |
+| `VITE_ADMIN_PASSWORD` | 管理员密码 | ✅ |
 | `VITE_GITHUB_TOKEN` | GitHub Token | ❌ |
 
 ## 🎯 功能特性

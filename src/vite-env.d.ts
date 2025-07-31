@@ -6,13 +6,12 @@ interface ImportMetaEnv {
   readonly VITE_GITHUB_TOKEN?: string
   readonly VITE_GITHUB_OWNER?: string
   readonly VITE_GITHUB_REPO?: string
-  readonly VITE_GITHUB_CLIENT_ID?: string
-  readonly VITE_GITHUB_CLIENT_SECRET?: string
   readonly REPO_OWNER?: string
   readonly REPO_NAME?: string
   readonly GITHUB_TOKEN?: string
   readonly GITHUB_OWNER?: string
   readonly GITHUB_REPO?: string
+  readonly VITE_ADMIN_PASSWORD?: string
   readonly DEV?: boolean
   readonly MODE?: string
 }

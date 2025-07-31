@@ -2,23 +2,23 @@
 
 ## 本地开发
 
-1. 创建 `.env` 文件，填入您的GitHub配置信息：
+1. 创建 `.env` 文件，填入您的配置信息：
 ```bash
 # 创建.env文件
 touch .env
 ```
 
-2. 编辑 `.env` 文件，填入您的GitHub配置信息：
+2. 编辑 `.env` 文件，填入您的配置信息：
 ```env
-# GitHub OAuth应用配置（必需）
-VITE_GITHUB_CLIENT_ID=your-github-client-id
-
 # GitHub仓库配置（必需）
 VITE_REPO_OWNER=your-github-username
 VITE_REPO_NAME=your-notes-repository
 
 # GitHub Access Token（可选，用于访问私有仓库）
 VITE_GITHUB_TOKEN=your-github-personal-access-token
+
+# 管理员密码（必需）
+VITE_ADMIN_PASSWORD=your-admin-password
 ```
 
 3. 启动开发服务器：
@@ -39,9 +39,9 @@ npm run dev
 在 Cloudflare Pages 控制台中设置以下环境变量：
 
 #### 必需变量
-- `VITE_GITHUB_CLIENT_ID`: GitHub OAuth应用的Client ID
 - `VITE_REPO_OWNER`: 您的GitHub用户名
 - `VITE_REPO_NAME`: 您的笔记仓库名称
+- `VITE_ADMIN_PASSWORD`: 管理员密码
 
 #### 可选变量
 - `VITE_GITHUB_TOKEN`: GitHub Personal Access Token（用于访问私有仓库）
@@ -52,9 +52,9 @@ npm run dev
 2. 进入 Pages 项目
 3. 点击 "Settings" 标签
 4. 在 "Environment variables" 部分添加变量：
-   - `VITE_GITHUB_CLIENT_ID` = `your-github-client-id`
    - `VITE_REPO_OWNER` = `your-github-username`
    - `VITE_REPO_NAME` = `your-notes-repository`
+   - `VITE_ADMIN_PASSWORD` = `your-admin-password`
    - `VITE_GITHUB_TOKEN` = `your-github-token` (可选)
 
 ### 4. 部署文件
@@ -68,33 +68,19 @@ npm run dev
 
 部署后，您可以将自定义域名指向您的 Cloudflare Pages 应用。
 
-## GitHub OAuth应用配置
+## 管理员身份验证配置
 
-### 1. 创建GitHub OAuth应用
+### 1. 设置管理员密码
 
-1. **访问GitHub开发者设置**
-   - 登录GitHub，访问 [GitHub Developer Settings](https://github.com/settings/developers)
-   - 点击"OAuth Apps" → "New OAuth App"
-
-2. **填写应用信息**
-   ```
-   Application name: SparkLog
-   Homepage URL: https://your-domain.pages.dev
-   Application description: 基于GitHub仓库的静态笔记应用
-   Authorization callback URL: https://your-domain.pages.dev/auth/callback
-   ```
-
-3. **获取Client ID**
-   - 创建完成后，记录下Client ID
-   - 将Client ID配置到环境变量`VITE_GITHUB_CLIENT_ID`中
+在环境变量中设置 `VITE_ADMIN_PASSWORD`，这个密码将用于管理员身份验证。
 
 ### 2. 仓库配置说明
 
 #### 公开仓库
 如果您的笔记仓库是公开的，只需要设置：
-- `VITE_GITHUB_CLIENT_ID`
 - `VITE_REPO_OWNER`
 - `VITE_REPO_NAME`
+- `VITE_ADMIN_PASSWORD`
 
 #### 私有仓库
 如果您的笔记仓库是私有的，还需要设置：
@@ -104,10 +90,10 @@ npm run dev
 
 ### 常见问题
 
-1. **GitHub登录失败**
-   - 确保`VITE_GITHUB_CLIENT_ID`已正确配置
-   - 检查GitHub OAuth应用的回调URL设置
-   - 确认OAuth应用已正确创建
+1. **管理员登录失败**
+   - 确保`VITE_ADMIN_PASSWORD`已正确配置
+   - 检查密码是否正确输入
+   - 确认环境变量已生效
 
 2. **环境变量未生效**
    - 确保变量名以 `VITE_` 开头
@@ -127,4 +113,5 @@ npm run dev
 ```javascript
 console.log('Repo Owner:', import.meta.env.VITE_REPO_OWNER)
 console.log('Repo Name:', import.meta.env.VITE_REPO_NAME)
+console.log('Admin Password Set:', !!import.meta.env.VITE_ADMIN_PASSWORD)
 ``` 

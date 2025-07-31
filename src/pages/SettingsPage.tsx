@@ -1,13 +1,15 @@
 import React, { useState } from 'react'
-import { Github, BookOpen, Settings, ExternalLink, LogOut, LogIn, Info } from 'lucide-react'
+import { Lock, Settings, ExternalLink, LogOut, LogIn, Info, Shield } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig } from '@/config/defaultRepo'
 
 const SettingsPage: React.FC = () => {
-  const { isConnected, disconnect } = useGitHub()
+  const { isConnected, disconnect, authenticate } = useGitHub()
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [showDebugInfo, setShowDebugInfo] = useState(false)
+  const [password, setPassword] = useState('')
+  const [showLoginForm, setShowLoginForm] = useState(false)
 
   // 显示消息提示
   const showMessage = (text: string, type: 'success' | 'error') => {
@@ -21,41 +23,33 @@ const SettingsPage: React.FC = () => {
 
   const handleLogout = () => {
     disconnect()
-    showMessage('已断开GitHub连接', 'success')
+    showMessage('已退出管理员模式', 'success')
   }
 
   const handleLogin = () => {
-    // 重定向到GitHub OAuth授权页面
-    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID
-    
-    console.log('GitHub登录调试信息:', {
-      clientId: clientId,
-      hasClientId: !!clientId,
-      origin: window.location.origin
-    })
-    
-    if (!clientId) {
-      showMessage('GitHub OAuth应用未配置，请联系管理员', 'error')
+    if (!password.trim()) {
+      showMessage('请输入管理员密码', 'error')
       return
     }
-    
-    const redirectUri = `${window.location.origin}/auth/callback`
-    const scope = 'repo'
-    
-    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}`
-    
-    console.log('GitHub授权URL:', authUrl)
-    window.location.href = authUrl
+
+    if (authenticate(password)) {
+      showMessage('登录成功！您现在拥有管理员权限', 'success')
+      setPassword('')
+      setShowLoginForm(false)
+    } else {
+      showMessage('密码错误，请重试', 'error')
+      setPassword('')
+    }
   }
 
   const defaultConfig = getDefaultRepoConfig()
 
   // 环境变量检查
   const envVars = {
-    VITE_GITHUB_CLIENT_ID: import.meta.env.VITE_GITHUB_CLIENT_ID,
     VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
     VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
-    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置'
+    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
+    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
 
   return (
@@ -79,7 +73,7 @@ const SettingsPage: React.FC = () => {
         {/* 欢迎信息 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center mb-4">
-            <BookOpen className="w-6 h-6 text-blue-600 mr-3" />
+            <Shield className="w-6 h-6 text-blue-600 mr-3" />
             <h2 className="text-xl font-semibold text-gray-900">欢迎使用 SparkLog</h2>
           </div>
           
@@ -98,9 +92,9 @@ const SettingsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>连接状态:</span>
+                  <span>管理员状态:</span>
                   <span className={isConnected ? 'text-green-600' : 'text-gray-600'}>
-                    {isConnected ? '已连接' : '未连接'}
+                    {isConnected ? '已登录' : '未登录'}
                   </span>
                 </div>
               </div>
@@ -108,55 +102,90 @@ const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* GitHub连接状态 */}
+        {/* 管理员身份验证 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <Github className="w-6 h-6 text-gray-700 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">GitHub 连接</h2>
+              <Lock className="w-6 h-6 text-gray-700 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">管理员身份验证</h2>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               isConnected 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-gray-100 text-gray-800'
             }`}>
-              {isConnected ? '已连接' : '未连接'}
+              {isConnected ? '已登录' : '未登录'}
             </div>
           </div>
 
           {isConnected ? (
             <div className="space-y-4">
               <p className="text-gray-600">
-                您已连接到GitHub，可以创建、编辑和删除笔记，以及查看私密笔记。
+                您已登录为管理员，可以创建、编辑和删除笔记，以及查看私密笔记。
               </p>
               <button
                 onClick={handleLogout}
                 className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                断开连接
+                退出管理员模式
               </button>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-gray-600">
-                连接GitHub以获得完整功能，包括创建、编辑、删除笔记和查看私密笔记。
+                输入管理员密码以获得完整功能，包括创建、编辑、删除笔记和查看私密笔记。
               </p>
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h3 className="font-semibold text-yellow-900 mb-2">功能说明</h3>
                 <ul className="text-sm text-yellow-800 space-y-1">
-                  <li>• 未连接用户：只能查看公开笔记</li>
-                  <li>• 已连接用户：可以管理所有笔记（公开和私密）</li>
-                  <li>• 私密笔记：只有连接用户才能查看和管理</li>
+                  <li>• 普通用户：只能查看公开笔记</li>
+                  <li>• 管理员：可以管理所有笔记（公开和私密）</li>
+                  <li>• 私密笔记：只有管理员才能查看和管理</li>
                 </ul>
               </div>
-              <button
-                onClick={handleLogin}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                使用GitHub登录
-              </button>
+              
+              {showLoginForm ? (
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                      管理员密码
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                      placeholder="请输入管理员密码"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleLogin}
+                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      登录
+                    </button>
+                    <button
+                      onClick={() => setShowLoginForm(false)}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowLoginForm(true)}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  管理员登录
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -196,15 +225,9 @@ const SettingsPage: React.FC = () => {
                 <h3 className="font-semibold text-gray-900 mb-2">本地存储</h3>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span>GitHub认证:</span>
-                    <span className={localStorage.getItem('sparklog_github_auth') ? 'text-green-600' : 'text-red-600'}>
-                      {localStorage.getItem('sparklog_github_auth') ? '已保存' : '未保存'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>GitHub配置:</span>
-                    <span className={localStorage.getItem('sparklog_github_config') ? 'text-green-600' : 'text-red-600'}>
-                      {localStorage.getItem('sparklog_github_config') ? '已保存' : '未保存'}
+                    <span>管理员认证:</span>
+                    <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600' : 'text-red-600'}>
+                      {localStorage.getItem('sparklog_admin_auth') ? '已保存' : '未保存'}
                     </span>
                   </div>
                 </div>
@@ -233,9 +256,9 @@ const SettingsPage: React.FC = () => {
             <div className="space-y-3">
               <h3 className="font-semibold text-gray-900">私密笔记</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• 只有连接用户可访问</li>
+                <li>• 只有管理员可访问</li>
                 <li>• 适合个人日记和私密内容</li>
-                <li>• 需要GitHub登录</li>
+                <li>• 需要管理员密码登录</li>
               </ul>
             </div>
           </div>
