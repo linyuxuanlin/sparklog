@@ -196,6 +196,15 @@ const NotesPage: React.FC = () => {
                       isPrivate = value === 'true'
                     }
                   }
+                  
+                  // 调试Frontmatter解析
+                  console.log('Frontmatter解析:', {
+                    line,
+                    inFrontmatter,
+                    createdDate,
+                    updatedDate,
+                    isPrivate
+                  })
                 }
                 
                 // 提取标题和内容（跳过Frontmatter）

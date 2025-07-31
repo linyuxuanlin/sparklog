@@ -7,6 +7,11 @@ const Sidebar: React.FC = () => {
   const location = useLocation()
   const { isLoggedIn } = useGitHub()
 
+  console.log('Sidebar调试:', {
+    isLoggedIn: isLoggedIn(),
+    menuItems: isLoggedIn() ? '包含新建笔记' : '不包含新建笔记'
+  })
+
   const menuItems = [
     { icon: BookOpen, label: '所有笔记', path: '/notes' },
     ...(isLoggedIn() ? [{ icon: Plus, label: '新建笔记', path: '/note/new' }] : []),
