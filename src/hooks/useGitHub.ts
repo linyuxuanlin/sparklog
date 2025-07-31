@@ -24,6 +24,11 @@ export const useGitHub = () => {
   useEffect(() => {
     // 检查GitHub连接状态
     const auth = localStorage.getItem('sparklog_github_auth')
+    console.log('useGitHub调试信息:', {
+      hasAuth: !!auth,
+      authData: auth ? JSON.parse(auth) : null
+    })
+    
     if (auth) {
       const authData: GitHubAuth = JSON.parse(auth)
       setIsConnected(authData.connected)
