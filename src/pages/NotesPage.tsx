@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search, Loader2, RefreshCw } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search, Loader2, RefreshCw, Edit, Trash2, Eye } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Note {
   name: string
@@ -24,11 +26,13 @@ interface Note {
 
 const NotesPage: React.FC = () => {
   const { isConnected, isLoading } = useGitHub()
+  const navigate = useNavigate()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
+  const [deletingNote, setDeletingNote] = useState<string | null>(null)
 
   // 显示消息提示
   const showMessage = (text: string, type: 'success' | 'error') => {
@@ -87,79 +91,92 @@ const NotesPage: React.FC = () => {
         file.type === 'file' && file.name.endsWith('.md')
       )
       
-      // 获取每个笔记的详细内容
-      const notesWithContent = await Promise.all(
-        markdownFiles.map(async (file: any) => {
-          try {
-            const contentResponse = await fetch(file.url, {
-              headers: {
-                'Authorization': `token ${authData.accessToken}`,
-                'Accept': 'application/vnd.github.v3+json'
-              }
-            })
-            
-            if (contentResponse.ok) {
-              const contentData = await contentResponse.json()
-              const content = atob(contentData.content) // 解码Base64内容
-              
-                             // 解析笔记标题和内容
-               const lines = content.split('\n')
+             // 获取每个笔记的详细内容（限制并发数量以提高性能）
+       const batchSize = 5 // 每次处理5个笔记
+       const notesWithContent = []
+       
+       for (let i = 0; i < markdownFiles.length; i += batchSize) {
+         const batch = markdownFiles.slice(i, i + batchSize)
+         const batchResults = await Promise.all(
+           batch.map(async (file: any) => {
+             try {
+               const contentResponse = await fetch(file.url, {
+                 headers: {
+                   'Authorization': `token ${authData.accessToken}`,
+                   'Accept': 'application/vnd.github.v3+json'
+                 }
+               })
                
-               // 解析Frontmatter
-               let title = file.name.replace(/\.md$/, '')
-               let contentPreview = ''
-               let inFrontmatter = false
-               let frontmatterEndIndex = -1
-               
-               for (let i = 0; i < lines.length; i++) {
-                 const line = lines[i].trim()
+               if (contentResponse.ok) {
+                 const contentData = await contentResponse.json()
+                 const content = atob(contentData.content) // 解码Base64内容
                  
-                 // 检测Frontmatter开始
-                 if (line === '---' && !inFrontmatter) {
-                   inFrontmatter = true
-                   continue
+                 // 解析笔记标题和内容
+                 const lines = content.split('\n')
+                 
+                 // 解析Frontmatter
+                 let title = file.name.replace(/\.md$/, '')
+                 let contentPreview = ''
+                 let inFrontmatter = false
+                 let frontmatterEndIndex = -1
+                 
+                 for (let i = 0; i < lines.length; i++) {
+                   const line = lines[i].trim()
+                   
+                   // 检测Frontmatter开始
+                   if (line === '---' && !inFrontmatter) {
+                     inFrontmatter = true
+                     continue
+                   }
+                   
+                   // 检测Frontmatter结束
+                   if (line === '---' && inFrontmatter) {
+                     frontmatterEndIndex = i
+                     break
+                   }
                  }
                  
-                 // 检测Frontmatter结束
-                 if (line === '---' && inFrontmatter) {
-                   frontmatterEndIndex = i
-                   break
+                 // 提取标题和内容（跳过Frontmatter）
+                 const contentLines = frontmatterEndIndex >= 0 
+                   ? lines.slice(frontmatterEndIndex + 1) 
+                   : lines
+                 
+                 // 查找第一个标题行
+                 for (const line of contentLines) {
+                   if (line.startsWith('# ')) {
+                     title = line.replace(/^#\s*/, '')
+                     break
+                   }
+                 }
+                 
+                 // 生成内容预览（排除Frontmatter和标题）
+                 const previewLines = contentLines.filter(line => !line.startsWith('# '))
+                 const previewText = previewLines.join('\n').trim()
+                 contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
+                 
+                 return {
+                   ...file,
+                   parsedTitle: title,
+                   contentPreview: contentPreview,
+                   fullContent: content
                  }
                }
                
-               // 提取标题和内容（跳过Frontmatter）
-               const contentLines = frontmatterEndIndex >= 0 
-                 ? lines.slice(frontmatterEndIndex + 1) 
-                 : lines
-               
-               // 查找第一个标题行
-               for (const line of contentLines) {
-                 if (line.startsWith('# ')) {
-                   title = line.replace(/^#\s*/, '')
-                   break
-                 }
-               }
-               
-               // 生成内容预览（排除Frontmatter和标题）
-               const previewLines = contentLines.filter(line => !line.startsWith('# '))
-               const previewText = previewLines.join('\n').trim()
-               contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
-              
-              return {
-                ...file,
-                parsedTitle: title,
-                contentPreview: contentPreview,
-                fullContent: content
-              }
-            }
-            
-            return file
-          } catch (error) {
-            console.error(`获取笔记内容失败: ${file.name}`, error)
-            return file
-          }
-        })
-      )
+               return file
+             } catch (error) {
+               console.error(`获取笔记内容失败: ${file.name}`, error)
+               return file
+             }
+           })
+         )
+         
+         notesWithContent.push(...batchResults)
+         
+         // 更新状态以显示进度
+         if (i + batchSize < markdownFiles.length) {
+           setNotes(notesWithContent)
+         }
+       }
       
       setNotes(notesWithContent)
       setIsLoadingNotes(false)
@@ -177,6 +194,60 @@ const NotesPage: React.FC = () => {
       loadNotes()
     }
   }, [isConnected])
+
+  // 编辑笔记
+  const handleEditNote = (note: Note) => {
+    // 提取笔记标题（去掉.md后缀）
+    const title = note.parsedTitle || note.name.replace(/\.md$/, '')
+    navigate(`/note/edit/${encodeURIComponent(title)}`)
+  }
+
+  // 删除笔记
+  const handleDeleteNote = async (note: Note) => {
+    if (!confirm(`确定要删除笔记"${note.parsedTitle || note.name}"吗？`)) {
+      return
+    }
+
+    setDeletingNote(note.sha)
+    
+    try {
+      const auth = localStorage.getItem('sparklog_github_auth')
+      const selectedRepo = localStorage.getItem('sparklog_selected_repo')
+      
+      if (!auth || !selectedRepo) {
+        throw new Error('未找到授权信息或仓库信息')
+      }
+      
+      const authData = JSON.parse(auth)
+      
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${note.path}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `删除笔记: ${note.parsedTitle || note.name}`,
+          sha: note.sha
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`删除失败: ${errorData.message || response.statusText}`)
+      }
+      
+      // 从列表中移除笔记
+      setNotes(prev => prev.filter(n => n.sha !== note.sha))
+      showMessage('笔记删除成功！', 'success')
+    } catch (error) {
+      console.error('删除笔记失败:', error)
+      showMessage(`删除失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
+    } finally {
+      setDeletingNote(null)
+    }
+  }
 
   // 过滤笔记
   const filteredNotes = notes.filter(note => {
@@ -345,12 +416,26 @@ const NotesPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* 显示内容预览 */}
-                    {note.contentPreview && (
-                      <p className="text-gray-600 mb-3 line-clamp-3">
-                        {note.contentPreview}
-                      </p>
-                    )}
+                                         {/* 显示内容预览 */}
+                     {note.contentPreview && (
+                       <div className="text-gray-600 mb-3 line-clamp-3 prose prose-sm max-w-none">
+                         <ReactMarkdown 
+                           remarkPlugins={[remarkGfm]}
+                           components={{
+                             p: ({ children }) => <span className="text-gray-600">{children}</span>,
+                             h1: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
+                             h2: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
+                             h3: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
+                             strong: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
+                             em: ({ children }) => <span className="text-gray-600 italic">{children}</span>,
+                             code: ({ children }) => <code className="bg-gray-100 px-1 rounded text-sm">{children}</code>,
+                             pre: ({ children }) => <span className="text-gray-600">{children}</span>
+                           }}
+                         >
+                           {note.contentPreview}
+                         </ReactMarkdown>
+                       </div>
+                     )}
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <div className="flex items-center">
@@ -366,16 +451,36 @@ const NotesPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <a
-                      href={note.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      在GitHub查看
-                    </a>
-                  </div>
+                                     <div className="flex items-center space-x-2">
+                     <button
+                       onClick={() => handleEditNote(note)}
+                       className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
+                       title="编辑笔记"
+                     >
+                       <Edit className="w-4 h-4" />
+                     </button>
+                     <button
+                       onClick={() => handleDeleteNote(note)}
+                       disabled={deletingNote === note.sha}
+                       className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                       title="删除笔记"
+                     >
+                       {deletingNote === note.sha ? (
+                         <Loader2 className="w-4 h-4 animate-spin" />
+                       ) : (
+                         <Trash2 className="w-4 h-4" />
+                       )}
+                     </button>
+                     <a
+                       href={note.html_url}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
+                       title="在GitHub查看"
+                     >
+                       <Eye className="w-4 h-4" />
+                     </a>
+                   </div>
                 </div>
               </div>
             )

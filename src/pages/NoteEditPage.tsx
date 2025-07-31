@@ -1,20 +1,125 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Github, Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 const NoteEditPage: React.FC = () => {
-  const { id } = useParams()
+  const { id, title } = useParams()
   const navigate = useNavigate()
-  const { isConnected, isLoading } = useGitHub()
+  const { isConnected, isLoading: isGitHubLoading } = useGitHub()
   const isNewNote = id === 'new'
+  const isEditMode = title !== undefined
   
-  const [title, setTitle] = useState('')
+  const [noteTitle, setNoteTitle] = useState('')
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
+
+  // 加载现有笔记
+  useEffect(() => {
+    if (isEditMode && title) {
+      loadExistingNote(decodeURIComponent(title))
+    }
+  }, [isEditMode, title])
+
+  const loadExistingNote = async (noteTitle: string) => {
+    setIsLoading(true)
+    
+    try {
+      const auth = localStorage.getItem('sparklog_github_auth')
+      const selectedRepo = localStorage.getItem('sparklog_selected_repo')
+      
+      if (!auth || !selectedRepo) {
+        throw new Error('未找到授权信息或仓库信息')
+      }
+      
+      const authData = JSON.parse(auth)
+      
+      // 查找笔记文件
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes`, {
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('无法获取笔记列表')
+      }
+      
+      const files = await response.json()
+      const noteFile = files.find((file: any) => 
+        file.name.endsWith('.md') && 
+        (file.name.replace(/\.md$/, '') === noteTitle || 
+         file.name.includes(noteTitle))
+      )
+      
+      if (!noteFile) {
+        throw new Error('未找到笔记文件')
+      }
+      
+      // 获取笔记内容
+      const contentResponse = await fetch(noteFile.url, {
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+      
+      if (!contentResponse.ok) {
+        throw new Error('无法获取笔记内容')
+      }
+      
+      const contentData = await contentResponse.json()
+      const fullContent = atob(contentData.content)
+      
+      // 解析笔记内容
+      const lines = fullContent.split('\n')
+      let inFrontmatter = false
+      let frontmatterEndIndex = -1
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (line === '---' && !inFrontmatter) {
+          inFrontmatter = true
+          continue
+        }
+        if (line === '---' && inFrontmatter) {
+          frontmatterEndIndex = i
+          break
+        }
+      }
+      
+      // 提取标题和内容
+      const contentLines = frontmatterEndIndex >= 0 
+        ? lines.slice(frontmatterEndIndex + 1) 
+        : lines
+      
+      let extractedTitle = noteTitle
+      let extractedContent = contentLines.join('\n')
+      
+      // 查找标题行
+      for (const line of contentLines) {
+        if (line.startsWith('# ')) {
+          extractedTitle = line.replace(/^#\s*/, '')
+          extractedContent = contentLines.slice(contentLines.indexOf(line) + 1).join('\n')
+          break
+        }
+      }
+      
+      setNoteTitle(extractedTitle)
+      setContent(extractedContent.trim())
+      
+    } catch (error) {
+      console.error('加载笔记失败:', error)
+      showMessage(`加载笔记失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleCancel = () => {
     navigate('/')
@@ -31,7 +136,7 @@ const NoteEditPage: React.FC = () => {
   }
 
   const handleSave = async () => {
-    if (!title.trim()) {
+    if (!noteTitle.trim()) {
       showMessage('请输入笔记标题', 'error')
       return
     }
@@ -60,7 +165,7 @@ const NoteEditPage: React.FC = () => {
       const authData = JSON.parse(auth)
       
       // 创建笔记文件名
-      const fileName = `${title.trim().replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-')}.md`
+      const fileName = `${noteTitle.trim().replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-')}.md`
       const filePath = `notes/${fileName}`
       
       // 创建笔记内容
@@ -70,7 +175,7 @@ updated_at: ${new Date().toISOString()}
 private: ${isPrivate}
 ---
 
-# ${title.trim()}
+# ${noteTitle.trim()}
 
 ${content.trim()}
 `
@@ -84,7 +189,7 @@ ${content.trim()}
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `${isNewNote ? '创建' : '更新'}笔记: ${title.trim()}`,
+          message: `${isNewNote ? '创建' : '更新'}笔记: ${noteTitle.trim()}`,
           content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
           branch: 'main'
         })
@@ -108,7 +213,7 @@ ${content.trim()}
   }
 
   // 如果正在加载，显示加载状态
-  if (isLoading) {
+  if (isGitHubLoading) {
     return (
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
@@ -183,83 +288,90 @@ ${content.trim()}
       </div>
 
       <div className="card p-6">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              标题
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="输入笔记标题..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">加载笔记中...</p>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              内容
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="开始编写你的笔记..."
-              rows={20}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center cursor-pointer group">
-                <div className="relative">
-                  <input 
-                    type="checkbox" 
-                    className="sr-only peer"
-                    checked={isPrivate}
-                    onChange={(e) => setIsPrivate(e.target.checked)}
-                  />
-                  <div className="w-5 h-5 bg-gray-200 border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 transition-colors group-hover:bg-gray-100 peer-checked:group-hover:bg-blue-700">
-                    <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
-                  设为私密笔记
-                </span>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                标题
               </label>
+              <input
+                type="text"
+                value={noteTitle}
+                onChange={(e) => setNoteTitle(e.target.value)}
+                placeholder="输入笔记标题..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
 
-            <div className="flex space-x-3">
-              <button 
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                取消
-              </button>
-              <button 
-                onClick={handleSave}
-                disabled={isSaving || !title.trim() || !content.trim()}
-                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    保存中...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    保存笔记
-                  </>
-                )}
-              </button>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                内容
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="开始编写你的笔记..."
+                rows={20}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center cursor-pointer group">
+                  <div className="relative">
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer"
+                      checked={isPrivate}
+                      onChange={(e) => setIsPrivate(e.target.checked)}
+                    />
+                    <div className="w-5 h-5 bg-gray-200 border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 transition-colors group-hover:bg-gray-100 peer-checked:group-hover:bg-blue-700">
+                      <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                    设为私密笔记
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex space-x-3">
+                <button 
+                  onClick={handleCancel}
+                  disabled={isSaving}
+                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  取消
+                </button>
+                <button 
+                  onClick={handleSave}
+                  disabled={isSaving || isLoading || !noteTitle.trim() || !content.trim()}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      保存中...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      保存笔记
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

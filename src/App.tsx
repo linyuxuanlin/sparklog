@@ -15,6 +15,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="notes" element={<NotesPage />} />
           <Route path="note/new" element={<NoteEditPage />} />
+          <Route path="note/edit/:title" element={<NoteEditPage />} />
           <Route path="note/:id" element={<NoteEditPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
