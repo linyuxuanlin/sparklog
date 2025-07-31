@@ -44,7 +44,7 @@ const NotesPage: React.FC = () => {
     setTimeout(() => {
       setMessage('')
       setMessageType('')
-    }, 5000)
+    }, 2000) // 缩短到2秒
   }
 
   // 从GitHub仓库加载笔记
@@ -273,9 +273,15 @@ const NotesPage: React.FC = () => {
 
   // 过滤笔记
   const filteredNotes = notes.filter(note => {
-    const searchLower = searchQuery.toLowerCase()
-    const titleMatch = (note.parsedTitle || note.name).toLowerCase().includes(searchLower)
-    const contentMatch = note.contentPreview?.toLowerCase().includes(searchLower) || false
+    if (!searchQuery.trim()) return true
+    
+    const searchLower = searchQuery.toLowerCase().trim()
+    const title = (note.parsedTitle || note.name).toLowerCase()
+    const content = note.contentPreview?.toLowerCase() || ''
+    
+    const titleMatch = title.includes(searchLower)
+    const contentMatch = content.includes(searchLower)
+    
     return titleMatch || contentMatch
   })
 
@@ -338,12 +344,12 @@ const NotesPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* 消息提示 */}
+      {/* 覆盖式消息提示 */}
       {message && (
-        <div className={`mb-4 p-4 rounded-lg ${
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
           messageType === 'success' 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
+            ? 'bg-green-50 text-green-800 border-green-200' 
+            : 'bg-red-50 text-red-800 border-red-200'
         }`}>
           <div className="flex items-center">
             <div className={`w-4 h-4 rounded-full mr-3 ${
@@ -379,19 +385,24 @@ const NotesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 搜索栏 */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="搜索笔记..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-      </div>
+             {/* 搜索栏 */}
+       <div className="mb-6">
+         <div className="relative max-w-md">
+           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+           <input
+             type="text"
+             placeholder="搜索笔记..."
+             value={searchQuery}
+             onChange={(e) => setSearchQuery(e.target.value)}
+             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+           />
+         </div>
+         {searchQuery && (
+           <div className="mt-2 text-sm text-gray-500">
+             搜索: "{searchQuery}" - 找到 {filteredNotes.length} 个笔记
+           </div>
+         )}
+       </div>
 
       {isLoadingNotes ? (
         <div className="text-center py-12">
