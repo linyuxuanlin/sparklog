@@ -1,5 +1,5 @@
 import React from 'react'
-import { Globe, Calendar, Tag, Edit, Trash2, Github, Check, X, Loader2 } from 'lucide-react'
+import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2 } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 
 interface Note {
@@ -70,11 +70,19 @@ const NoteCard: React.FC<NoteCardProps> = ({
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <div className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
-              <span>{note.createdDate ? new Date(note.createdDate).toLocaleDateString() : '未知日期'}</span>
-            </div>
-            <div className="flex items-center">
-              <Tag className="w-4 h-4 mr-1" />
-              <span>Markdown</span>
+              <span>
+                {note.createdDate ? 
+                  (() => {
+                    try {
+                      const date = new Date(note.createdDate)
+                      return isNaN(date.getTime()) ? '未知日期' : date.toLocaleDateString()
+                    } catch {
+                      return '未知日期'
+                    }
+                  })() 
+                  : '未知日期'
+                }
+              </span>
             </div>
             <div className="flex items-center space-x-1">
               {note.isPrivate ? (

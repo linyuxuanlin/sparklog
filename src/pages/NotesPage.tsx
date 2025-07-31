@@ -94,114 +94,127 @@ const NotesPage: React.FC = () => {
         file.type === 'file' && file.name.endsWith('.md')
       )
       
-             // 获取每个笔记的详细内容（限制并发数量以提高性能）
-       const batchSize = 5 // 每次处理5个笔记
-       const notesWithContent = []
-       
-       for (let i = 0; i < markdownFiles.length; i += batchSize) {
-         const batch = markdownFiles.slice(i, i + batchSize)
-         const batchResults = await Promise.all(
-           batch.map(async (file: any) => {
-             try {
-               const contentResponse = await fetch(file.url, {
-                 headers: {
-                   'Authorization': `token ${authData.accessToken}`,
-                   'Accept': 'application/vnd.github.v3+json'
-                 }
-               })
-               
-               if (contentResponse.ok) {
-                 const contentData = await contentResponse.json()
-                 const content = atob(contentData.content) // 解码Base64内容
-                 
-                 // 解析笔记标题和内容
-                 const lines = content.split('\n')
-                 
-                                   // 解析Frontmatter
-                  let title = file.name.replace(/\.md$/, '')
-                  let contentPreview = ''
-                  let createdDate = ''
-                  let updatedDate = ''
-                  let isPrivate = false
-                  let inFrontmatter = false
-                  let frontmatterEndIndex = -1
-                  
-                  for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i].trim()
-                    
-                    // 检测Frontmatter开始
-                    if (line === '---' && !inFrontmatter) {
-                      inFrontmatter = true
-                      continue
-                    }
-                    
-                    // 检测Frontmatter结束
-                    if (line === '---' && inFrontmatter) {
-                      frontmatterEndIndex = i
-                      break
-                    }
-                    
-                    // 解析Frontmatter内容
-                    if (inFrontmatter && line.includes(':')) {
-                      const [key, value] = line.split(':').map(s => s.trim())
-                      if (key === 'created_at') {
-                        createdDate = value
-                      } else if (key === 'updated_at') {
-                        updatedDate = value
-                      } else if (key === 'private') {
-                        isPrivate = value === 'true'
-                      }
-                    }
-                  }
-                  
-                  // 提取标题和内容（跳过Frontmatter）
-                  const contentLines = frontmatterEndIndex >= 0 
-                    ? lines.slice(frontmatterEndIndex + 1) 
-                    : lines
-                  
-                  // 查找第一个标题行
-                  for (const line of contentLines) {
-                    if (line.startsWith('# ')) {
-                      title = line.replace(/^#\s*/, '')
-                      break
-                    }
-                  }
-                  
-                  // 生成内容预览（排除Frontmatter和标题）
-                  const previewLines = contentLines.filter(line => !line.startsWith('# '))
-                  const previewText = previewLines.join('\n').trim()
-                  contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
-                  
-                  return {
-                    ...file,
-                    parsedTitle: title,
-                    contentPreview: contentPreview,
-                    fullContent: content,
-                    createdDate,
-                    updatedDate,
-                    isPrivate
-                  }
-               }
-               
-               return file
-             } catch (error) {
-               console.error(`获取笔记内容失败: ${file.name}`, error)
-               return file
-             }
-           })
-         )
-         
-         notesWithContent.push(...batchResults)
-         
-         // 更新状态以显示进度
-         if (i + batchSize < markdownFiles.length) {
-           setNotes(notesWithContent)
-         }
-       }
+      // 获取每个笔记的详细内容（限制并发数量以提高性能）
+      const batchSize = 5 // 每次处理5个笔记
+      const notesWithContent = []
       
-      setNotes(notesWithContent)
+      for (let i = 0; i < markdownFiles.length; i += batchSize) {
+        const batch = markdownFiles.slice(i, i + batchSize)
+        const batchResults = await Promise.all(
+          batch.map(async (file: any) => {
+            try {
+              const contentResponse = await fetch(file.url, {
+                headers: {
+                  'Authorization': `token ${authData.accessToken}`,
+                  'Accept': 'application/vnd.github.v3+json'
+                }
+              })
+              
+              if (contentResponse.ok) {
+                const contentData = await contentResponse.json()
+                const content = atob(contentData.content) // 解码Base64内容
+                
+                // 解析笔记标题和内容
+                const lines = content.split('\n')
+                
+                // 解析Frontmatter
+                let title = file.name.replace(/\.md$/, '')
+                let contentPreview = ''
+                let createdDate = ''
+                let updatedDate = ''
+                let isPrivate = false
+                let inFrontmatter = false
+                let frontmatterEndIndex = -1
+                
+                for (let i = 0; i < lines.length; i++) {
+                  const line = lines[i].trim()
+                  
+                  // 检测Frontmatter开始
+                  if (line === '---' && !inFrontmatter) {
+                    inFrontmatter = true
+                    continue
+                  }
+                  
+                  // 检测Frontmatter结束
+                  if (line === '---' && inFrontmatter) {
+                    frontmatterEndIndex = i
+                    break
+                  }
+                  
+                  // 解析Frontmatter内容
+                  if (inFrontmatter && line.includes(':')) {
+                    const [key, value] = line.split(':').map(s => s.trim())
+                    if (key === 'created_at') {
+                      createdDate = value.replace(/"/g, '').trim() // 移除引号
+                    } else if (key === 'updated_at') {
+                      updatedDate = value.replace(/"/g, '').trim() // 移除引号
+                    } else if (key === 'private') {
+                      isPrivate = value === 'true'
+                    }
+                  }
+                }
+                
+                // 提取标题和内容（跳过Frontmatter）
+                const contentLines = frontmatterEndIndex >= 0 
+                  ? lines.slice(frontmatterEndIndex + 1) 
+                  : lines
+                
+                // 查找第一个标题行
+                for (const line of contentLines) {
+                  if (line.startsWith('# ')) {
+                    title = line.replace(/^#\s*/, '')
+                    break
+                  }
+                }
+                
+                // 生成内容预览（排除Frontmatter和标题）
+                const previewLines = contentLines.filter(line => !line.startsWith('# '))
+                const previewText = previewLines.join('\n').trim()
+                contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
+                
+                return {
+                  ...file,
+                  parsedTitle: title,
+                  contentPreview: contentPreview,
+                  fullContent: content,
+                  createdDate,
+                  updatedDate,
+                  isPrivate
+                }
+              }
+              
+              return file
+            } catch (error) {
+              console.error(`获取笔记内容失败: ${file.name}`, error)
+              return file
+            }
+          })
+        )
+        
+        notesWithContent.push(...batchResults)
+        
+        // 更新状态以显示进度
+        if (i + batchSize < markdownFiles.length) {
+          setNotes(notesWithContent)
+        }
+      }
+      
+      // 过滤私密笔记 - 只显示用户有权限查看的笔记
+      // 注意：这里假设用户只能看到自己的笔记，私密笔记仍然可见
+      // 如果需要真正的私密控制，需要额外的权限验证逻辑
+      const visibleNotes = notesWithContent.filter(note => {
+        // 如果笔记标记为私密，检查用户是否有权限查看
+        if (note.isPrivate) {
+          // 这里可以添加更复杂的权限检查逻辑
+          // 目前简单返回true，因为用户已经通过GitHub认证
+          return true
+        }
+        return true // 公开笔记总是可见
+      })
+      
+      setNotes(visibleNotes)
       setIsLoadingNotes(false)
-      showMessage(`成功加载 ${notesWithContent.length} 个笔记`, 'success')
+      showMessage(`成功加载 ${visibleNotes.length} 个笔记`, 'success')
     } catch (error) {
       console.error('加载笔记失败:', error)
       showMessage(`加载笔记失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')

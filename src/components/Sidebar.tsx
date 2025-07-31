@@ -1,12 +1,15 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Plus, Home, Settings, BookOpen } from 'lucide-react'
+import { useGitHub } from '@/hooks/useGitHub'
 
 const Sidebar: React.FC = () => {
   const location = useLocation()
+  const { isConnected } = useGitHub()
 
   const menuItems = [
-    { icon: Home, label: '首页', path: '/' },
+    // 只有在未连接GitHub时才显示首页
+    ...(isConnected ? [] : [{ icon: Home, label: '首页', path: '/' }]),
     { icon: Plus, label: '新建笔记', path: '/note/new' },
     { icon: BookOpen, label: '所有笔记', path: '/notes' },
     { icon: Settings, label: '设置', path: '/settings' },
