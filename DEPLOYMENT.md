@@ -2,9 +2,10 @@
 
 ## 本地开发
 
-1. 复制环境变量示例文件：
+1. 创建 `.env` 文件，填入您的GitHub仓库信息：
 ```bash
-cp env.example .env
+# 创建.env文件
+touch .env
 ```
 
 2. 编辑 `.env` 文件，填入您的GitHub仓库信息：

@@ -1,22 +1,21 @@
 # SparkLog 妙想
 
-一个基于GitHub仓库的静态笔记应用，灵感来源于Memos，但采用完全不同的架构设计。
+一个基于GitHub仓库的静态笔记应用，支持公开笔记分享。
 
 ## 🌟 项目特点
 
-- **纯静态部署**: 可托管在Cloudflare Pages、GitHub Pages等静态托管平台
-- **GitHub仓库存储**: 所有笔记数据存储在私有GitHub仓库中
+- **纯静态部署**: 可托管在Cloudflare Pages等静态托管平台
+- **GitHub仓库存储**: 所有笔记数据存储在GitHub仓库中
 - **实时编辑**: 在网页上直接创建、编辑笔记
 - **权限控制**: 支持笔记公开/私密设置
-- **多媒体支持**: 支持图片上传，自动创建assets目录
-- **现代化UI**: 参考Memos的简洁美观界面设计
+- **公开分享**: 未连接用户也能查看公开笔记
+- **现代化UI**: 简洁美观的界面设计
 
 ## 🚀 快速开始
 
 ### 环境要求
 - Node.js 18+
 - npm/yarn/pnpm
-- GitHub账号
 
 ### 本地开发
 ```bash
@@ -27,77 +26,37 @@ cd sparklog
 # 安装依赖
 npm install
 
+# 创建环境变量文件
+touch .env
+
+# 编辑.env文件，配置GitHub仓库信息
+# VITE_REPO_OWNER=your-github-username
+# VITE_REPO_NAME=your-notes-repository
+# VITE_GITHUB_TOKEN=your-github-token
+
 # 启动开发服务器
 npm run dev
 ```
 
 ### 部署到Cloudflare Pages
 
-#### 准备工作
+详细部署指南请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-1. **Fork此仓库**
-   - 访问 [SparkLog GitHub仓库](https://github.com/your-username/sparklog)
-   - 点击右上角的"Fork"按钮
-   - 将仓库Fork到你的GitHub账号下
+## 📝 环境变量配置
 
-2. **克隆Fork的仓库**
-   ```bash
-   # 克隆你Fork的仓库
-   git clone https://github.com/your-username/sparklog.git
-   cd sparklog
-   
-   # 添加原仓库作为上游仓库（可选，用于同步更新）
-   git remote add upstream https://github.com/original-username/sparklog.git
-   ```
+| 变量名 | 说明 | 必需 |
+|--------|------|------|
+| `VITE_REPO_OWNER` | GitHub用户名 | ✅ |
+| `VITE_REPO_NAME` | 仓库名称 | ✅ |
+| `VITE_GITHUB_TOKEN` | GitHub Token | ❌ |
 
-3. **配置环境变量**
-   - 复制环境变量模板文件
-   ```bash
-   cp .env.example .env.local
-   ```
-   - 编辑`.env.local`文件，配置你的GitHub OAuth应用信息
+## 🎯 功能特性
 
-#### 通过GitHub仓库部署
-
-1. **登录Cloudflare Dashboard**
-   - 访问 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-   - 登录你的Cloudflare账号
-
-2. **创建Pages项目**
-   - 在Dashboard中点击"Pages"
-   - 点击"Create a project"
-   - 选择"Connect to Git"选项
-
-3. **连接GitHub仓库**
-   - 选择GitHub作为代码源
-   - 授权Cloudflare访问你的GitHub账号
-   - 选择你Fork的SparkLog仓库（如`your-username/sparklog`）
-
-4. **配置构建设置**
-   ```
-   Framework preset: None
-   Build command: npm run build
-   Build output directory: dist
-   Root directory: /
-   ```
-
-5. **配置环境变量**
-   - 在项目设置中添加以下环境变量：
-     ```
-     VITE_GITHUB_CLIENT_ID=your_github_client_id
-     VITE_GITHUB_CLIENT_SECRET=your_github_client_secret
-     VITE_APP_URL=https://your-project-name.pages.dev
-     ```
-
-6. **部署完成**
-   - 点击"Save and Deploy"
-   - 等待构建和部署完成
-   - 你的应用将在 `https://your-project-name.pages.dev` 上线
-
-#### 自动部署
-
-- 每次向GitHub仓库推送代码时，Cloudflare Pages会自动重新构建和部署
-- 支持预览部署：Pull Request会创建预览版本
+- **公开笔记分享**: 任何人都可以查看公开笔记
+- **私密笔记保护**: 只有连接GitHub的用户才能管理私密笔记
+- **实时编辑**: 支持Markdown格式的笔记编辑
+- **搜索功能**: 快速搜索笔记标题和内容
+- **响应式设计**: 支持桌面和移动设备
 - 支持回滚：可以快速回滚到之前的版本
 
 ### 连接GitHub配置

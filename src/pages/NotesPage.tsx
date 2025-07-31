@@ -83,6 +83,13 @@ const NotesPage: React.FC = () => {
           username: defaultConfig.owner,
           accessToken: getDefaultGitHubToken() // 使用环境变量中的token
         }
+        
+        // 调试信息
+        console.log('未连接用户配置:', {
+          owner: defaultConfig.owner,
+          repo: defaultConfig.repo,
+          hasToken: !!authData.accessToken
+        })
       }
       
       // 调用GitHub API获取notes目录下的文件
@@ -90,7 +97,8 @@ const NotesPage: React.FC = () => {
         'Accept': 'application/vnd.github.v3+json'
       }
       
-      if (isConnected && authData.accessToken) {
+      // 如果有accessToken，无论是连接用户还是默认配置，都添加Authorization头
+      if (authData.accessToken) {
         headers['Authorization'] = `token ${authData.accessToken}`
       }
       
@@ -129,7 +137,8 @@ const NotesPage: React.FC = () => {
                 'Accept': 'application/vnd.github.v3+json'
               }
               
-              if (isConnected && authData.accessToken) {
+              // 如果有accessToken，无论是连接用户还是默认配置，都添加Authorization头
+              if (authData.accessToken) {
                 contentHeaders['Authorization'] = `token ${authData.accessToken}`
               }
               
