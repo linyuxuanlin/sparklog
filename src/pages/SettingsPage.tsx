@@ -52,6 +52,15 @@ const SettingsPage: React.FC = () => {
     VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
 
+  // 调试信息
+  console.log('环境变量调试信息:', {
+    VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
+    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
+    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
+    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置',
+    defaultConfig: getDefaultRepoConfig()
+  })
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
