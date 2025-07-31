@@ -277,14 +277,30 @@ const NotesPage: React.FC = () => {
     setDeletingNote(note.sha)
     
     try {
-      const auth = localStorage.getItem('sparklog_github_auth')
-      const selectedRepo = localStorage.getItem('sparklog_selected_repo')
-      
-      if (!auth || !selectedRepo) {
-        throw new Error('未找到授权信息或仓库信息')
+      // 获取默认仓库配置
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库')
       }
       
-      const authData = JSON.parse(auth)
+      let authData: any = null
+      let selectedRepo: string | null = null
+      
+      // 基础配置使用环境变量
+      authData = {
+        username: defaultConfig.owner,
+        accessToken: getDefaultGitHubToken()
+      }
+      selectedRepo = defaultConfig.repo
+      
+      // 如果是管理员且已登录，使用GitHub Token
+      if (isLoggedIn()) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData.accessToken = adminToken
+          console.log('管理员模式，使用GitHub Token删除笔记')
+        }
+      }
       
       const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${note.path}`, {
         method: 'DELETE',

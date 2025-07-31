@@ -54,6 +54,11 @@ export const useGitHub = () => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
+    // 强制触发重新渲染
+    setTimeout(() => {
+      setIsConnected(false)
+      setIsOwner(false)
+    }, 0)
   }
 
   // 检查是否有管理权限（已认证的管理员）
