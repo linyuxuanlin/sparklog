@@ -37,15 +37,7 @@ const NoteEditPage: React.FC = () => {
 
   // 加载现有笔记
   useEffect(() => {
-    console.log('编辑笔记useEffect调试:', {
-      isEditMode,
-      title,
-      isLoggedIn: isLoggedIn(),
-      shouldLoad: isEditMode && title && isLoggedIn()
-    })
-    
     if (isEditMode && title && isLoggedIn()) {
-      console.log('开始加载笔记:', decodeURIComponent(title))
       loadExistingNote(decodeURIComponent(title))
     }
   }, [isEditMode, title, isLoggedIn])
@@ -83,7 +75,6 @@ const NoteEditPage: React.FC = () => {
   }
 
   const loadExistingNote = async (noteTitle: string) => {
-    console.log('loadExistingNote开始:', noteTitle)
     setIsLoading(true)
     
     try {
@@ -102,13 +93,6 @@ const NoteEditPage: React.FC = () => {
         accessToken: getDefaultGitHubToken()
       }
       selectedRepo = defaultConfig.repo
-      
-      console.log('loadExistingNote配置:', {
-        noteTitle,
-        defaultConfig,
-        authData,
-        selectedRepo
-      })
       
       // 如果是管理员且已登录，使用GitHub Token
       if (isLoggedIn()) {
@@ -132,19 +116,11 @@ const NoteEditPage: React.FC = () => {
       }
       
       const files = await response.json()
-      console.log('获取到的文件列表:', files.map((f: any) => f.name))
-      
       const noteFile = files.find((file: any) => 
         file.name.endsWith('.md') && 
         (file.name.replace(/\.md$/, '') === noteTitle || 
          file.name.includes(noteTitle))
       )
-      
-      console.log('查找笔记文件结果:', {
-        noteTitle,
-        foundFile: noteFile,
-        searchPattern: noteTitle
-      })
       
       if (!noteFile) {
         throw new Error('未找到笔记文件')
