@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search, Loader2, RefreshCw, Edit, Trash2, Eye } from 'lucide-react'
+import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search, Loader2, RefreshCw, Edit, Trash2, Check, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -22,6 +22,9 @@ interface Note {
   parsedTitle?: string
   contentPreview?: string
   fullContent?: string
+  createdDate?: string
+  updatedDate?: string
+  isPrivate?: boolean
 }
 
 const NotesPage: React.FC = () => {
@@ -33,6 +36,7 @@ const NotesPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
 
   // 显示消息提示
   const showMessage = (text: string, type: 'success' | 'error') => {
@@ -114,52 +118,70 @@ const NotesPage: React.FC = () => {
                  // 解析笔记标题和内容
                  const lines = content.split('\n')
                  
-                 // 解析Frontmatter
-                 let title = file.name.replace(/\.md$/, '')
-                 let contentPreview = ''
-                 let inFrontmatter = false
-                 let frontmatterEndIndex = -1
-                 
-                 for (let i = 0; i < lines.length; i++) {
-                   const line = lines[i].trim()
-                   
-                   // 检测Frontmatter开始
-                   if (line === '---' && !inFrontmatter) {
-                     inFrontmatter = true
-                     continue
-                   }
-                   
-                   // 检测Frontmatter结束
-                   if (line === '---' && inFrontmatter) {
-                     frontmatterEndIndex = i
-                     break
-                   }
-                 }
-                 
-                 // 提取标题和内容（跳过Frontmatter）
-                 const contentLines = frontmatterEndIndex >= 0 
-                   ? lines.slice(frontmatterEndIndex + 1) 
-                   : lines
-                 
-                 // 查找第一个标题行
-                 for (const line of contentLines) {
-                   if (line.startsWith('# ')) {
-                     title = line.replace(/^#\s*/, '')
-                     break
-                   }
-                 }
-                 
-                 // 生成内容预览（排除Frontmatter和标题）
-                 const previewLines = contentLines.filter(line => !line.startsWith('# '))
-                 const previewText = previewLines.join('\n').trim()
-                 contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
-                 
-                 return {
-                   ...file,
-                   parsedTitle: title,
-                   contentPreview: contentPreview,
-                   fullContent: content
-                 }
+                                   // 解析Frontmatter
+                  let title = file.name.replace(/\.md$/, '')
+                  let contentPreview = ''
+                  let createdDate = ''
+                  let updatedDate = ''
+                  let isPrivate = false
+                  let inFrontmatter = false
+                  let frontmatterEndIndex = -1
+                  
+                  for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim()
+                    
+                    // 检测Frontmatter开始
+                    if (line === '---' && !inFrontmatter) {
+                      inFrontmatter = true
+                      continue
+                    }
+                    
+                    // 检测Frontmatter结束
+                    if (line === '---' && inFrontmatter) {
+                      frontmatterEndIndex = i
+                      break
+                    }
+                    
+                    // 解析Frontmatter内容
+                    if (inFrontmatter && line.includes(':')) {
+                      const [key, value] = line.split(':').map(s => s.trim())
+                      if (key === 'created_at') {
+                        createdDate = value
+                      } else if (key === 'updated_at') {
+                        updatedDate = value
+                      } else if (key === 'private') {
+                        isPrivate = value === 'true'
+                      }
+                    }
+                  }
+                  
+                  // 提取标题和内容（跳过Frontmatter）
+                  const contentLines = frontmatterEndIndex >= 0 
+                    ? lines.slice(frontmatterEndIndex + 1) 
+                    : lines
+                  
+                  // 查找第一个标题行
+                  for (const line of contentLines) {
+                    if (line.startsWith('# ')) {
+                      title = line.replace(/^#\s*/, '')
+                      break
+                    }
+                  }
+                  
+                  // 生成内容预览（排除Frontmatter和标题）
+                  const previewLines = contentLines.filter(line => !line.startsWith('# '))
+                  const previewText = previewLines.join('\n').trim()
+                  contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
+                  
+                  return {
+                    ...file,
+                    parsedTitle: title,
+                    contentPreview: contentPreview,
+                    fullContent: content,
+                    createdDate,
+                    updatedDate,
+                    isPrivate
+                  }
                }
                
                return file
@@ -204,10 +226,11 @@ const NotesPage: React.FC = () => {
 
   // 删除笔记
   const handleDeleteNote = async (note: Note) => {
-    if (!confirm(`确定要删除笔记"${note.parsedTitle || note.name}"吗？`)) {
-      return
-    }
+    setConfirmingDelete(note.sha)
+  }
 
+  const confirmDelete = async (note: Note) => {
+    setConfirmingDelete(null)
     setDeletingNote(note.sha)
     
     try {
@@ -395,28 +418,21 @@ const NotesPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredNotes.map((note) => {
-            // 使用解析的标题或文件名
-            const title = note.parsedTitle || note.name.replace(/\.md$/, '')
-            // 从文件名提取日期（如果有日期格式）
-            const dateMatch = note.name.match(/(\d{4}-\d{2}-\d{2})/)
-            const date = dateMatch ? dateMatch[1] : '未知日期'
+                     {filteredNotes.map((note) => {
+             // 使用解析的标题或文件名
+             const title = note.parsedTitle || note.name.replace(/\.md$/, '')
             
-            return (
-              <div key={note.sha} className="card p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 mr-3">
-                        {title}
-                      </h3>
-                      <div className="flex items-center space-x-2">
-                        <Globe className="w-4 h-4 text-green-600" />
-                        <span className="text-xs text-green-600">公开</span>
-                      </div>
-                    </div>
-                    
-                                         {/* 显示内容预览 */}
+                         return (
+               <div key={note.sha} className="card p-6 hover:shadow-md transition-shadow">
+                 <div className="flex items-start justify-between">
+                   <div className="flex-1">
+                     <div className="flex items-center mb-2">
+                       <h3 className="text-lg font-semibold text-gray-900">
+                         {title}
+                       </h3>
+                     </div>
+                     
+                     {/* 显示内容预览 */}
                      {note.contentPreview && (
                        <div className="text-gray-600 mb-3 line-clamp-3 prose prose-sm max-w-none">
                          <ReactMarkdown 
@@ -436,54 +452,86 @@ const NotesPage: React.FC = () => {
                          </ReactMarkdown>
                        </div>
                      )}
-                    
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span>{date}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Tag className="w-4 h-4 mr-1" />
-                        <span>Markdown</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span>{(note.size / 1024).toFixed(1)} KB</span>
-                      </div>
-                    </div>
-                  </div>
-                                     <div className="flex items-center space-x-2">
-                     <button
-                       onClick={() => handleEditNote(note)}
-                       className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
-                       title="编辑笔记"
-                     >
-                       <Edit className="w-4 h-4" />
-                     </button>
-                     <button
-                       onClick={() => handleDeleteNote(note)}
-                       disabled={deletingNote === note.sha}
-                       className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                       title="删除笔记"
-                     >
-                       {deletingNote === note.sha ? (
-                         <Loader2 className="w-4 h-4 animate-spin" />
-                       ) : (
-                         <Trash2 className="w-4 h-4" />
-                       )}
-                     </button>
-                     <a
-                       href={note.html_url}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
-                       title="在GitHub查看"
-                     >
-                       <Eye className="w-4 h-4" />
-                     </a>
+                     
+                     <div className="flex items-center space-x-4 text-sm text-gray-500">
+                       <div className="flex items-center">
+                         <Calendar className="w-4 h-4 mr-1" />
+                         <span>{note.createdDate ? new Date(note.createdDate).toLocaleDateString() : '未知日期'}</span>
+                       </div>
+                       <div className="flex items-center">
+                         <Tag className="w-4 h-4 mr-1" />
+                         <span>Markdown</span>
+                       </div>
+                       <div className="flex items-center space-x-1">
+                         {note.isPrivate ? (
+                           <>
+                             <Globe className="w-4 h-4 text-red-600" />
+                             <span className="text-red-600">私密</span>
+                           </>
+                         ) : (
+                           <>
+                             <Globe className="w-4 h-4 text-green-600" />
+                             <span className="text-green-600">公开</span>
+                           </>
+                         )}
+                       </div>
+                     </div>
                    </div>
-                </div>
-              </div>
-            )
+                   
+                   <div className="flex items-center space-x-2">
+                     {confirmingDelete === note.sha ? (
+                       <>
+                         <button
+                           onClick={() => confirmDelete(note)}
+                           className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors"
+                           title="确认删除"
+                         >
+                           <Check className="w-4 h-4" />
+                         </button>
+                         <button
+                           onClick={() => setConfirmingDelete(null)}
+                           className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
+                           title="取消删除"
+                         >
+                           <X className="w-4 h-4" />
+                         </button>
+                       </>
+                     ) : (
+                       <>
+                         <button
+                           onClick={() => handleEditNote(note)}
+                           className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
+                           title="编辑笔记"
+                         >
+                           <Edit className="w-4 h-4" />
+                         </button>
+                         <button
+                           onClick={() => handleDeleteNote(note)}
+                           disabled={deletingNote === note.sha}
+                           className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                           title="删除笔记"
+                         >
+                           {deletingNote === note.sha ? (
+                             <Loader2 className="w-4 h-4 animate-spin" />
+                           ) : (
+                             <Trash2 className="w-4 h-4" />
+                           )}
+                         </button>
+                         <a
+                           href={note.html_url}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
+                           title="在GitHub查看"
+                         >
+                           <Github className="w-4 h-4" />
+                         </a>
+                       </>
+                     )}
+                   </div>
+                 </div>
+               </div>
+             )
           })}
         </div>
       )}

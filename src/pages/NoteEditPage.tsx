@@ -180,20 +180,46 @@ private: ${isPrivate}
 ${content.trim()}
 `
 
-      // 调用GitHub API保存笔记
-      const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${selectedRepo}/contents/${filePath}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${authData.accessToken}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `${isNewNote ? '创建' : '更新'}笔记: ${noteTitle.trim()}`,
-          content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
-          branch: 'main'
-        })
-      })
+             // 如果是编辑模式，需要先获取文件的SHA
+       let sha = ''
+       if (isEditMode) {
+         try {
+           const existingFileResponse = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${filePath}`, {
+             headers: {
+               'Authorization': `token ${authData.accessToken}`,
+               'Accept': 'application/vnd.github.v3+json'
+             }
+           })
+           
+           if (existingFileResponse.ok) {
+             const existingFileData = await existingFileResponse.json()
+             sha = existingFileData.sha
+           }
+         } catch (error) {
+           console.warn('获取现有文件SHA失败，将创建新文件:', error)
+         }
+       }
+
+       // 调用GitHub API保存笔记
+       const requestBody: any = {
+         message: `${isNewNote ? '创建' : '更新'}笔记: ${noteTitle.trim()}`,
+         content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
+         branch: 'main'
+       }
+       
+       if (sha) {
+         requestBody.sha = sha
+       }
+
+       const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${selectedRepo}/contents/${filePath}`, {
+         method: 'PUT',
+         headers: {
+           'Authorization': `token ${authData.accessToken}`,
+           'Accept': 'application/vnd.github.v3+json',
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify(requestBody)
+       })
       
       if (!response.ok) {
         const errorData = await response.json()
