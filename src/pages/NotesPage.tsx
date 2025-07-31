@@ -73,16 +73,31 @@ const NotesPage: React.FC = () => {
       console.log('基础配置:', {
         owner: defaultConfig.owner,
         repo: defaultConfig.repo,
-        hasToken: !!authData.accessToken
+        hasToken: !!authData.accessToken,
+        envVars: {
+          VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
+          VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
+          VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
+          VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
+        }
       })
       
       // 如果是管理员且已登录，使用GitHub Token
       if (isLoggedIn()) {
         const adminToken = getGitHubToken()
+        console.log('管理员Token检查:', {
+          isLoggedIn: isLoggedIn(),
+          adminToken: adminToken ? '已获取' : '未获取',
+          hasToken: !!adminToken
+        })
         if (adminToken) {
           authData.accessToken = adminToken
           console.log('管理员模式，使用GitHub Token访问私密笔记')
+        } else {
+          console.log('管理员模式但未获取到Token，使用默认Token')
         }
+      } else {
+        console.log('非管理员模式，使用默认Token')
       }
       
       // 调用GitHub API获取notes目录下的文件

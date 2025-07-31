@@ -9,6 +9,7 @@ export const useGitHub = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isOwner, setIsOwner] = useState(false)
+  const [forceUpdate, setForceUpdate] = useState(0)
 
   useEffect(() => {
     // 检查管理员身份验证状态
@@ -24,10 +25,16 @@ export const useGitHub = () => {
       setIsOwner(authData.isAuthenticated) // 如果通过密码验证，就是所有者
     }
     setIsLoading(false)
-  }, [])
+  }, [forceUpdate])
 
   const authenticate = (password: string) => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+    console.log('认证调试:', {
+      inputPassword: password,
+      adminPassword: adminPassword,
+      isMatch: password === adminPassword
+    })
+    
     if (password === adminPassword) {
       const authData: AdminAuth = {
         isAuthenticated: true,
@@ -36,6 +43,8 @@ export const useGitHub = () => {
       localStorage.setItem('sparklog_admin_auth', JSON.stringify(authData))
       setIsConnected(true)
       setIsOwner(true)
+      setForceUpdate(prev => prev + 1)
+      console.log('认证成功，状态已更新')
       return true
     }
     return false
@@ -45,8 +54,15 @@ export const useGitHub = () => {
   const getGitHubToken = () => {
     // 如果是管理员且已认证，返回环境变量中的Token
     if (isConnected && isOwner) {
-      return import.meta.env.VITE_GITHUB_TOKEN || null
+      const token = import.meta.env.VITE_GITHUB_TOKEN
+      console.log('获取GitHub Token:', {
+        isConnected,
+        isOwner,
+        hasToken: !!token
+      })
+      return token || null
     }
+    console.log('未获取到GitHub Token:', { isConnected, isOwner })
     return null
   }
 
@@ -54,11 +70,8 @@ export const useGitHub = () => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
-    // 强制触发重新渲染
-    setTimeout(() => {
-      setIsConnected(false)
-      setIsOwner(false)
-    }, 0)
+    setForceUpdate(prev => prev + 1)
+    console.log('已断开连接，状态已更新')
   }
 
   // 检查是否有管理权限（已认证的管理员）
