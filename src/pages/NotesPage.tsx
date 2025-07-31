@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Github, BookOpen, Globe, Calendar, Tag, Settings, Search, Loader2, RefreshCw, Edit, Trash2, Check, X } from 'lucide-react'
+import { Plus, Github, BookOpen, Settings, Search, Loader2, RefreshCw } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import NoteCard from '@/components/NoteCard'
 
 interface Note {
   name: string
@@ -417,123 +416,20 @@ const NotesPage: React.FC = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
-                     {filteredNotes.map((note) => {
-             // 使用解析的标题或文件名
-             const title = note.parsedTitle || note.name.replace(/\.md$/, '')
-            
-                         return (
-               <div key={note.sha} className="card p-6 hover:shadow-md transition-shadow">
-                 <div className="flex items-start justify-between">
-                   <div className="flex-1">
-                     <div className="flex items-center mb-2">
-                       <h3 className="text-lg font-semibold text-gray-900">
-                         {title}
-                       </h3>
-                     </div>
-                     
-                     {/* 显示内容预览 */}
-                     {note.contentPreview && (
-                       <div className="text-gray-600 mb-3 line-clamp-3 prose prose-sm max-w-none">
-                         <ReactMarkdown 
-                           remarkPlugins={[remarkGfm]}
-                           components={{
-                             p: ({ children }) => <span className="text-gray-600">{children}</span>,
-                             h1: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
-                             h2: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
-                             h3: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
-                             strong: ({ children }) => <span className="text-gray-600 font-semibold">{children}</span>,
-                             em: ({ children }) => <span className="text-gray-600 italic">{children}</span>,
-                             code: ({ children }) => <code className="bg-gray-100 px-1 rounded text-sm">{children}</code>,
-                             pre: ({ children }) => <span className="text-gray-600">{children}</span>
-                           }}
-                         >
-                           {note.contentPreview}
-                         </ReactMarkdown>
-                       </div>
-                     )}
-                     
-                     <div className="flex items-center space-x-4 text-sm text-gray-500">
-                       <div className="flex items-center">
-                         <Calendar className="w-4 h-4 mr-1" />
-                         <span>{note.createdDate ? new Date(note.createdDate).toLocaleDateString() : '未知日期'}</span>
-                       </div>
-                       <div className="flex items-center">
-                         <Tag className="w-4 h-4 mr-1" />
-                         <span>Markdown</span>
-                       </div>
-                       <div className="flex items-center space-x-1">
-                         {note.isPrivate ? (
-                           <>
-                             <Globe className="w-4 h-4 text-red-600" />
-                             <span className="text-red-600">私密</span>
-                           </>
-                         ) : (
-                           <>
-                             <Globe className="w-4 h-4 text-green-600" />
-                             <span className="text-green-600">公开</span>
-                           </>
-                         )}
-                       </div>
-                     </div>
-                   </div>
-                   
-                   <div className="flex items-center space-x-2">
-                     {confirmingDelete === note.sha ? (
-                       <>
-                         <button
-                           onClick={() => confirmDelete(note)}
-                           className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors"
-                           title="确认删除"
-                         >
-                           <Check className="w-4 h-4" />
-                         </button>
-                         <button
-                           onClick={() => setConfirmingDelete(null)}
-                           className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
-                           title="取消删除"
-                         >
-                           <X className="w-4 h-4" />
-                         </button>
-                       </>
-                     ) : (
-                       <>
-                         <button
-                           onClick={() => handleEditNote(note)}
-                           className="text-blue-600 hover:text-blue-800 text-sm p-1 rounded hover:bg-blue-50 transition-colors"
-                           title="编辑笔记"
-                         >
-                           <Edit className="w-4 h-4" />
-                         </button>
-                         <button
-                           onClick={() => handleDeleteNote(note)}
-                           disabled={deletingNote === note.sha}
-                           className="text-red-600 hover:text-red-800 text-sm p-1 rounded hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                           title="删除笔记"
-                         >
-                           {deletingNote === note.sha ? (
-                             <Loader2 className="w-4 h-4 animate-spin" />
-                           ) : (
-                             <Trash2 className="w-4 h-4" />
-                           )}
-                         </button>
-                         <a
-                           href={note.html_url}
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           className="text-gray-600 hover:text-gray-800 text-sm p-1 rounded hover:bg-gray-50 transition-colors"
-                           title="在GitHub查看"
-                         >
-                           <Github className="w-4 h-4" />
-                         </a>
-                       </>
-                     )}
-                   </div>
-                 </div>
-               </div>
-             )
-          })}
-        </div>
+                 <div className="grid gap-4">
+           {filteredNotes.map((note) => (
+             <NoteCard
+               key={note.sha}
+               note={note}
+               onEdit={handleEditNote}
+               onDelete={handleDeleteNote}
+               onConfirmDelete={confirmDelete}
+               onCancelDelete={() => setConfirmingDelete(null)}
+               confirmingDeleteId={confirmingDelete}
+               deletingNoteId={deletingNote}
+             />
+           ))}
+         </div>
       )}
     </div>
   )

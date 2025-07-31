@@ -1,8 +1,42 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plus, BookOpen, Settings, Github } from 'lucide-react'
+import { useGitHub } from '@/hooks/useGitHub'
 
 const HomePage: React.FC = () => {
+  const { isConnected, isLoading } = useGitHub()
+  const navigate = useNavigate()
+
+  // 如果已连接GitHub，自动跳转到所有笔记页面
+  useEffect(() => {
+    if (!isLoading && isConnected) {
+      navigate('/notes')
+    }
+  }, [isConnected, isLoading, navigate])
+
+  // 如果正在加载，显示加载状态
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">检查GitHub连接状态...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果已连接，显示加载状态（即将跳转）
+  if (isConnected) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">正在跳转到笔记页面...</p>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
