@@ -20,7 +20,7 @@
 ### 本地开发
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/sparklog.git
+git clone https://github.com/linyuxuanlin/sparklog.git
 cd sparklog
 
 # 安装依赖

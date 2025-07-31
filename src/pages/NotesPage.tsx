@@ -28,7 +28,7 @@ interface Note {
 }
 
 const NotesPage: React.FC = () => {
-  const { isConnected, isLoading, isLoggedIn } = useGitHub()
+  const { isConnected, isLoading, isLoggedIn, getGitHubToken } = useGitHub()
   const navigate = useNavigate()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
@@ -90,6 +90,15 @@ const NotesPage: React.FC = () => {
           repo: defaultConfig.repo,
           hasToken: !!authData.accessToken
         })
+      }
+      
+      // 如果是管理员且已登录，使用GitHub Token
+      if (isLoggedIn()) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData.accessToken = adminToken
+          console.log('管理员模式，使用GitHub Token访问私密笔记')
+        }
       }
       
       // 调用GitHub API获取notes目录下的文件

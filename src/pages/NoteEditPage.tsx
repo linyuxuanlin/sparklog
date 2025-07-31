@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Github, Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
+import { getDefaultRepoConfig } from '@/config/defaultRepo'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
-  const { isConnected, isLoading: isGitHubLoading, isLoggedIn } = useGitHub()
+  const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
@@ -37,14 +38,40 @@ const NoteEditPage: React.FC = () => {
     setIsLoading(true)
     
     try {
-      const auth = localStorage.getItem('sparklog_github_auth')
-      const selectedRepo = localStorage.getItem('sparklog_selected_repo')
-      
-      if (!auth || !selectedRepo) {
-        throw new Error('未找到授权信息或仓库信息')
+      // 获取默认仓库配置
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库')
       }
       
-      const authData = JSON.parse(auth)
+      let authData: any = null
+      let selectedRepo: string | null = null
+      
+      // 如果是管理员且已登录，使用GitHub Token
+      if (isLoggedIn()) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData = {
+            username: defaultConfig.owner,
+            accessToken: adminToken
+          }
+          selectedRepo = defaultConfig.repo
+          console.log('管理员模式，使用GitHub Token加载笔记')
+        }
+      }
+      
+      // 如果没有管理员Token，尝试从localStorage获取
+      if (!authData) {
+        const auth = localStorage.getItem('sparklog_github_auth')
+        const repo = localStorage.getItem('sparklog_selected_repo')
+        
+        if (!auth || !repo) {
+          throw new Error('未找到授权信息或仓库信息')
+        }
+        
+        authData = JSON.parse(auth)
+        selectedRepo = repo
+      }
       
       // 查找笔记文件
       const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes`, {
@@ -154,23 +181,43 @@ const NoteEditPage: React.FC = () => {
       return
     }
     
-    // 检查是否选择了仓库
-    const selectedRepo = localStorage.getItem('sparklog_selected_repo')
-    if (!selectedRepo) {
-      showMessage('请先在设置中选择一个笔记仓库', 'error')
-      return
-    }
-    
     setIsSaving(true)
     
     try {
-      // 获取GitHub授权信息
-      const auth = localStorage.getItem('sparklog_github_auth')
-      if (!auth) {
-        throw new Error('未找到GitHub授权信息')
+      // 获取默认仓库配置
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库')
       }
       
-      const authData = JSON.parse(auth)
+      let authData: any = null
+      let selectedRepo: string | null = null
+      
+      // 如果是管理员且已登录，使用GitHub Token
+      if (isLoggedIn()) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData = {
+            username: defaultConfig.owner,
+            accessToken: adminToken
+          }
+          selectedRepo = defaultConfig.repo
+          console.log('管理员模式，使用GitHub Token保存笔记')
+        }
+      }
+      
+      // 如果没有管理员Token，尝试从localStorage获取
+      if (!authData) {
+        const auth = localStorage.getItem('sparklog_github_auth')
+        const repo = localStorage.getItem('sparklog_selected_repo')
+        
+        if (!auth || !repo) {
+          throw new Error('未找到GitHub授权信息或仓库信息')
+        }
+        
+        authData = JSON.parse(auth)
+        selectedRepo = repo
+      }
       
       // 创建笔记文件名
       const fileName = `${noteTitle.trim().replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-')}.md`

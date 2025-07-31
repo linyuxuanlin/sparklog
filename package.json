@@ -51,10 +51,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/sparklog.git"
+    "url": "https://github.com/linyuxuanlin/sparklog.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/sparklog/issues"
+    "url": "https://github.com/linyuxuanlin/sparklog/issues"
   },
-  "homepage": "https://github.com/your-username/sparklog#readme"
+  "homepage": "https://github.com/linyuxuanlin/sparklog#readme"
 }

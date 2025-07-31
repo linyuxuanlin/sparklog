@@ -270,7 +270,7 @@ const SettingsPage: React.FC = () => {
           
           <div className="space-y-3">
             <a
-              href="https://github.com/your-username/sparklog"
+              href="https://github.com/linyuxuanlin/sparklog"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
@@ -280,7 +280,7 @@ const SettingsPage: React.FC = () => {
             </a>
             
             <a
-              href="https://github.com/your-username/sparklog/issues"
+              href="https://github.com/linyuxuanlin/sparklog/issues"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"

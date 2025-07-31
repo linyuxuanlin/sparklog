@@ -41,6 +41,15 @@ export const useGitHub = () => {
     return false
   }
 
+  // 获取GitHub Token（用于API调用）
+  const getGitHubToken = () => {
+    // 如果是管理员且已认证，返回环境变量中的Token
+    if (isConnected && isOwner) {
+      return import.meta.env.VITE_GITHUB_TOKEN || null
+    }
+    return null
+  }
+
   const disconnect = () => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
@@ -64,6 +73,7 @@ export const useGitHub = () => {
     hasManagePermission,
     isLoggedIn,
     authenticate,
-    disconnect
+    disconnect,
+    getGitHubToken
   }
 } 
