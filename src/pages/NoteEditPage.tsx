@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Github, Save, Loader2 } from 'lucide-react'
+import { Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 
@@ -21,11 +21,51 @@ const NoteEditPage: React.FC = () => {
 
   // 权限检查
   useEffect(() => {
-    if (!isLoggedIn()) {
+    console.log('NoteEditPage权限检查:', {
+      isLoggedIn: isLoggedIn(),
+      isGitHubLoading,
+      isConnected
+    })
+    
+    // 等待GitHub状态加载完成后再检查权限
+    if (!isGitHubLoading && !isLoggedIn()) {
+      console.log('权限检查失败，重定向到笔记页面')
       navigate('/notes')
       return
     }
-  }, [isLoggedIn, navigate])
+  }, [isLoggedIn, isGitHubLoading, navigate])
+
+  // 如果正在加载GitHub状态，显示加载界面
+  if (isGitHubLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">正在检查权限...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果未登录，显示权限不足界面
+  if (!isLoggedIn()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">权限不足</h2>
+            <p className="text-gray-600 mb-6">您需要登录管理员账户才能创建和编辑笔记。</p>
+            <button
+              onClick={() => navigate('/settings')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              前往设置页面登录
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // 加载现有笔记
   useEffect(() => {
@@ -285,44 +325,7 @@ ${content.trim()}
     )
   }
 
-  // 如果未连接GitHub，显示提示
-  if (!isConnected) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center py-12">
-          <div className="mb-8">
-            <Github className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              需要连接GitHub
-            </h2>
-            <p className="text-gray-600 mb-6">
-              请先连接GitHub账号才能创建和编辑笔记
-            </p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              连接GitHub步骤：
-            </h3>
-            <ol className="text-left text-sm text-gray-600 space-y-2 mb-6">
-              <li>1. 前往 <a href="https://github.com/settings/applications/new" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">GitHub OAuth应用设置</a></li>
-              <li>2. 创建新的OAuth应用</li>
-              <li>3. 设置回调URL为：<code className="bg-gray-200 px-1 rounded">https://your-domain.pages.dev/auth/callback</code></li>
-              <li>4. 复制Client ID和Client Secret</li>
-              <li>5. 在设置页面配置这些信息</li>
-            </ol>
-            
-            <button 
-              onClick={() => navigate('/settings')}
-              className="btn-primary"
-            >
-              前往设置
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div className="max-w-4xl mx-auto">
