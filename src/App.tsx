@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from '@/components/Layout'
-import HomePage from '@/pages/HomePage'
 import NotesPage from '@/pages/NotesPage'
 import NoteEditPage from '@/pages/NoteEditPage'
 import SettingsPage from '@/pages/SettingsPage'
@@ -8,7 +7,7 @@ import AuthCallbackPage from '@/pages/AuthCallbackPage'
 import { useGitHub } from '@/hooks/useGitHub'
 
 function App() {
-  const { isConnected, isLoading } = useGitHub()
+  const { isLoading } = useGitHub()
 
   // 如果正在加载，显示加载状态
   if (isLoading) {
@@ -27,8 +26,8 @@ function App() {
       <Routes>
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/" element={<Layout />}>
-          {/* 如果已连接GitHub，首页重定向到所有笔记 */}
-          <Route index element={isConnected ? <Navigate to="/notes" replace /> : <HomePage />} />
+          {/* 默认显示所有笔记页面，未连接用户也能看到公开笔记 */}
+          <Route index element={<Navigate to="/notes" replace />} />
           <Route path="notes" element={<NotesPage />} />
           <Route path="note/new" element={<NoteEditPage />} />
           <Route path="note/edit/:title" element={<NoteEditPage />} />

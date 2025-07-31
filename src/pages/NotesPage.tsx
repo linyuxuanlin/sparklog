@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Github, BookOpen, Settings, Search, Loader2, RefreshCw } from 'lucide-react'
+import { Plus, BookOpen, Search, Loader2, RefreshCw } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import NoteCard from '@/components/NoteCard'
+import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 
 interface Note {
   name: string
@@ -49,31 +50,52 @@ const NotesPage: React.FC = () => {
 
   // 从GitHub仓库加载笔记
   const loadNotes = async () => {
-    if (!isConnected) return
-
     setIsLoadingNotes(true)
     
     try {
-      // 获取授权信息
-      const auth = localStorage.getItem('sparklog_github_auth')
-      if (!auth) {
-        throw new Error('未找到授权信息')
-      }
+      let authData: any = null
+      let selectedRepo: string | null = null
       
-      const authData = JSON.parse(auth)
-      
-      // 获取选择的仓库
-      const selectedRepo = localStorage.getItem('sparklog_selected_repo')
-      if (!selectedRepo) {
-        throw new Error('未选择笔记仓库')
+      if (isConnected) {
+        // 获取授权信息
+        const auth = localStorage.getItem('sparklog_github_auth')
+        if (!auth) {
+          throw new Error('未找到授权信息')
+        }
+        
+        authData = JSON.parse(auth)
+        
+        // 获取选择的仓库
+        selectedRepo = localStorage.getItem('sparklog_selected_repo')
+        if (!selectedRepo) {
+          throw new Error('未选择笔记仓库')
+        }
+      } else {
+        // 未连接用户，使用默认的公开仓库配置
+        const defaultConfig = getDefaultRepoConfig()
+        
+        if (!defaultConfig) {
+          throw new Error('未配置默认仓库，请设置环境变量或连接GitHub')
+        }
+        
+        selectedRepo = defaultConfig.repo
+        authData = { 
+          username: defaultConfig.owner,
+          accessToken: getDefaultGitHubToken() // 使用环境变量中的token
+        }
       }
       
       // 调用GitHub API获取notes目录下的文件
+      const headers: any = {
+        'Accept': 'application/vnd.github.v3+json'
+      }
+      
+      if (isConnected && authData.accessToken) {
+        headers['Authorization'] = `token ${authData.accessToken}`
+      }
+      
       const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes`, {
-        headers: {
-          'Authorization': `token ${authData.accessToken}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
+        headers
       })
       
       if (!response.ok) {
@@ -103,11 +125,16 @@ const NotesPage: React.FC = () => {
         const batchResults = await Promise.all(
           batch.map(async (file: any) => {
             try {
+              const contentHeaders: any = {
+                'Accept': 'application/vnd.github.v3+json'
+              }
+              
+              if (isConnected && authData.accessToken) {
+                contentHeaders['Authorization'] = `token ${authData.accessToken}`
+              }
+              
               const contentResponse = await fetch(file.url, {
-                headers: {
-                  'Authorization': `token ${authData.accessToken}`,
-                  'Accept': 'application/vnd.github.v3+json'
-                }
+                headers: contentHeaders
               })
               
               if (contentResponse.ok) {
@@ -199,34 +226,37 @@ const NotesPage: React.FC = () => {
         }
       }
       
-      // 过滤私密笔记 - 只显示用户有权限查看的笔记
-      // 注意：这里假设用户只能看到自己的笔记，私密笔记仍然可见
-      // 如果需要真正的私密控制，需要额外的权限验证逻辑
+      // 过滤笔记 - 未连接用户只能看到公开笔记
       const visibleNotes = notesWithContent.filter(note => {
-        // 如果笔记标记为私密，检查用户是否有权限查看
-        if (note.isPrivate) {
-          // 这里可以添加更复杂的权限检查逻辑
-          // 目前简单返回true，因为用户已经通过GitHub认证
-          return true
+        if (!isConnected) {
+          // 未连接用户只能看到公开笔记
+          return !note.isPrivate
         }
-        return true // 公开笔记总是可见
+        // 已连接用户可以看到所有笔记（包括私密笔记）
+        return true
       })
       
       setNotes(visibleNotes)
       setIsLoadingNotes(false)
       showMessage(`成功加载 ${visibleNotes.length} 个笔记`, 'success')
-    } catch (error) {
-      console.error('加载笔记失败:', error)
-      showMessage(`加载笔记失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
-      setIsLoadingNotes(false)
-    }
+          } catch (error) {
+        console.error('加载笔记失败:', error)
+        const errorMessage = error instanceof Error ? error.message : '请重试'
+        
+        // 特殊处理配置错误
+        if (errorMessage.includes('未配置默认仓库')) {
+          showMessage('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记', 'error')
+        } else {
+          showMessage(`加载笔记失败: ${errorMessage}`, 'error')
+        }
+        
+        setIsLoadingNotes(false)
+      }
   }
 
   // 当连接状态改变时加载笔记
   useEffect(() => {
-    if (isConnected) {
-      loadNotes()
-    }
+    loadNotes()
   }, [isConnected])
 
   // 编辑笔记
@@ -309,51 +339,7 @@ const NotesPage: React.FC = () => {
     )
   }
 
-  if (!isConnected) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center py-12">
-          <div className="mb-8">
-            <Github className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              尚未连接GitHub
-            </h2>
-            <p className="text-gray-600 mb-6">
-              请先连接GitHub账号才能查看和管理笔记
-            </p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-8 max-w-md mx-auto">
-            <h3 className="text-lg font-semibold mb-4">连接步骤</h3>
-            <ol className="text-left space-y-3 text-sm">
-              <li className="flex items-start">
-                <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mr-3 mt-0.5">1</span>
-                <span>前往设置页面配置GitHub Personal Access Token</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mr-3 mt-0.5">2</span>
-                <span>选择或创建笔记存储仓库</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mr-3 mt-0.5">3</span>
-                <span>开始创建和管理笔记</span>
-              </li>
-            </ol>
-            
-            <div className="mt-6">
-              <Link
-                to="/settings"
-                className="btn-primary inline-flex items-center"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                前往设置
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // 移除未连接状态的检查，让未连接用户也能看到公开笔记
 
   return (
     <div className="max-w-4xl mx-auto">
