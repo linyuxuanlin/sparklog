@@ -35,6 +35,13 @@ const NoteEditPage: React.FC = () => {
     }
   }, [isLoggedIn, isGitHubLoading, navigate])
 
+  // 加载现有笔记
+  useEffect(() => {
+    if (isEditMode && title && isLoggedIn()) {
+      loadExistingNote(decodeURIComponent(title))
+    }
+  }, [isEditMode, title, isLoggedIn])
+
   // 如果正在加载GitHub状态，显示加载界面
   if (isGitHubLoading) {
     return (
@@ -66,13 +73,6 @@ const NoteEditPage: React.FC = () => {
       </div>
     )
   }
-
-  // 加载现有笔记
-  useEffect(() => {
-    if (isEditMode && title) {
-      loadExistingNote(decodeURIComponent(title))
-    }
-  }, [isEditMode, title])
 
   const loadExistingNote = async (noteTitle: string) => {
     setIsLoading(true)
