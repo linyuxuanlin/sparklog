@@ -73,17 +73,53 @@ const NoteCard: React.FC<NoteCardProps> = ({
             <div className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
               <span>
-                {note.createdDate ? 
-                  (() => {
-                    try {
-                      const date = new Date(note.createdDate)
-                      return isNaN(date.getTime()) ? '未知日期' : date.toLocaleDateString()
-                    } catch {
+                {(() => {
+                  // 调试：查看笔记的日期数据
+                  console.log(`笔记 ${note.name} 的日期数据:`, {
+                    created_at: note.created_at,
+                    createdDate: note.createdDate,
+                    updated_at: note.updated_at,
+                    updatedDate: note.updatedDate
+                  })
+                  
+                  // 优先使用GitHub API提供的日期
+                  const dateToUse = note.created_at || note.createdDate || note.updated_at || note.updatedDate
+                  
+                  if (!dateToUse) {
+                    return '未知日期'
+                  }
+                  
+                  try {
+                    const date = new Date(dateToUse)
+                    if (isNaN(date.getTime())) {
                       return '未知日期'
                     }
-                  })() 
-                  : '未知日期'
-                }
+                    
+                    // 格式化日期
+                    const now = new Date()
+                    const diffTime = Math.abs(now.getTime() - date.getTime())
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                    
+                    if (diffDays === 0) {
+                      return '今天'
+                    } else if (diffDays === 1) {
+                      return '昨天'
+                    } else if (diffDays <= 7) {
+                      return `${diffDays}天前`
+                    } else if (diffDays <= 30) {
+                      const weeks = Math.floor(diffDays / 7)
+                      return `${weeks}周前`
+                    } else {
+                      return date.toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })
+                    }
+                  } catch {
+                    return '未知日期'
+                  }
+                })()}
               </span>
             </div>
             <div className="flex items-center space-x-1">

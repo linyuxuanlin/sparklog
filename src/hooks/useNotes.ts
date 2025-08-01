@@ -126,8 +126,61 @@ export const useNotes = () => {
                 const contentData = await contentResponse.json()
                 const content = atob(contentData.content) // 解码Base64内容
                 
+                // 获取文件的提交历史来获取创建和修改时间
+                let created_at = file.created_at
+                let updated_at = file.updated_at
+                
+                try {
+                  // 获取文件的提交历史
+                  const commitsResponse = await fetch(
+                    `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=1`,
+                    { headers: contentHeaders }
+                  )
+                  
+                  if (commitsResponse.ok) {
+                    const commits = await commitsResponse.json()
+                    if (commits.length > 0) {
+                      // 使用最新的提交时间作为更新时间
+                      updated_at = commits[0].commit.author.date
+                      
+                      // 获取第一个提交（创建时间）
+                      const firstCommitResponse = await fetch(
+                        `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=100`,
+                        { headers: contentHeaders }
+                      )
+                      
+                      if (firstCommitResponse.ok) {
+                        const allCommits = await firstCommitResponse.json()
+                        if (allCommits.length > 0) {
+                          // 使用最后一个提交的时间作为创建时间（GitHub按时间倒序返回）
+                          created_at = allCommits[allCommits.length - 1].commit.author.date
+                        }
+                      }
+                    }
+                  }
+                } catch (error) {
+                  console.warn(`获取文件 ${file.name} 的提交历史失败:`, error)
+                }
+                
+                // 调试：查看GitHub API返回的原始数据
+                console.log(`笔记 ${file.name} 的GitHub API数据:`, {
+                  name: file.name,
+                  created_at: created_at,
+                  updated_at: updated_at,
+                  path: file.path,
+                  sha: file.sha
+                })
+                
                 // 解析笔记内容
                 const parsed = parseNoteContent(content, file.name)
+                
+                // 调试：查看解析后的数据
+                console.log(`笔记 ${file.name} 的解析数据:`, {
+                  title: parsed.title,
+                  createdDate: parsed.createdDate,
+                  updatedDate: parsed.updatedDate,
+                  isPrivate: parsed.isPrivate
+                })
                 
                 return {
                   ...file,
@@ -136,7 +189,10 @@ export const useNotes = () => {
                   fullContent: content,
                   createdDate: parsed.createdDate,
                   updatedDate: parsed.updatedDate,
-                  isPrivate: parsed.isPrivate
+                  isPrivate: parsed.isPrivate,
+                  // 使用从commits API获取的日期信息
+                  created_at: created_at,
+                  updated_at: updated_at
                 }
               }
               
