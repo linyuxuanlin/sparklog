@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
@@ -8,9 +8,15 @@ export const useNotes = () => {
   const { isConnected, isLoggedIn, getGitHubToken } = useGitHub()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   // 从GitHub仓库加载笔记
-  const loadNotes = async () => {
+  const loadNotes = useCallback(async () => {
+    // 如果正在加载，避免重复请求
+    if (isLoadingNotes) {
+      return
+    }
+    
     setIsLoadingNotes(true)
     
     try {
@@ -80,6 +86,7 @@ export const useNotes = () => {
           // notes目录不存在，返回空数组
           setNotes([])
           setIsLoadingNotes(false)
+          setHasLoaded(true)
           return
         }
         const errorData = await response.json().catch(() => ({}))
@@ -161,6 +168,7 @@ export const useNotes = () => {
       
       setNotes(visibleNotes)
       setIsLoadingNotes(false)
+      setHasLoaded(true)
     } catch (error) {
       console.error('加载笔记失败:', error)
       const errorMessage = error instanceof Error ? error.message : '请重试'
@@ -172,7 +180,7 @@ export const useNotes = () => {
         throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
-  }
+  }, [isConnected, isLoggedIn, getGitHubToken])
 
   // 删除笔记
   const deleteNote = async (note: Note) => {
@@ -229,7 +237,7 @@ export const useNotes = () => {
     }
   }
 
-  // 当连接状态改变时加载笔记
+  // 当连接状态改变时加载笔记，以及组件挂载时加载
   useEffect(() => {
     loadNotes()
   }, [isConnected])
