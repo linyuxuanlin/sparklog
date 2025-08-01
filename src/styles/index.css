@@ -4,7 +4,7 @@
 
 @layer base {
   html {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
   }
   
   body {
@@ -27,6 +27,14 @@
   
   .btn-neomorphic-primary {
     @apply px-4 py-2 bg-blue-600 text-white rounded-lg shadow-[0_2px_4px_rgba(59,130,246,0.3),0_1px_2px_rgba(59,130,246,0.2)] hover:shadow-[0_4px_6px_rgba(59,130,246,0.3),0_2px_4px_rgba(59,130,246,0.2)] hover:bg-blue-700 active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] active:transform active:translate-y-0.5 transition-all duration-150;
+  }
+  
+  .logo-title {
+    @apply text-3xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .logo-subtitle {
+    @apply text-base font-semibold text-gray-500;
   }
   
   .card {

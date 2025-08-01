@@ -19,10 +19,10 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200">
         <Link to="/" className="block text-center">
-          <h1 className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">SparkLog</h1>
-          <p className="text-sm text-gray-500">妙想笔记</p>
+          <h1 className="logo-title">SparkLog</h1>
+          <p className="logo-subtitle mt-1">妙想笔记</p>
         </Link>
       </div>
       
@@ -31,7 +31,7 @@ const Sidebar: React.FC = () => {
         <div className="p-4 border-b border-gray-200">
           <Link
             to="/note/new"
-            className="btn-neomorphic-primary flex items-center justify-center w-full"
+            className="btn-neomorphic-primary flex items-center justify-center w-full font-semibold"
           >
             <Plus className="w-4 h-4 mr-2" />
             新建笔记
@@ -49,7 +49,7 @@ const Sidebar: React.FC = () => {
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
+                  className={`flex items-center px-4 py-3 rounded-lg transition-colors font-semibold ${
                     isActive
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-700 hover:bg-gray-50'
