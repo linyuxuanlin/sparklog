@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -19,36 +19,39 @@ const NoteEditPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
 
+  // 直接使用isLoggedIn，现在它已经是稳定的了
+  const isLoggedInStable = isLoggedIn
+
   // 权限检查
   useEffect(() => {
     console.log('NoteEditPage权限检查:', {
-      isLoggedIn: isLoggedIn(),
+      isLoggedIn: isLoggedInStable(),
       isGitHubLoading,
       isConnected
     })
     
     // 等待GitHub状态加载完成后再检查权限
-    if (!isGitHubLoading && !isLoggedIn()) {
+    if (!isGitHubLoading && !isLoggedInStable()) {
       console.log('权限检查失败，重定向到笔记页面')
       navigate('/notes')
       return
     }
-  }, [isLoggedIn, isGitHubLoading, navigate])
+  }, [isLoggedInStable, isGitHubLoading, navigate])
 
   // 加载现有笔记
   useEffect(() => {
     console.log('编辑笔记useEffect调试:', {
       isEditMode,
       title,
-      isLoggedIn: isLoggedIn(),
-      shouldLoad: isEditMode && title && isLoggedIn()
+      isLoggedIn: isLoggedInStable(),
+      shouldLoad: isEditMode && title && isLoggedInStable()
     })
     
-    if (isEditMode && title && isLoggedIn()) {
+    if (isEditMode && title && isLoggedInStable()) {
       console.log('开始加载笔记:', decodeURIComponent(title))
       loadExistingNote(decodeURIComponent(title))
     }
-  }, [isEditMode, title, isLoggedIn])
+  }, [isEditMode, title, isLoggedInStable])
 
   // 如果正在加载GitHub状态，显示加载界面
   if (isGitHubLoading) {
@@ -63,7 +66,7 @@ const NoteEditPage: React.FC = () => {
   }
 
   // 如果未登录，显示权限不足界面
-  if (!isLoggedIn()) {
+  if (!isLoggedInStable()) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -111,7 +114,7 @@ const NoteEditPage: React.FC = () => {
       })
       
       // 如果是管理员且已登录，使用GitHub Token
-      if (isLoggedIn()) {
+      if (isLoggedInStable()) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken
@@ -255,7 +258,7 @@ const NoteEditPage: React.FC = () => {
       selectedRepo = defaultConfig.repo
       
       // 如果是管理员且已登录，使用GitHub Token
-      if (isLoggedIn()) {
+      if (isLoggedInStable()) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken

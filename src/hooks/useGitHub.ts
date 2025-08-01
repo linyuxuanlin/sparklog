@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface AdminAuth {
   isAuthenticated: boolean
@@ -27,7 +27,7 @@ export const useGitHub = () => {
     setIsLoading(false)
   }, [forceUpdate])
 
-  const authenticate = (password: string) => {
+  const authenticate = useCallback((password: string) => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
     console.log('认证调试:', {
       inputPassword: password,
@@ -48,10 +48,10 @@ export const useGitHub = () => {
       return true
     }
     return false
-  }
+  }, [])
 
   // 获取GitHub Token（用于API调用）
-  const getGitHubToken = () => {
+  const getGitHubToken = useCallback(() => {
     // 如果是管理员且已认证，返回环境变量中的Token
     if (isConnected && isOwner) {
       const token = import.meta.env.VITE_GITHUB_TOKEN
@@ -64,25 +64,25 @@ export const useGitHub = () => {
     }
     console.log('未获取到GitHub Token:', { isConnected, isOwner })
     return null
-  }
+  }, [isConnected, isOwner])
 
-  const disconnect = () => {
+  const disconnect = useCallback(() => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
     setForceUpdate(prev => prev + 1)
     console.log('已断开连接，状态已更新')
-  }
+  }, [])
 
   // 检查是否有管理权限（已认证的管理员）
-  const hasManagePermission = () => {
+  const hasManagePermission = useCallback(() => {
     return isConnected && isOwner
-  }
+  }, [isConnected, isOwner])
 
   // 检查是否已登录
-  const isLoggedIn = () => {
+  const isLoggedIn = useCallback(() => {
     return isConnected
-  }
+  }, [isConnected])
 
   return {
     isConnected,
