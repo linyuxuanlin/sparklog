@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Plus, BookOpen, Search, Loader2, RefreshCw } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
@@ -11,11 +11,22 @@ const NotesPage: React.FC = () => {
   const { isLoading } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, deleteNote } = useNotes()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchQuery, setSearchQuery] = useState('')
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
+
+  // 检查是否需要刷新笔记列表
+  useEffect(() => {
+    if (location.state?.shouldRefresh) {
+      console.log('检测到需要刷新笔记列表')
+      loadNotes()
+      // 清除state，避免重复刷新
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.state, loadNotes, navigate, location.pathname])
 
   // 显示消息提示
   const handleShowMessage = (text: string, type: 'success' | 'error') => {
@@ -24,8 +35,8 @@ const NotesPage: React.FC = () => {
 
   // 编辑笔记
   const handleEditNote = (note: Note) => {
-    const title = note.parsedTitle || note.name.replace(/\.md$/, '')
-    navigate(`/note/edit/${encodeURIComponent(title)}`)
+    const timestamp = note.name.replace(/\.md$/, '')
+    navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
   // 删除笔记

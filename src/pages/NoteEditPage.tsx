@@ -11,13 +11,13 @@ const NoteEditPage: React.FC = () => {
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
-  const [noteTitle, setNoteTitle] = useState('')
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
+  const [originalFile, setOriginalFile] = useState<{ path: string; sha: string } | null>(null)
 
   // 直接使用isLoggedIn，现在它已经是稳定的了
   const isLoggedInStable = isLoggedIn
@@ -153,6 +153,12 @@ const NoteEditPage: React.FC = () => {
         throw new Error('未找到笔记文件')
       }
       
+      // 保存原始文件信息，用于编辑时的更新
+      setOriginalFile({
+        path: noteFile.path,
+        sha: noteFile.sha
+      })
+      
       // 获取笔记内容
       const contentResponse = await fetch(noteFile.url, {
         headers: {
@@ -185,25 +191,13 @@ const NoteEditPage: React.FC = () => {
         }
       }
       
-      // 提取标题和内容
-      const contentLines = frontmatterEndIndex >= 0 
-        ? lines.slice(frontmatterEndIndex + 1) 
-        : lines
-      
-      let extractedTitle = noteTitle
-      let extractedContent = contentLines.join('\n')
-      
-      // 查找标题行
-      for (const line of contentLines) {
-        if (line.startsWith('# ')) {
-          extractedTitle = line.replace(/^#\s*/, '')
-          extractedContent = contentLines.slice(contentLines.indexOf(line) + 1).join('\n')
-          break
-        }
-      }
-      
-      setNoteTitle(extractedTitle)
-      setContent(extractedContent.trim())
+             // 提取内容
+       const contentLines = frontmatterEndIndex >= 0 
+         ? lines.slice(frontmatterEndIndex + 1) 
+         : lines
+       
+       const extractedContent = contentLines.join('\n')
+       setContent(extractedContent.trim())
       
     } catch (error) {
       console.error('加载笔记失败:', error)
@@ -227,16 +221,11 @@ const NoteEditPage: React.FC = () => {
     }, 5000)
   }
 
-  const handleSave = async () => {
-    if (!noteTitle.trim()) {
-      showMessage('请输入笔记标题', 'error')
-      return
-    }
-    
-    if (!content.trim()) {
-      showMessage('请输入笔记内容', 'error')
-      return
-    }
+     const handleSave = async () => {
+     if (!content.trim()) {
+       showMessage('请输入笔记内容', 'error')
+       return
+     }
     
     setIsSaving(true)
     
@@ -266,45 +255,55 @@ const NoteEditPage: React.FC = () => {
         }
       }
       
-      // 创建笔记文件名
-      const fileName = `${noteTitle.trim().replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '-')}.md`
-      const filePath = `notes/${fileName}`
-      
-      // 创建笔记内容
-      const noteContent = `---
-created_at: ${new Date().toISOString()}
-updated_at: ${new Date().toISOString()}
-private: ${isPrivate}
----
+             // 创建笔记文件名（使用时间戳）
+       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').replace('Z', '')
+       const fileName = `${timestamp}.md`
+       let filePath = `notes/${fileName}`
+       
+       // 如果是编辑模式，使用原始文件路径
+       if (isEditMode && originalFile) {
+         filePath = originalFile.path
+         console.log('编辑模式，使用原始文件路径:', filePath)
+       }
+       
+       // 创建笔记内容
+       const noteContent = `---
+ created_at: ${new Date().toISOString()}
+ updated_at: ${new Date().toISOString()}
+ private: ${isPrivate}
+ ---
 
-# ${noteTitle.trim()}
+ ${content.trim()}
+ `
 
-${content.trim()}
-`
-
-             // 如果是编辑模式，需要先获取文件的SHA
+       // 如果是编辑模式，检查是否需要更新现有文件或创建新文件
        let sha = ''
-       if (isEditMode) {
-         try {
-           const existingFileResponse = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${filePath}`, {
-             headers: {
-               'Authorization': `token ${authData.accessToken}`,
-               'Accept': 'application/vnd.github.v3+json'
-             }
-           })
-           
-           if (existingFileResponse.ok) {
-             const existingFileData = await existingFileResponse.json()
-             sha = existingFileData.sha
-           }
-         } catch (error) {
-           console.warn('获取现有文件SHA失败，将创建新文件:', error)
+       let shouldDeleteOriginal = false
+       
+       if (isEditMode && originalFile) {
+         // 检查是否使用原始文件路径
+         const isUsingOriginalPath = filePath === originalFile.path
+         
+         console.log('文件路径比较:', {
+           originalPath: originalFile.path,
+           newPath: filePath,
+           isUsingOriginal: isUsingOriginalPath
+         })
+         
+         if (isUsingOriginalPath) {
+           // 使用原始文件路径，更新现有文件
+           sha = originalFile.sha
+           console.log('编辑模式，更新现有文件，SHA:', sha)
+         } else {
+           // 使用新文件路径，创建新文件，稍后删除旧文件
+           console.log('编辑模式，创建新文件，稍后删除旧文件')
+           shouldDeleteOriginal = true
          }
        }
 
        // 调用GitHub API保存笔记
        const requestBody: any = {
-         message: `${isNewNote ? '创建' : '更新'}笔记: ${noteTitle.trim()}`,
+         message: `${isNewNote ? '创建' : '更新'}笔记: ${timestamp}`,
          content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
          branch: 'main'
        }
@@ -323,15 +322,42 @@ ${content.trim()}
          body: JSON.stringify(requestBody)
        })
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(`保存失败: ${errorData.message || response.statusText}`)
-      }
-      
-      showMessage('笔记保存成功！', 'success')
-      setTimeout(() => {
-        navigate('/notes')
-      }, 1500)
+             if (!response.ok) {
+         const errorData = await response.json()
+         throw new Error(`保存失败: ${errorData.message || response.statusText}`)
+       }
+       
+       // 如果文件名改变了，删除原始文件
+       if (shouldDeleteOriginal && originalFile) {
+         try {
+           console.log('删除原始文件:', originalFile.path)
+           const deleteResponse = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${originalFile.path}`, {
+             method: 'DELETE',
+             headers: {
+               'Authorization': `token ${authData.accessToken}`,
+               'Accept': 'application/vnd.github.v3+json',
+               'Content-Type': 'application/json'
+             },
+             body: JSON.stringify({
+               message: `删除旧文件: ${originalFile.path}`,
+               sha: originalFile.sha
+             })
+           })
+           
+           if (!deleteResponse.ok) {
+             console.warn('删除原始文件失败:', deleteResponse.statusText)
+           } else {
+             console.log('原始文件删除成功')
+           }
+         } catch (error) {
+           console.warn('删除原始文件时出错:', error)
+         }
+       }
+       
+       showMessage('笔记保存成功！', 'success')
+       setTimeout(() => {
+         navigate('/notes', { state: { shouldRefresh: true } })
+       }, 1500)
     } catch (error) {
       console.error('保存笔记失败:', error)
       showMessage(`保存失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
@@ -372,45 +398,32 @@ ${content.trim()}
         </div>
       )}
       
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {isNewNote ? '创建新笔记' : '编辑笔记'}
-        </h1>
-      </div>
+             <div className="mb-6">
+         <h1 className="text-2xl font-bold text-gray-900">
+           {isNewNote ? '创建新笔记' : '编辑笔记'}
+         </h1>
+       </div>
 
-      <div className="card p-6">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">加载笔记中...</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                标题
-              </label>
-              <input
-                type="text"
-                value={noteTitle}
-                onChange={(e) => setNoteTitle(e.target.value)}
-                placeholder="输入笔记标题..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                内容
-              </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="开始编写你的笔记..."
-                rows={20}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-              />
-            </div>
+       <div className="card p-6">
+         {isLoading ? (
+           <div className="text-center py-8">
+             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+             <p className="mt-4 text-gray-600">加载笔记中...</p>
+           </div>
+         ) : (
+           <div className="space-y-4">
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 内容
+               </label>
+               <textarea
+                 value={content}
+                 onChange={(e) => setContent(e.target.value)}
+                 placeholder="开始编写你的笔记..."
+                 rows={20}
+                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+               />
+             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -442,11 +455,11 @@ ${content.trim()}
                 >
                   取消
                 </button>
-                <button 
-                  onClick={handleSave}
-                  disabled={isSaving || isLoading || !noteTitle.trim() || !content.trim()}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-                >
+                                 <button 
+                   onClick={handleSave}
+                   disabled={isSaving || isLoading || !content.trim()}
+                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                 >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

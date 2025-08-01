@@ -17,7 +17,6 @@ interface Note {
   encoding?: string
   created_at?: string
   updated_at?: string
-  parsedTitle?: string
   contentPreview?: string
   fullContent?: string
   createdDate?: string
@@ -45,9 +44,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
   deletingNoteId
 }) => {
   const { isLoggedIn } = useGitHub()
-  const title = note.parsedTitle || note.name.replace(/\.md$/, '')
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
+
+  // 从文件名提取时间戳
+  const timestamp = note.name.replace(/\.md$/, '')
+  const date = new Date(timestamp.replace(/-/g, ':').replace('T', ' '))
 
   return (
     <div className="card p-6 hover:shadow-md transition-shadow">
@@ -55,7 +57,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
         <div className="flex-1">
           <div className="flex items-center mb-2">
             <h3 className="text-lg font-semibold text-gray-900">
-              {title}
+              {date.toLocaleString('zh-CN')}
             </h3>
           </div>
           

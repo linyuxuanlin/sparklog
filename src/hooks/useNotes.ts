@@ -188,18 +188,17 @@ export const useNotes = () => {
                   isPrivate: parsed.isPrivate
                 })
                 
-                return {
-                  ...file,
-                  parsedTitle: parsed.title,
-                  contentPreview: parsed.contentPreview,
-                  fullContent: content,
-                  createdDate: parsed.createdDate,
-                  updatedDate: parsed.updatedDate,
-                  isPrivate: parsed.isPrivate,
-                  // 使用从commits API获取的日期信息
-                  created_at: created_at,
-                  updated_at: updated_at
-                }
+                                        return {
+                          ...file,
+                          contentPreview: parsed.contentPreview,
+                          fullContent: content,
+                          createdDate: parsed.createdDate,
+                          updatedDate: parsed.updatedDate,
+                          isPrivate: parsed.isPrivate,
+                          // 使用从commits API获取的日期信息
+                          created_at: created_at,
+                          updated_at: updated_at
+                        }
               }
               
               return file
@@ -324,7 +323,7 @@ export const useNotes = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `删除笔记: ${note.parsedTitle || note.name}`,
+          message: `删除笔记: ${note.name}`,
           sha: note.sha
         })
       })

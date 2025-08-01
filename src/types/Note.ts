@@ -12,7 +12,6 @@ export interface Note {
   encoding?: string
   created_at?: string
   updated_at?: string
-  parsedTitle?: string
   contentPreview?: string
   fullContent?: string
   createdDate?: string
