@@ -222,7 +222,25 @@ export const useNotes = () => {
         return true
       })
       
-      setNotes(visibleNotes)
+      // 按创建时间从新到旧排序
+      const sortedNotes = visibleNotes.sort((a, b) => {
+        const dateA = a.created_at || a.createdDate || a.updated_at || a.updatedDate
+        const dateB = b.created_at || b.createdDate || b.updated_at || b.updatedDate
+        
+        if (!dateA && !dateB) return 0
+        if (!dateA) return 1
+        if (!dateB) return -1
+        
+        try {
+          const timeA = new Date(dateA).getTime()
+          const timeB = new Date(dateB).getTime()
+          return timeB - timeA // 从新到旧排序
+        } catch {
+          return 0
+        }
+      })
+      
+      setNotes(sortedNotes)
       setIsLoadingNotes(false)
       setHasLoaded(true)
     } catch (error) {
