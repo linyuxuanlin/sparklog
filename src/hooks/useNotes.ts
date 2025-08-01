@@ -5,10 +5,11 @@ import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRep
 import { parseNoteContent } from '@/utils/noteUtils'
 
 export const useNotes = () => {
-  const { isConnected, isLoggedIn, getGitHubToken } = useGitHub()
+  const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
+  const [loginStatus, setLoginStatus] = useState(isLoggedIn())
 
   // 从GitHub仓库加载笔记
   const loadNotes = useCallback(async () => {
@@ -36,11 +37,16 @@ export const useNotes = () => {
         accessToken: getDefaultGitHubToken()
       }
       
+      // 获取当前登录状态
+      const currentLoginStatus = isLoggedIn()
+      
       // 调试信息
       console.log('基础配置:', {
         owner: defaultConfig.owner,
         repo: defaultConfig.repo,
         hasToken: !!authData.accessToken,
+        currentLoginStatus,
+        isLoading,
         envVars: {
           VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
           VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
@@ -50,10 +56,10 @@ export const useNotes = () => {
       })
       
       // 如果是管理员且已登录，使用GitHub Token
-      if (isLoggedIn()) {
+      if (currentLoginStatus) {
         const adminToken = getGitHubToken()
         console.log('管理员Token检查:', {
-          isLoggedIn: isLoggedIn(),
+          isLoggedIn: currentLoginStatus,
           adminToken: adminToken ? '已获取' : '未获取',
           hasToken: !!adminToken
         })
@@ -206,15 +212,23 @@ export const useNotes = () => {
         
         notesWithContent.push(...batchResults)
         
-        // 更新状态以显示进度
+        // 更新状态以显示进度（应用过滤逻辑）
         if (i + batchSize < markdownFiles.length) {
-          setNotes(notesWithContent)
+          const visibleNotesForProgress = notesWithContent.filter(note => {
+            if (!currentLoginStatus) {
+              // 未登录用户只能看到公开笔记
+              return !note.isPrivate
+            }
+            // 已登录用户可以看到所有笔记（包括私密笔记）
+            return true
+          })
+          setNotes(visibleNotesForProgress)
         }
       }
       
       // 过滤笔记 - 根据登录状态显示笔记
       const visibleNotes = notesWithContent.filter(note => {
-        if (!isLoggedIn()) {
+        if (!currentLoginStatus) {
           // 未登录用户只能看到公开笔记
           return !note.isPrivate
         }
@@ -254,7 +268,22 @@ export const useNotes = () => {
         throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
-  }, [isConnected, isLoggedIn, getGitHubToken])
+  }, [isConnected, getGitHubToken])
+
+  // 监听登录状态变化
+  useEffect(() => {
+    // 等待GitHub状态加载完成后再检查登录状态
+    if (!isLoading) {
+      const currentStatus = isLoggedIn()
+      if (currentStatus !== loginStatus) {
+        setLoginStatus(currentStatus)
+        // 登录状态改变时重新加载笔记
+        if (hasLoaded) {
+          loadNotes()
+        }
+      }
+    }
+  }, [isLoggedIn, loginStatus, hasLoaded, loadNotes, isLoading])
 
   // 删除笔记
   const deleteNote = async (note: Note) => {
@@ -275,8 +304,11 @@ export const useNotes = () => {
       }
       selectedRepo = defaultConfig.repo
       
+      // 获取当前登录状态
+      const currentLoginStatus = isLoggedIn()
+      
       // 如果是管理员且已登录，使用GitHub Token
-      if (isLoggedIn()) {
+      if (currentLoginStatus) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken
@@ -313,8 +345,11 @@ export const useNotes = () => {
 
   // 当连接状态改变时加载笔记，以及组件挂载时加载
   useEffect(() => {
-    loadNotes()
-  }, [isConnected])
+    // 等待GitHub状态加载完成后再加载笔记
+    if (!isLoading) {
+      loadNotes()
+    }
+  }, [isConnected, loginStatus, isLoading])
 
   return {
     notes,
