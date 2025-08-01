@@ -80,10 +80,6 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">所有笔记</h1>
-      </div>
-
       {/* 搜索栏和刷新按钮 */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
