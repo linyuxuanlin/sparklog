@@ -1,9 +1,13 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Plus, Settings, BookOpen } from 'lucide-react'
+import { Plus, Settings, BookOpen, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
   const { isLoggedIn } = useGitHub()
 
@@ -18,11 +22,26 @@ const Sidebar: React.FC = () => {
   ]
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="p-6 border-b border-gray-200">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+      {/* 移动端关闭按钮 */}
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="text-center flex-1">
+          <h1 className="logo-title">SparkLog</h1>
+          <p className="logo-subtitle">妙想笔记</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      
+      {/* 桌面端Logo */}
+      <div className="hidden lg:block p-6 border-b border-gray-200">
         <Link to="/" className="block text-center">
           <h1 className="logo-title">SparkLog</h1>
-          <p className="logo-subtitle mt-1">妙想笔记</p>
+          <p className="logo-subtitle">妙想笔记</p>
         </Link>
       </div>
       
@@ -32,6 +51,7 @@ const Sidebar: React.FC = () => {
           <Link
             to="/note/new"
             className="btn-neomorphic-primary flex items-center justify-center w-full font-semibold"
+            onClick={onClose}
           >
             <Plus className="w-4 h-4 mr-2" />
             新建笔记
@@ -54,6 +74,7 @@ const Sidebar: React.FC = () => {
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
+                  onClick={onClose}
                 >
                   <Icon className="w-5 h-5 mr-3" />
                   {item.label}
