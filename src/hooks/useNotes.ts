@@ -10,9 +10,12 @@ export const useNotes = () => {
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
   const [loginStatus, setLoginStatus] = useState(isLoggedIn())
+  const [hasMoreNotes, setHasMoreNotes] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 })
 
-  // 从GitHub仓库加载笔记
-  const loadNotes = useCallback(async (forceRefresh = false) => {
+  // 从GitHub仓库加载笔记（分页加载）
+  const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
     // 如果正在加载且不是强制刷新，避免重复请求
     if (isLoadingNotes && !forceRefresh) {
       return
@@ -40,37 +43,12 @@ export const useNotes = () => {
       // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
       
-      // 调试信息
-      console.log('基础配置:', {
-        owner: defaultConfig.owner,
-        repo: defaultConfig.repo,
-        hasToken: !!authData.accessToken,
-        currentLoginStatus,
-        isLoading,
-        envVars: {
-          VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
-          VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
-          VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
-          VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
-        }
-      })
-      
       // 如果是管理员且已登录，使用GitHub Token
       if (currentLoginStatus) {
         const adminToken = getGitHubToken()
-        console.log('管理员Token检查:', {
-          isLoggedIn: currentLoginStatus,
-          adminToken: adminToken ? '已获取' : '未获取',
-          hasToken: !!adminToken
-        })
         if (adminToken) {
           authData.accessToken = adminToken
-          console.log('管理员模式，使用GitHub Token访问私密笔记')
-        } else {
-          console.log('管理员模式但未获取到Token，使用默认Token')
         }
-      } else {
-        console.log('非管理员模式，使用默认Token')
       }
       
       // 调用GitHub API获取notes目录下的文件
@@ -78,12 +56,10 @@ export const useNotes = () => {
         'Accept': 'application/vnd.github.v3+json'
       }
       
-      // 如果有accessToken，无论是连接用户还是默认配置，都添加Authorization头
       if (authData.accessToken) {
         headers['Authorization'] = `token ${authData.accessToken}`
       }
       
-      // 添加时间戳参数确保获取最新数据
       const timestamp = Date.now()
       const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${timestamp}`, {
         headers
@@ -91,10 +67,10 @@ export const useNotes = () => {
       
       if (!response.ok) {
         if (response.status === 404) {
-          // notes目录不存在，返回空数组
           setNotes([])
           setIsLoadingNotes(false)
           setHasLoaded(true)
+          setHasMoreNotes(false)
           return
         }
         const errorData = await response.json().catch(() => ({}))
@@ -103,180 +79,105 @@ export const useNotes = () => {
       
       const files = await response.json()
       
-      // 过滤出.md文件并获取内容
-      const markdownFiles = files.filter((file: any) => 
-        file.type === 'file' && file.name.endsWith('.md')
+      // 过滤出.md文件并按时间排序（新到旧）
+      const markdownFiles = files
+        .filter((file: any) => file.type === 'file' && file.name.endsWith('.md'))
+        .sort((a: any, b: any) => {
+          // 按文件名中的时间戳排序（新到旧）
+          const timeA = a.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
+          const timeB = b.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
+          return timeB.localeCompare(timeA)
+        })
+      
+      // 分页处理
+      const pageSize = 10 // 每页加载10个笔记
+      const startIndex = (page - 1) * pageSize
+      const endIndex = startIndex + pageSize
+      const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
+      
+      setLoadingProgress({ current: 0, total: currentPageFiles.length })
+      
+      // 检查是否还有更多笔记
+      setHasMoreNotes(endIndex < markdownFiles.length)
+      
+      // 并发加载当前页的笔记内容
+      const notesWithContent = await Promise.all(
+        currentPageFiles.map(async (file: any, index: number) => {
+          try {
+            const contentHeaders: any = {
+              'Accept': 'application/vnd.github.v3+json'
+            }
+            
+            if (authData.accessToken) {
+              contentHeaders['Authorization'] = `token ${authData.accessToken}`
+            }
+            
+            // 获取笔记内容
+            const timestamp = Date.now()
+            const separator = file.url.includes('?') ? '&' : '?'
+            const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
+              headers: contentHeaders
+            })
+            
+            if (contentResponse.ok) {
+              const contentData = await contentResponse.json()
+              const content = decodeBase64Content(contentData.content)
+              
+              // 简化时间获取：使用文件的基本信息，避免额外的API调用
+              let created_at = file.created_at
+              let updated_at = file.updated_at
+              
+              // 解析笔记内容
+              const parsed = parseNoteContent(content, file.name)
+              
+              // 更新加载进度
+              setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
+              
+              return {
+                ...file,
+                contentPreview: parsed.contentPreview,
+                fullContent: content,
+                createdDate: parsed.createdDate,
+                updatedDate: parsed.updatedDate,
+                isPrivate: parsed.isPrivate,
+                created_at: created_at,
+                updated_at: updated_at
+              }
+            }
+            
+            return file
+          } catch (error) {
+            console.error(`获取笔记内容失败: ${file.name}`, error)
+            setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
+            return file
+          }
+        })
       )
-      
-      // 获取每个笔记的详细内容（限制并发数量以提高性能）
-      const batchSize = 5 // 每次处理5个笔记
-      const notesWithContent = []
-      
-      for (let i = 0; i < markdownFiles.length; i += batchSize) {
-        const batch = markdownFiles.slice(i, i + batchSize)
-        const batchResults = await Promise.all(
-          batch.map(async (file: any) => {
-            try {
-              const contentHeaders: any = {
-                'Accept': 'application/vnd.github.v3+json'
-              }
-              
-              // 如果有accessToken，无论是连接用户还是默认配置，都添加Authorization头
-              if (authData.accessToken) {
-                contentHeaders['Authorization'] = `token ${authData.accessToken}`
-              }
-              
-              // 添加时间戳参数确保获取最新数据
-              const timestamp = Date.now()
-              // 检查URL是否已经包含参数
-              const separator = file.url.includes('?') ? '&' : '?'
-              const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
-                headers: contentHeaders
-              })
-              
-              if (contentResponse.ok) {
-                const contentData = await contentResponse.json()
-                // 使用新的工具函数正确处理UTF-8编码的Base64内容
-                const content = decodeBase64Content(contentData.content)
-                
-                // 获取文件的提交历史来获取创建和修改时间
-                let created_at = file.created_at
-                let updated_at = file.updated_at
-                
-                try {
-                  // 获取文件的提交历史
-                  // 添加时间戳参数确保获取最新数据
-                  const timestamp = Date.now()
-                  const commitsResponse = await fetch(
-                    `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=1&t=${timestamp}`,
-                    { 
-                      headers: contentHeaders
-                    }
-                  )
-                  
-                  if (commitsResponse.ok) {
-                    const commits = await commitsResponse.json()
-                    if (commits.length > 0) {
-                      // 使用最新的提交时间作为更新时间
-                      updated_at = commits[0].commit.author.date
-                      
-                      // 获取第一个提交（创建时间）
-                      // 添加时间戳参数确保获取最新数据
-                      const timestamp = Date.now()
-                      const firstCommitResponse = await fetch(
-                        `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=100&t=${timestamp}`,
-                        { 
-                          headers: contentHeaders
-                        }
-                      )
-                      
-                      if (firstCommitResponse.ok) {
-                        const allCommits = await firstCommitResponse.json()
-                        if (allCommits.length > 0) {
-                          // 使用最后一个提交的时间作为创建时间（GitHub按时间倒序返回）
-                          created_at = allCommits[allCommits.length - 1].commit.author.date
-                        }
-                      }
-                    }
-                  }
-                } catch (error) {
-                  console.warn(`获取文件 ${file.name} 的提交历史失败:`, error)
-                }
-                
-                // 调试：查看GitHub API返回的原始数据
-                console.log(`笔记 ${file.name} 的GitHub API数据:`, {
-                  name: file.name,
-                  created_at: created_at,
-                  updated_at: updated_at,
-                  path: file.path,
-                  sha: file.sha
-                })
-                
-                // 解析笔记内容
-                const parsed = parseNoteContent(content, file.name)
-                
-                // 调试：查看解析后的数据
-                console.log(`笔记 ${file.name} 的解析数据:`, {
-                  title: parsed.title,
-                  createdDate: parsed.createdDate,
-                  updatedDate: parsed.updatedDate,
-                  isPrivate: parsed.isPrivate
-                })
-                
-                                        return {
-                          ...file,
-                          contentPreview: parsed.contentPreview,
-                          fullContent: content,
-                          createdDate: parsed.createdDate,
-                          updatedDate: parsed.updatedDate,
-                          isPrivate: parsed.isPrivate,
-                          // 使用从commits API获取的日期信息
-                          created_at: created_at,
-                          updated_at: updated_at
-                        }
-              }
-              
-              return file
-            } catch (error) {
-              console.error(`获取笔记内容失败: ${file.name}`, error)
-              return file
-            }
-          })
-        )
-        
-        notesWithContent.push(...batchResults)
-        
-        // 更新状态以显示进度（应用过滤逻辑）
-        if (i + batchSize < markdownFiles.length) {
-          const visibleNotesForProgress = notesWithContent.filter(note => {
-            if (!currentLoginStatus) {
-              // 未登录用户只能看到公开笔记
-              return !note.isPrivate
-            }
-            // 已登录用户可以看到所有笔记（包括私密笔记）
-            return true
-          })
-          setNotes(visibleNotesForProgress)
-        }
-      }
       
       // 过滤笔记 - 根据登录状态显示笔记
       const visibleNotes = notesWithContent.filter(note => {
         if (!currentLoginStatus) {
-          // 未登录用户只能看到公开笔记
           return !note.isPrivate
         }
-        // 已登录用户可以看到所有笔记（包括私密笔记）
         return true
       })
       
-      // 按更新时间从新到旧排序
-      const sortedNotes = visibleNotes.sort((a, b) => {
-        // 优先使用更新时间，如果没有则使用创建时间
-        const dateA = a.updated_at || a.updatedDate || a.created_at || a.createdDate
-        const dateB = b.updated_at || b.updatedDate || b.created_at || b.createdDate
-        
-        if (!dateA && !dateB) return 0
-        if (!dateA) return 1
-        if (!dateB) return -1
-        
-        try {
-          const timeA = new Date(dateA).getTime()
-          const timeB = new Date(dateB).getTime()
-          return timeB - timeA // 从新到旧排序
-        } catch {
-          return 0
-        }
-      })
+      // 如果是第一页或强制刷新，替换笔记列表；否则追加
+      if (page === 1 || forceRefresh) {
+        setNotes(visibleNotes)
+        setCurrentPage(1)
+      } else {
+        setNotes(prev => [...prev, ...visibleNotes])
+        setCurrentPage(page)
+      }
       
-      setNotes(sortedNotes)
       setIsLoadingNotes(false)
       setHasLoaded(true)
+      
     } catch (error) {
       console.error('加载笔记失败:', error)
       const errorMessage = error instanceof Error ? error.message : '请重试'
       
-      // 特殊处理配置错误
       if (errorMessage.includes('未配置默认仓库')) {
         throw new Error('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
       } else {
@@ -285,14 +186,19 @@ export const useNotes = () => {
     }
   }, [isConnected, getGitHubToken])
 
+  // 加载更多笔记
+  const loadMoreNotes = useCallback(() => {
+    if (!isLoadingNotes && hasMoreNotes) {
+      loadNotes(false, currentPage + 1)
+    }
+  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage])
+
   // 监听登录状态变化
   useEffect(() => {
-    // 等待GitHub状态加载完成后再检查登录状态
     if (!isLoading) {
       const currentStatus = isLoggedIn()
       if (currentStatus !== loginStatus) {
         setLoginStatus(currentStatus)
-        // 登录状态改变时重新加载笔记
         if (hasLoaded) {
           loadNotes(true)
         }
@@ -303,7 +209,6 @@ export const useNotes = () => {
   // 删除笔记
   const deleteNote = async (note: Note) => {
     try {
-      // 获取默认仓库配置
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
         throw new Error('未配置默认仓库')
@@ -312,22 +217,18 @@ export const useNotes = () => {
       let authData: any = null
       let selectedRepo: string | null = null
       
-      // 基础配置使用环境变量
       authData = {
         username: defaultConfig.owner,
         accessToken: getDefaultGitHubToken()
       }
       selectedRepo = defaultConfig.repo
       
-      // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
       
-      // 如果是管理员且已登录，使用GitHub Token
       if (currentLoginStatus) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken
-          console.log('管理员模式，使用GitHub Token删除笔记')
         }
       }
       
@@ -349,7 +250,6 @@ export const useNotes = () => {
         throw new Error(`删除失败: ${errorData.message || response.statusText}`)
       }
       
-      // 从列表中移除笔记
       setNotes(prev => prev.filter(n => n.sha !== note.sha))
       return true
     } catch (error) {
@@ -360,9 +260,7 @@ export const useNotes = () => {
 
   // 当连接状态改变时加载笔记，以及组件挂载时加载
   useEffect(() => {
-    // 等待GitHub状态加载完成后再加载笔记
     if (!isLoading) {
-      // 只在组件挂载时或连接状态真正改变时加载笔记
       if (!hasLoaded || isConnected) {
         loadNotes(true)
       }
@@ -373,6 +271,9 @@ export const useNotes = () => {
     notes,
     isLoadingNotes,
     loadNotes,
-    deleteNote
+    loadMoreNotes,
+    deleteNote,
+    hasMoreNotes,
+    loadingProgress
   }
 } 

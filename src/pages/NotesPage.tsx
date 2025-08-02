@@ -9,7 +9,7 @@ import { showMessage, filterNotes } from '@/utils/noteUtils'
 
 const NotesPage: React.FC = () => {
   const { isLoading, isConnected, isLoggedIn } = useGitHub()
-  const { notes, isLoadingNotes, loadNotes, deleteNote } = useNotes()
+  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchQuery, setSearchQuery] = useState('')
@@ -191,22 +191,62 @@ const NotesPage: React.FC = () => {
             创建第一篇笔记
           </button>
         </div>
-      ) : (
-        <div className="grid gap-4">
-          {filteredNotes.map((note) => (
-            <NoteCard
-              key={note.sha}
-              note={note}
-              onEdit={handleEditNote}
-              onDelete={handleDeleteNote}
-              onConfirmDelete={confirmDelete}
-              onCancelDelete={() => setConfirmingDelete(null)}
-              confirmingDeleteId={confirmingDelete}
-              deletingNoteId={deletingNote}
-            />
-          ))}
-        </div>
-      )}
+             ) : (
+         <div className="space-y-4">
+           <div className="grid gap-4">
+             {filteredNotes.map((note) => (
+               <NoteCard
+                 key={note.sha}
+                 note={note}
+                 onEdit={handleEditNote}
+                 onDelete={handleDeleteNote}
+                 onConfirmDelete={confirmDelete}
+                 onCancelDelete={() => setConfirmingDelete(null)}
+                 confirmingDeleteId={confirmingDelete}
+                 deletingNoteId={deletingNote}
+               />
+             ))}
+           </div>
+           
+           {/* 加载更多按钮 */}
+           {hasMoreNotes && (
+             <div className="text-center pt-6">
+               <button
+                 onClick={loadMoreNotes}
+                 disabled={isLoadingNotes}
+                 className="btn-neomorphic inline-flex items-center"
+               >
+                 {isLoadingNotes ? (
+                   <>
+                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                     加载中... ({loadingProgress.current}/{loadingProgress.total})
+                   </>
+                 ) : (
+                   <>
+                     <Plus className="w-4 h-4 mr-2" />
+                     加载更多笔记
+                   </>
+                 )}
+               </button>
+             </div>
+           )}
+           
+           {/* 加载进度显示 */}
+           {isLoadingNotes && loadingProgress.total > 0 && (
+             <div className="text-center py-4">
+               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                 <div 
+                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                   style={{ width: `${(loadingProgress.current / loadingProgress.total) * 100}%` }}
+                 ></div>
+               </div>
+               <p className="text-sm text-gray-600 dark:text-gray-400">
+                 正在加载笔记... {loadingProgress.current}/{loadingProgress.total}
+               </p>
+             </div>
+           )}
+         </div>
+       )}
     </div>
   )
 }
