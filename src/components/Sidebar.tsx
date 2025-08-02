@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Settings, BookOpen, X, AlertCircle } from 'lucide-react'
+import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { Settings, BookOpen, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 interface SidebarProps {
@@ -9,9 +9,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
-  const navigate = useNavigate()
   const { isLoggedIn, isConnected } = useGitHub()
-  const [showConfigModal, setShowConfigModal] = useState(false)
 
   console.log('Sidebar调试:', {
     isLoggedIn: isLoggedIn(),

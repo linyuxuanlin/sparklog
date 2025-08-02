@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { parseNoteContent, filterNotes, decodeBase64Content } from '@/utils/noteUtils'
+import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 
 export const useNotes = () => {
   const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
@@ -12,9 +12,9 @@ export const useNotes = () => {
   const [loginStatus, setLoginStatus] = useState(isLoggedIn())
 
   // 从GitHub仓库加载笔记
-  const loadNotes = useCallback(async () => {
-    // 如果正在加载，避免重复请求
-    if (isLoadingNotes) {
+  const loadNotes = useCallback(async (forceRefresh = false) => {
+    // 如果正在加载且不是强制刷新，避免重复请求
+    if (isLoadingNotes && !forceRefresh) {
       return
     }
     
@@ -83,7 +83,9 @@ export const useNotes = () => {
         headers['Authorization'] = `token ${authData.accessToken}`
       }
       
-      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes`, {
+      // 添加时间戳参数确保获取最新数据
+      const timestamp = Date.now()
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${timestamp}`, {
         headers
       })
       
@@ -124,7 +126,11 @@ export const useNotes = () => {
                 contentHeaders['Authorization'] = `token ${authData.accessToken}`
               }
               
-              const contentResponse = await fetch(file.url, {
+              // 添加时间戳参数确保获取最新数据
+              const timestamp = Date.now()
+              // 检查URL是否已经包含参数
+              const separator = file.url.includes('?') ? '&' : '?'
+              const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
                 headers: contentHeaders
               })
               
@@ -139,9 +145,13 @@ export const useNotes = () => {
                 
                 try {
                   // 获取文件的提交历史
+                  // 添加时间戳参数确保获取最新数据
+                  const timestamp = Date.now()
                   const commitsResponse = await fetch(
-                    `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=1`,
-                    { headers: contentHeaders }
+                    `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=1&t=${timestamp}`,
+                    { 
+                      headers: contentHeaders
+                    }
                   )
                   
                   if (commitsResponse.ok) {
@@ -151,9 +161,13 @@ export const useNotes = () => {
                       updated_at = commits[0].commit.author.date
                       
                       // 获取第一个提交（创建时间）
+                      // 添加时间戳参数确保获取最新数据
+                      const timestamp = Date.now()
                       const firstCommitResponse = await fetch(
-                        `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=100`,
-                        { headers: contentHeaders }
+                        `https://api.github.com/repos/${authData.username}/${selectedRepo}/commits?path=${file.path}&per_page=100&t=${timestamp}`,
+                        { 
+                          headers: contentHeaders
+                        }
                       )
                       
                       if (firstCommitResponse.ok) {
@@ -280,7 +294,7 @@ export const useNotes = () => {
         setLoginStatus(currentStatus)
         // 登录状态改变时重新加载笔记
         if (hasLoaded) {
-          loadNotes()
+          loadNotes(true)
         }
       }
     }
@@ -348,9 +362,12 @@ export const useNotes = () => {
   useEffect(() => {
     // 等待GitHub状态加载完成后再加载笔记
     if (!isLoading) {
-      loadNotes()
+      // 只在组件挂载时或连接状态真正改变时加载笔记
+      if (!hasLoaded || isConnected) {
+        loadNotes(true)
+      }
     }
-  }, [isConnected, loginStatus, isLoading])
+  }, [isConnected, isLoading, hasLoaded])
 
   return {
     notes,

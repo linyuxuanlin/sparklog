@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus, BookOpen, Search, Loader2, RefreshCw, Settings, AlertCircle } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
@@ -23,11 +23,13 @@ const NotesPage: React.FC = () => {
   useEffect(() => {
     if (location.state?.shouldRefresh) {
       console.log('检测到需要刷新笔记列表')
-      loadNotes()
+      loadNotes(true)
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [location.state, loadNotes, navigate, location.pathname])
+
+
 
   // 显示消息提示
   const handleShowMessage = (text: string, type: 'success' | 'error') => {
@@ -150,27 +152,15 @@ const NotesPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={loadNotes}
-              disabled={isLoadingNotes}
-              className="btn-neomorphic inline-flex items-center"
-            >
-              {isLoadingNotes ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4 mr-2" />
-              )}
-              刷新
-            </button>
-            <button
-              onClick={handleCreateNote}
-              className="btn-neomorphic-primary inline-flex items-center"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              新建笔记
-            </button>
-          </div>
+                     <div className="flex items-center space-x-3">
+             <button
+               onClick={handleCreateNote}
+               className="btn-neomorphic-primary inline-flex items-center"
+             >
+               <Plus className="w-4 h-4 mr-2" />
+               新建笔记
+             </button>
+           </div>
         </div>
         {searchQuery && (
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Loader2 } from 'lucide-react'
+import { Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { decodeBase64Content, encodeBase64Content } from '@/utils/noteUtils'
@@ -124,7 +124,8 @@ const NoteEditPage: React.FC = () => {
       }
       
       // 查找笔记文件
-      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes`, {
+      const listTimestamp = Date.now()
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${listTimestamp}`, {
         headers: {
           'Authorization': `token ${authData.accessToken}`,
           'Accept': 'application/vnd.github.v3+json'
@@ -161,7 +162,10 @@ const NoteEditPage: React.FC = () => {
       })
       
       // 获取笔记内容
-      const contentResponse = await fetch(noteFile.url, {
+      const contentTimestamp = Date.now()
+      // 检查URL是否已经包含参数
+      const separator = noteFile.url.includes('?') ? '&' : '?'
+      const contentResponse = await fetch(`${noteFile.url}${separator}t=${contentTimestamp}`, {
         headers: {
           'Authorization': `token ${authData.accessToken}`,
           'Accept': 'application/vnd.github.v3+json'
@@ -357,9 +361,8 @@ const NoteEditPage: React.FC = () => {
        }
        
        showMessage('笔记保存成功！', 'success')
-       setTimeout(() => {
-         navigate('/', { state: { shouldRefresh: true } })
-       }, 1500)
+       // 立即刷新，不等待
+       navigate('/', { state: { shouldRefresh: true } })
     } catch (error) {
       console.error('保存笔记失败:', error)
       showMessage(`保存失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
