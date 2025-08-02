@@ -91,42 +91,36 @@ const SettingsPage: React.FC = () => {
             </p>
             
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前配置</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前环境变量：</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>GitHub仓库:</span>
+                  <span>GitHub 仓库</span>
                   <span className="font-mono text-blue-800 dark:text-blue-200">
                     {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>管理员状态:</span>
-                  <span className={isConnected ? 'text-green-600' : 'text-gray-600'}>
-                    {isConnected ? '已登录' : '未登录'}
+                  <span>VITE_REPO_OWNER</span>
+                  <span className={envVars.VITE_REPO_OWNER ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.VITE_REPO_OWNER ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>环境变量:</span>
-                  <span className={envVars.VITE_REPO_OWNER && envVars.VITE_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_REPO_OWNER && envVars.VITE_REPO_NAME ? '已配置' : '未配置'}
+                  <span>VITE_REPO_NAME</span>
+                  <span className={envVars.VITE_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.VITE_REPO_NAME ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>GitHub Token:</span>
+                  <span>VITE_GITHUB_TOKEN</span>
                   <span className={envVars.VITE_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
                     {envVars.VITE_GITHUB_TOKEN}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>管理员密码:</span>
+                  <span>VITE_ADMIN_PASSWORD</span>
                   <span className={envVars.VITE_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
                     {envVars.VITE_ADMIN_PASSWORD}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>本地认证:</span>
-                  <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600' : 'text-red-600'}>
-                    {localStorage.getItem('sparklog_admin_auth') ? '已保存' : '未保存'}
                   </span>
                 </div>
               </div>
