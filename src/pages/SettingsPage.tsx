@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Lock, Settings, ExternalLink, LogOut, LogIn, Info, Shield } from 'lucide-react'
+import { Lock, Settings, ExternalLink, LogOut, LogIn, Shield } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig } from '@/config/defaultRepo'
 
@@ -7,7 +7,6 @@ const SettingsPage: React.FC = () => {
   const { isConnected, disconnect, authenticate } = useGitHub()
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
-  const [showDebugInfo, setShowDebugInfo] = useState(false)
   const [password, setPassword] = useState('')
   const [showLoginForm, setShowLoginForm] = useState(false)
 
@@ -106,6 +105,30 @@ const SettingsPage: React.FC = () => {
                     {isConnected ? '已登录' : '未登录'}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span>环境变量:</span>
+                  <span className={envVars.VITE_REPO_OWNER && envVars.VITE_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.VITE_REPO_OWNER && envVars.VITE_REPO_NAME ? '已配置' : '未配置'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>GitHub Token:</span>
+                  <span className={envVars.VITE_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.VITE_GITHUB_TOKEN}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>管理员密码:</span>
+                  <span className={envVars.VITE_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.VITE_ADMIN_PASSWORD}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>本地认证:</span>
+                  <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600' : 'text-red-600'}>
+                    {localStorage.getItem('sparklog_admin_auth') ? '已保存' : '未保存'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -193,52 +216,6 @@ const SettingsPage: React.FC = () => {
                   管理员登录
                 </button>
               )}
-            </div>
-          )}
-        </div>
-
-        {/* 调试信息 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Info className="w-6 h-6 text-gray-700 dark:text-gray-300 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">调试信息</h2>
-            </div>
-            <button
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-            >
-              {showDebugInfo ? '隐藏' : '显示'}
-            </button>
-          </div>
-          
-          {showDebugInfo && (
-            <div className="space-y-3">
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">环境变量</h3>
-                <div className="space-y-1 text-sm">
-                  {Object.entries(envVars).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="font-mono text-gray-600 dark:text-gray-400">{key}:</span>
-                      <span className={`font-mono ${value && value !== '未设置' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {value || '未设置'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">本地存储</h3>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>管理员认证:</span>
-                    <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                      {localStorage.getItem('sparklog_admin_auth') ? '已保存' : '未保存'}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
         </div>
