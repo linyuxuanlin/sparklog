@@ -74,13 +74,8 @@ const NotesPage: React.FC = () => {
     }
   }
 
-  // 过滤笔记并确保唯一性
+  // 过滤笔记
   const filteredNotes = filterNotes(notes, searchQuery)
-  
-  // 确保笔记的唯一性，基于SHA去重
-  const uniqueFilteredNotes = filteredNotes.filter((note, index, self) => 
-    index === self.findIndex(n => n.sha === note.sha)
-  )
 
   if (isLoading) {
     return (
@@ -169,7 +164,7 @@ const NotesPage: React.FC = () => {
         </div>
         {searchQuery && (
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            搜索: "{searchQuery}" - 找到 {uniqueFilteredNotes.length} 个笔记
+            搜索: "{searchQuery}" - 找到 {filteredNotes.length} 个笔记
           </div>
         )}
       </div>
@@ -199,9 +194,9 @@ const NotesPage: React.FC = () => {
              ) : (
          <div className="space-y-4">
            <div className="grid gap-4">
-             {uniqueFilteredNotes.map((note, index) => (
+             {filteredNotes.map((note) => (
                <NoteCard
-                 key={`${note.sha}-${index}`}
+                 key={note.sha}
                  note={note}
                  onEdit={handleEditNote}
                  onDelete={handleDeleteNote}
