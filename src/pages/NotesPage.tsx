@@ -208,28 +208,28 @@ const NotesPage: React.FC = () => {
              ))}
            </div>
            
-           {/* 加载更多按钮 */}
-           {hasMoreNotes && (
-             <div className="text-center pt-6">
-               <button
-                 onClick={loadMoreNotes}
-                 disabled={isLoadingNotes}
-                 className="btn-neomorphic inline-flex items-center"
-               >
-                 {isLoadingNotes ? (
-                   <>
-                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                     加载中... ({loadingProgress.current}/{loadingProgress.total})
-                   </>
-                 ) : (
-                   <>
-                     <Plus className="w-4 h-4 mr-2" />
-                     加载更多笔记
-                   </>
-                 )}
-               </button>
-             </div>
-           )}
+                       {/* 加载更多按钮 */}
+            {hasMoreNotes && (
+              <div className="text-center pt-6">
+                <button
+                  onClick={loadMoreNotes}
+                  disabled={isLoadingNotes}
+                  className="btn-neomorphic inline-flex items-center"
+                >
+                  {isLoadingNotes ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      加载中...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      加载更多
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
            
            {/* 加载进度显示 */}
            {isLoadingNotes && loadingProgress.total > 0 && (

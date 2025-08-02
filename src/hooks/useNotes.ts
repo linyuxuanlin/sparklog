@@ -13,6 +13,85 @@ export const useNotes = () => {
   const [hasMoreNotes, setHasMoreNotes] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 })
+  const [preloadedNotes, setPreloadedNotes] = useState<Note[]>([])
+  const [isPreloading, setIsPreloading] = useState(false)
+
+  // 预加载下一批笔记
+  const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
+    if (isPreloading) return
+    
+    setIsPreloading(true)
+    
+    try {
+      const pageSize = 5
+      const endIndex = startIndex + pageSize
+      const nextBatchFiles = markdownFiles.slice(startIndex, endIndex)
+      
+      // 并发加载下一批笔记内容
+      const nextBatchNotes = await Promise.all(
+        nextBatchFiles.map(async (file: any) => {
+          try {
+            const contentHeaders: any = {
+              'Accept': 'application/vnd.github.v3+json'
+            }
+            
+            if (authData.accessToken) {
+              contentHeaders['Authorization'] = `token ${authData.accessToken}`
+            }
+            
+            // 获取笔记内容
+            const timestamp = Date.now()
+            const separator = file.url.includes('?') ? '&' : '?'
+            const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
+              headers: contentHeaders
+            })
+            
+            if (contentResponse.ok) {
+              const contentData = await contentResponse.json()
+              const content = decodeBase64Content(contentData.content)
+              
+              // 简化时间获取：使用文件的基本信息，避免额外的API调用
+              let created_at = file.created_at
+              let updated_at = file.updated_at
+              
+              // 解析笔记内容
+              const parsed = parseNoteContent(content, file.name)
+              
+              return {
+                ...file,
+                contentPreview: parsed.contentPreview,
+                fullContent: content,
+                createdDate: parsed.createdDate,
+                updatedDate: parsed.updatedDate,
+                isPrivate: parsed.isPrivate,
+                created_at: created_at,
+                updated_at: updated_at
+              }
+            }
+            
+            return file
+          } catch (error) {
+            console.error(`预加载笔记内容失败: ${file.name}`, error)
+            return file
+          }
+        })
+      )
+      
+      // 过滤笔记 - 根据登录状态显示笔记
+      const visibleNextBatchNotes = nextBatchNotes.filter(note => {
+        if (!currentLoginStatus) {
+          return !note.isPrivate
+        }
+        return true
+      })
+      
+      setPreloadedNotes(visibleNextBatchNotes)
+    } catch (error) {
+      console.error('预加载笔记失败:', error)
+    } finally {
+      setIsPreloading(false)
+    }
+  }, [isPreloading])
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
@@ -90,7 +169,7 @@ export const useNotes = () => {
         })
       
       // 分页处理
-      const pageSize = 10 // 每页加载10个笔记
+      const pageSize = 5 // 每页加载5个笔记
       const startIndex = (page - 1) * pageSize
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
@@ -166,9 +245,17 @@ export const useNotes = () => {
       if (page === 1 || forceRefresh) {
         setNotes(visibleNotes)
         setCurrentPage(1)
+        // 预加载下一批笔记
+        if (endIndex < markdownFiles.length) {
+          preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
+        }
       } else {
         setNotes(prev => [...prev, ...visibleNotes])
         setCurrentPage(page)
+        // 预加载下一批笔记
+        if (endIndex < markdownFiles.length) {
+          preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
+        }
       }
       
       setIsLoadingNotes(false)
@@ -189,9 +276,26 @@ export const useNotes = () => {
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
     if (!isLoadingNotes && hasMoreNotes) {
-      loadNotes(false, currentPage + 1)
+      // 如果有预加载的笔记，立即显示
+      if (preloadedNotes.length > 0) {
+        setNotes(prev => [...prev, ...preloadedNotes])
+        setCurrentPage(prev => prev + 1)
+        setPreloadedNotes([])
+        
+        // 检查是否还有更多笔记需要预加载
+        if (currentPage * 5 + 5 < notes.length + preloadedNotes.length + 10) {
+          // 这里需要重新获取文件列表来预加载下一批
+          // 暂时先清空预加载状态，下次加载时会重新预加载
+          setHasMoreNotes(true)
+        } else {
+          setHasMoreNotes(false)
+        }
+      } else {
+        // 如果没有预加载的笔记，正常加载
+        loadNotes(false, currentPage + 1)
+      }
     }
-  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage])
+  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, notes.length])
 
   // 监听登录状态变化
   useEffect(() => {
@@ -274,6 +378,8 @@ export const useNotes = () => {
     loadMoreNotes,
     deleteNote,
     hasMoreNotes,
-    loadingProgress
+    loadingProgress,
+    isPreloading,
+    preloadedNotes
   }
 } 
