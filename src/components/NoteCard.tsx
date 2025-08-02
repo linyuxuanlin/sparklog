@@ -34,6 +34,124 @@ interface NoteCardProps {
   deletingNoteId: string | null
 }
 
+// 格式化时间显示
+const formatTimeDisplay = (dateString: string | undefined): string => {
+  if (!dateString) return '未知日期'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return '未知日期'
+    }
+    
+    const now = new Date()
+    
+    // 获取日期部分（忽略时间）
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterdayOnly = new Date(todayOnly.getTime() - 24 * 60 * 60 * 1000)
+    
+    // 调试信息
+    console.log('时间计算调试:', {
+      originalDate: dateString,
+      parsedDate: date.toISOString(),
+      dateOnly: dateOnly.toISOString(),
+      todayOnly: todayOnly.toISOString(),
+      yesterdayOnly: yesterdayOnly.toISOString(),
+      isToday: dateOnly.getTime() === todayOnly.getTime(),
+      isYesterday: dateOnly.getTime() === yesterdayOnly.getTime()
+    })
+    
+    if (dateOnly.getTime() === todayOnly.getTime()) {
+      return '今天'
+    } else if (dateOnly.getTime() === yesterdayOnly.getTime()) {
+      return '昨天'
+    } else {
+      // 计算天数差
+      const diffTime = todayOnly.getTime() - dateOnly.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays <= 7) {
+        return `${diffDays}天前`
+      } else if (diffDays <= 30) {
+        const weeks = Math.floor(diffDays / 7)
+        return `${weeks}周前`
+      } else {
+        return date.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      }
+    }
+  } catch {
+    return '未知日期'
+  }
+}
+
+// 格式化精确时间
+const formatExactTime = (dateString: string | undefined): string => {
+  if (!dateString) return '未知'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return '无效日期'
+    }
+    
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch {
+    return '无效日期'
+  }
+}
+
+// 时间显示组件
+const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
+  const createdTime = note.created_at || note.createdDate
+  const updatedTime = note.updated_at || note.updatedDate
+  
+  // 优先使用更新时间，如果没有则使用创建时间
+  const displayTime = updatedTime || createdTime
+  
+  // 生成悬停提示内容
+  const getTooltipContent = () => {
+    const created = formatExactTime(createdTime)
+    const updated = formatExactTime(updatedTime)
+    
+    let tooltip = ''
+    if (createdTime && updatedTime) {
+      tooltip = `创建时间: ${created}\n修改时间: ${updated}`
+    } else if (createdTime) {
+      tooltip = `创建时间: ${created}`
+    } else if (updatedTime) {
+      tooltip = `修改时间: ${updated}`
+    } else {
+      tooltip = '时间信息未知'
+    }
+    
+    return tooltip
+  }
+  
+  return (
+    <div className="flex items-center">
+      <Calendar className="w-4 h-4 mr-1" />
+      <span 
+        className="cursor-help hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        title={getTooltipContent()}
+      >
+        {formatTimeDisplay(displayTime)}
+      </span>
+    </div>
+  )
+}
+
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onEdit,
@@ -62,58 +180,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
           
           <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-1" />
-              <span>
-                {(() => {
-                  // 调试：查看笔记的日期数据
-                  console.log(`笔记 ${note.name} 的日期数据:`, {
-                    created_at: note.created_at,
-                    createdDate: note.createdDate,
-                    updated_at: note.updated_at,
-                    updatedDate: note.updatedDate
-                  })
-                  
-                  // 优先使用GitHub API提供的日期
-                  const dateToUse = note.created_at || note.createdDate || note.updated_at || note.updatedDate
-                  
-                  if (!dateToUse) {
-                    return '未知日期'
-                  }
-                  
-                  try {
-                    const date = new Date(dateToUse)
-                    if (isNaN(date.getTime())) {
-                      return '未知日期'
-                    }
-                    
-                    // 格式化日期
-                    const now = new Date()
-                    const diffTime = Math.abs(now.getTime() - date.getTime())
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-                    
-                    if (diffDays === 0) {
-                      return '今天'
-                    } else if (diffDays === 1) {
-                      return '昨天'
-                    } else if (diffDays <= 7) {
-                      return `${diffDays}天前`
-                    } else if (diffDays <= 30) {
-                      const weeks = Math.floor(diffDays / 7)
-                      return `${weeks}周前`
-                    } else {
-                      return date.toLocaleDateString('zh-CN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })
-                    }
-                  } catch {
-                    return '未知日期'
-                  }
-                })()}
-              </span>
-            </div>
+            <TimeDisplay note={note} />
             <div className="flex items-center space-x-1">
               {note.isPrivate ? (
                 <>

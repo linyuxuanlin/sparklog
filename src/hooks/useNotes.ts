@@ -236,10 +236,11 @@ export const useNotes = () => {
         return true
       })
       
-      // 按创建时间从新到旧排序
+      // 按更新时间从新到旧排序
       const sortedNotes = visibleNotes.sort((a, b) => {
-        const dateA = a.created_at || a.createdDate || a.updated_at || a.updatedDate
-        const dateB = b.created_at || b.createdDate || b.updated_at || b.updatedDate
+        // 优先使用更新时间，如果没有则使用创建时间
+        const dateA = a.updated_at || a.updatedDate || a.created_at || a.createdDate
+        const dateB = b.updated_at || b.updatedDate || b.created_at || b.createdDate
         
         if (!dateA && !dateB) return 0
         if (!dateA) return 1
