@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { parseNoteContent } from '@/utils/noteUtils'
+import { parseNoteContent, filterNotes, decodeBase64Content } from '@/utils/noteUtils'
 
 export const useNotes = () => {
   const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
@@ -130,7 +130,8 @@ export const useNotes = () => {
               
               if (contentResponse.ok) {
                 const contentData = await contentResponse.json()
-                const content = atob(contentData.content) // 解码Base64内容
+                // 使用新的工具函数正确处理UTF-8编码的Base64内容
+                const content = decodeBase64Content(contentData.content)
                 
                 // 获取文件的提交历史来获取创建和修改时间
                 let created_at = file.created_at

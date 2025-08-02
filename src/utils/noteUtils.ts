@@ -1,5 +1,45 @@
 import { Note } from '@/types/Note'
 
+// 正确处理UTF-8编码的Base64内容
+export const decodeBase64Content = (base64Content: string): string => {
+  try {
+    // 现代浏览器推荐的方法
+    const binaryString = atob(base64Content)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+    return new TextDecoder('utf-8').decode(bytes)
+  } catch (error) {
+    // 如果现代方法失败，回退到传统方法
+    try {
+      return decodeURIComponent(escape(atob(base64Content)))
+    } catch (fallbackError) {
+      console.error('Base64解码失败:', error, fallbackError)
+      return atob(base64Content) // 最后的回退
+    }
+  }
+}
+
+// 正确编码内容为Base64
+export const encodeBase64Content = (content: string): string => {
+  try {
+    // 现代浏览器推荐的方法
+    const encoder = new TextEncoder()
+    const bytes = encoder.encode(content)
+    const binaryString = String.fromCharCode(...bytes)
+    return btoa(binaryString)
+  } catch (error) {
+    // 如果现代方法失败，回退到传统方法
+    try {
+      return btoa(unescape(encodeURIComponent(content)))
+    } catch (fallbackError) {
+      console.error('Base64编码失败:', error, fallbackError)
+      return btoa(content) // 最后的回退
+    }
+  }
+}
+
 // 显示消息提示
 export const showMessage = (
   setMessage: (text: string) => void,

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Save, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
+import { decodeBase64Content, encodeBase64Content } from '@/utils/noteUtils'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
@@ -172,7 +173,8 @@ const NoteEditPage: React.FC = () => {
       }
       
       const contentData = await contentResponse.json()
-      const fullContent = atob(contentData.content)
+      // 使用新的工具函数正确处理UTF-8编码的Base64内容
+      const fullContent = decodeBase64Content(contentData.content)
       
       // 解析笔记内容
       const lines = fullContent.split('\n')
@@ -304,7 +306,7 @@ const NoteEditPage: React.FC = () => {
        // 调用GitHub API保存笔记
        const requestBody: any = {
          message: `${isNewNote ? '创建' : '更新'}笔记: ${timestamp}`,
-         content: btoa(unescape(encodeURIComponent(noteContent))), // Base64编码
+         content: encodeBase64Content(noteContent), // 使用新的工具函数进行Base64编码
          branch: 'main'
        }
        
