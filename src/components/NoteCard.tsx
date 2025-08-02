@@ -30,6 +30,7 @@ interface NoteCardProps {
   onDelete: (note: Note) => void
   onConfirmDelete: (note: Note) => void
   onCancelDelete: () => void
+  onOpen: (note: Note) => void
   confirmingDeleteId: string | null
   deletingNoteId: string | null
 }
@@ -158,6 +159,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onDelete,
   onConfirmDelete,
   onCancelDelete,
+  onOpen,
   confirmingDeleteId,
   deletingNoteId
 }) => {
@@ -166,7 +168,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const isDeletingNote = deletingNoteId === note.sha
 
   return (
-    <div className="card p-6 hover:shadow-md transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+    <div 
+      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+      onClick={() => onOpen(note)}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
           {/* 显示内容预览 */}
@@ -203,14 +208,20 @@ const NoteCard: React.FC<NoteCardProps> = ({
           {isConfirming ? (
             <>
               <button
-                onClick={() => onConfirmDelete(note)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onConfirmDelete(note)
+                }}
                 className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 title="确认删除"
               >
                 <Check className="w-4 h-4" />
               </button>
               <button
-                onClick={onCancelDelete}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCancelDelete()
+                }}
                 className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 title="取消删除"
               >
@@ -222,14 +233,21 @@ const NoteCard: React.FC<NoteCardProps> = ({
               {isLoggedIn() && (
                 <>
                   <button
-                    onClick={() => onEdit(note)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      console.log('NoteCard编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
+                      onEdit(note)
+                    }}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     title="编辑笔记"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => onDelete(note)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(note)
+                    }}
                     disabled={isDeletingNote}
                     className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="删除笔记"
@@ -244,6 +262,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                     href={note.html_url}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     title="在GitHub查看"
                   >

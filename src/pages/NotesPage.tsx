@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import { Plus, BookOpen, Search, Settings, AlertCircle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
+import NoteDetailModal from '@/components/NoteDetailModal'
 import { Note } from '@/types/Note'
 import { showMessage, filterNotes } from '@/utils/noteUtils'
 
@@ -12,12 +13,15 @@ const NotesPage: React.FC = () => {
   const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
+  const params = useParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // 检查是否需要刷新笔记列表
   useEffect(() => {
@@ -28,6 +32,35 @@ const NotesPage: React.FC = () => {
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [location.state, loadNotes, navigate, location.pathname])
+
+  // 处理URL参数，如果有noteId参数则打开对应的笔记
+  useEffect(() => {
+    if (params.noteId && notes.length > 0) {
+      const noteId = decodeURIComponent(params.noteId)
+      const targetNote = notes.find(note => note.name.replace(/\.md$/, '') === noteId)
+      if (targetNote) {
+        setSelectedNote(targetNote)
+        setIsModalOpen(true)
+        // 更新URL但不重新加载页面
+        navigate(`/note/${params.noteId}`, { replace: true })
+      }
+    }
+  }, [params.noteId, notes, navigate])
+
+  // 处理打开笔记
+  const handleOpenNote = (note: Note) => {
+    setSelectedNote(note)
+    setIsModalOpen(true)
+    const noteId = encodeURIComponent(note.name.replace(/\.md$/, ''))
+    navigate(`/note/${noteId}`)
+  }
+
+  // 处理关闭模态框
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedNote(null)
+    navigate('/')
+  }
 
 
 
@@ -50,7 +83,13 @@ const NotesPage: React.FC = () => {
 
   // 编辑笔记
   const handleEditNote = (note: Note) => {
+    // 先关闭模态框
+    setIsModalOpen(false)
+    setSelectedNote(null)
+    
+    // 然后跳转到编辑页面
     const timestamp = note.name.replace(/\.md$/, '')
+    console.log('编辑笔记:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
     navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
@@ -66,6 +105,13 @@ const NotesPage: React.FC = () => {
     try {
       await deleteNote(note)
       handleShowMessage('笔记删除成功！', 'success')
+      
+      // 如果当前有模态框打开，关闭它并跳转到首页
+      if (isModalOpen) {
+        setIsModalOpen(false)
+        setSelectedNote(null)
+        navigate('/')
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '请重试'
       handleShowMessage(`删除失败: ${errorMessage}`, 'error')
@@ -202,6 +248,7 @@ const NotesPage: React.FC = () => {
                  onDelete={handleDeleteNote}
                  onConfirmDelete={confirmDelete}
                  onCancelDelete={() => setConfirmingDelete(null)}
+                 onOpen={handleOpenNote}
                  confirmingDeleteId={confirmingDelete}
                  deletingNoteId={deletingNote}
                />
@@ -247,6 +294,19 @@ const NotesPage: React.FC = () => {
            )}
          </div>
        )}
+      
+      {/* 笔记详情模态框 */}
+      <NoteDetailModal
+        note={selectedNote}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onEdit={handleEditNote}
+        onDelete={handleDeleteNote}
+        onConfirmDelete={confirmDelete}
+        onCancelDelete={() => setConfirmingDelete(null)}
+        confirmingDeleteId={confirmingDelete}
+        deletingNoteId={deletingNote}
+      />
     </div>
   )
 }

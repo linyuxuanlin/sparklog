@@ -44,13 +44,15 @@ const NoteEditPage: React.FC = () => {
     console.log('编辑笔记useEffect调试:', {
       isEditMode,
       title,
+      decodedTitle: title ? decodeURIComponent(title) : null,
       isLoggedIn: isLoggedInStable(),
       shouldLoad: isEditMode && title && isLoggedInStable()
     })
     
     if (isEditMode && title && isLoggedInStable()) {
-      console.log('开始加载笔记:', decodeURIComponent(title))
-      loadExistingNote(decodeURIComponent(title))
+      const decodedTitle = decodeURIComponent(title)
+      console.log('开始加载笔记:', decodedTitle)
+      loadExistingNote(decodedTitle)
     }
   }, [isEditMode, title, isLoggedInStable])
 
@@ -139,16 +141,27 @@ const NoteEditPage: React.FC = () => {
       const files = await response.json()
       console.log('获取到的文件列表:', files.map((f: any) => f.name))
       
-      const noteFile = files.find((file: any) => 
+      // 首先尝试精确匹配
+      let noteFile = files.find((file: any) => 
         file.name.endsWith('.md') && 
-        (file.name.replace(/\.md$/, '') === noteTitle || 
-         file.name.includes(noteTitle))
+        file.name.replace(/\.md$/, '') === noteTitle
       )
+      
+      // 如果没有精确匹配，再尝试包含匹配
+      if (!noteFile) {
+        noteFile = files.find((file: any) => 
+          file.name.endsWith('.md') && 
+          file.name.includes(noteTitle)
+        )
+      }
       
       console.log('查找笔记文件结果:', {
         noteTitle,
         foundFile: noteFile,
-        searchPattern: noteTitle
+        searchPattern: noteTitle,
+        allFiles: files.map((f: any) => f.name),
+        exactMatches: files.filter((f: any) => f.name.endsWith('.md') && f.name.replace(/\.md$/, '') === noteTitle).map((f: any) => f.name),
+        includesMatches: files.filter((f: any) => f.name.endsWith('.md') && f.name.includes(noteTitle)).map((f: any) => f.name)
       })
       
       if (!noteFile) {

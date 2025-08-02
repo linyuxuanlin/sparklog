@@ -14,16 +14,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   preview = false
 }) => {
   return (
-    <div className={`prose prose-sm max-w-none dark:prose-invert ${className}`}>
+    <div className={`prose max-w-none dark:prose-invert ${className}`}>
       <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{
-          // 段落处理
-          p: ({ children }) => (
-            <p className={`text-gray-600 dark:text-gray-300 mb-2 last:mb-0 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </p>
-          ),
+                     // 段落处理
+           p: ({ children }) => (
+             <p className="text-gray-600 dark:text-gray-300 mb-2 last:mb-0 text-inherit">
+               {children}
+             </p>
+           ),
           // 标题处理
           h1: ({ children }) => (
             <h1 className="text-gray-900 dark:text-gray-100 font-bold text-lg mb-2">
@@ -74,21 +74,21 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </pre>
           ),
           // 列表处理
-          ul: ({ children }) => (
-            <ul className={`list-disc list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </ul>
-          ),
-          ol: ({ children }) => (
-            <ol className={`list-decimal list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </ol>
-          ),
-          li: ({ children }) => (
-            <li className={`text-gray-600 dark:text-gray-300 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </li>
-          ),
+                     ul: ({ children }) => (
+             <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 text-inherit">
+               {children}
+             </ul>
+           ),
+           ol: ({ children }) => (
+             <ol className="list-decimal list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 text-inherit">
+               {children}
+             </ol>
+           ),
+           li: ({ children }) => (
+             <li className="text-gray-600 dark:text-gray-300 text-inherit">
+               {children}
+             </li>
+           ),
           // 链接处理
           a: ({ children, href }) => (
             <a 
@@ -101,11 +101,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </a>
           ),
           // 引用处理
-          blockquote: ({ children }) => (
-            <blockquote className={`border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-300 mb-2 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </blockquote>
-          ),
+                     blockquote: ({ children }) => (
+             <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-300 mb-2 text-inherit">
+               {children}
+             </blockquote>
+           ),
           // 分割线处理
           hr: () => (
             <hr className="border-gray-300 dark:border-gray-600 my-4" />
@@ -138,11 +138,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               {children}
             </th>
           ),
-          td: ({ children }) => (
-            <td className={`px-3 py-2 text-gray-600 dark:text-gray-300 ${preview ? 'text-lg' : ''}`}>
-              {children}
-            </td>
-          ),
+                     td: ({ children }) => (
+             <td className="px-3 py-2 text-gray-600 dark:text-gray-300 text-inherit">
+               {children}
+             </td>
+           ),
         }}
       >
         {content}
