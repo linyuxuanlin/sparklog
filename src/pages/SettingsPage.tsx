@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import { Lock, Settings, ExternalLink, LogOut, LogIn, Shield } from 'lucide-react'
+import { Lock, Settings, ExternalLink, LogOut, LogIn } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig } from '@/config/defaultRepo'
+import SparkLogLogo from '@/components/SparkLogLogo'
 
 const SettingsPage: React.FC = () => {
   const { isConnected, disconnect, authenticate } = useGitHub()
@@ -81,7 +82,7 @@ const SettingsPage: React.FC = () => {
         {/* 欢迎信息 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center mb-4">
-            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" />
+            <SparkLogLogo size={24} className="text-blue-600 dark:text-blue-400 mr-3" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">欢迎使用 SparkLog</h2>
           </div>
           
