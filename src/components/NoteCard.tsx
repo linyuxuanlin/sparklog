@@ -47,20 +47,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
 
-  // 从文件名提取时间戳
-  const timestamp = note.name.replace(/\.md$/, '')
-  const date = new Date(timestamp.replace(/-/g, ':').replace('T', ' '))
-
   return (
     <div className="card p-6 hover:shadow-md transition-shadow bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              {date.toLocaleString('zh-CN')}
-            </h3>
-          </div>
-          
           {/* 显示内容预览 */}
           {note.contentPreview && (
             <div className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">

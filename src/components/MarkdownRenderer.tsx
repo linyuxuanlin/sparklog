@@ -10,7 +10,8 @@ interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content, 
-  className = ''
+  className = '',
+  preview = false
 }) => {
   return (
     <div className={`prose prose-sm max-w-none dark:prose-invert ${className}`}>
@@ -19,7 +20,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         components={{
           // 段落处理
           p: ({ children }) => (
-            <p className="text-gray-600 dark:text-gray-300 mb-2 last:mb-0">
+            <p className={`text-gray-600 dark:text-gray-300 mb-2 last:mb-0 ${preview ? 'text-lg' : ''}`}>
               {children}
             </p>
           ),
@@ -74,17 +75,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
           // 列表处理
           ul: ({ children }) => (
-            <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1">
+            <ul className={`list-disc list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 ${preview ? 'text-lg' : ''}`}>
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1">
+            <ol className={`list-decimal list-inside text-gray-600 dark:text-gray-300 mb-2 space-y-1 ${preview ? 'text-lg' : ''}`}>
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="text-gray-600 dark:text-gray-300">
+            <li className={`text-gray-600 dark:text-gray-300 ${preview ? 'text-lg' : ''}`}>
               {children}
             </li>
           ),
@@ -101,7 +102,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
           // 引用处理
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-300 mb-2">
+            <blockquote className={`border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-300 mb-2 ${preview ? 'text-lg' : ''}`}>
               {children}
             </blockquote>
           ),
@@ -138,7 +139,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-3 py-2 text-gray-600 dark:text-gray-300">
+            <td className={`px-3 py-2 text-gray-600 dark:text-gray-300 ${preview ? 'text-lg' : ''}`}>
               {children}
             </td>
           ),
