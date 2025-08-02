@@ -146,11 +146,9 @@ const SettingsPage: React.FC = () => {
                 输入管理员密码以获得完整功能，包括创建、编辑、删除笔记和查看私密笔记。
               </p>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">功能说明</h3>
                 <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
                   <li>• 普通用户：只能查看公开笔记</li>
                   <li>• 管理员：可以管理所有笔记（公开和私密）</li>
-                  <li>• 私密笔记：只有管理员才能查看和管理</li>
                 </ul>
               </div>
               
