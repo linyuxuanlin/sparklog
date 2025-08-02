@@ -33,7 +33,7 @@ const NoteEditPage: React.FC = () => {
     // 等待GitHub状态加载完成后再检查权限
     if (!isGitHubLoading && !isLoggedInStable()) {
       console.log('权限检查失败，重定向到笔记页面')
-      navigate('/notes')
+      navigate('/')
       return
     }
   }, [isLoggedInStable, isGitHubLoading, navigate])
@@ -356,7 +356,7 @@ const NoteEditPage: React.FC = () => {
        
        showMessage('笔记保存成功！', 'success')
        setTimeout(() => {
-         navigate('/notes', { state: { shouldRefresh: true } })
+         navigate('/', { state: { shouldRefresh: true } })
        }, 1500)
     } catch (error) {
       console.error('保存笔记失败:', error)
