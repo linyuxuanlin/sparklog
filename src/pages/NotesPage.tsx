@@ -137,7 +137,7 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* 搜索栏和刷新按钮 */}
+      {/* 搜索栏和按钮区域 */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="relative max-w-md">
@@ -150,18 +150,27 @@ const NotesPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
-          <button
-            onClick={loadNotes}
-            disabled={isLoadingNotes}
-            className="btn-neomorphic inline-flex items-center"
-          >
-            {isLoadingNotes ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4 mr-2" />
-            )}
-            刷新
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={loadNotes}
+              disabled={isLoadingNotes}
+              className="btn-neomorphic inline-flex items-center"
+            >
+              {isLoadingNotes ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              刷新
+            </button>
+            <button
+              onClick={handleCreateNote}
+              className="btn-neomorphic-primary inline-flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              新建笔记
+            </button>
+          </div>
         </div>
         {searchQuery && (
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
