@@ -181,19 +181,21 @@ const NoteCard: React.FC<NoteCardProps> = ({
           
           <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
             <TimeDisplay note={note} />
-            <div className="flex items-center space-x-1">
-              {note.isPrivate ? (
-                <>
-                  <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  <span className="text-red-600 dark:text-red-400">私密</span>
-                </>
-              ) : (
-                <>
-                  <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">公开</span>
-                </>
-              )}
-            </div>
+            {isLoggedIn() && (
+              <div className="flex items-center space-x-1">
+                {note.isPrivate ? (
+                  <>
+                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    <span className="text-red-600 dark:text-red-400">私密</span>
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-green-600 dark:text-green-400">公开</span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
@@ -238,17 +240,17 @@ const NoteCard: React.FC<NoteCardProps> = ({
                       <Trash2 className="w-4 h-4" />
                     )}
                   </button>
+                  <a
+                    href={note.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    title="在GitHub查看"
+                  >
+                    <Github className="w-4 h-4" />
+                  </a>
                 </>
               )}
-              <a
-                href={note.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                title="在GitHub查看"
-              >
-                <Github className="w-4 h-4" />
-              </a>
             </>
           )}
         </div>
