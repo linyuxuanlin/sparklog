@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Plus, BookOpen, Search, Loader2, RefreshCw } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Plus, BookOpen, Search, Loader2, RefreshCw, Settings, AlertCircle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
@@ -8,7 +8,7 @@ import { Note } from '@/types/Note'
 import { showMessage, filterNotes } from '@/utils/noteUtils'
 
 const NotesPage: React.FC = () => {
-  const { isLoading } = useGitHub()
+  const { isLoading, isConnected, isLoggedIn } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, deleteNote } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
@@ -17,6 +17,7 @@ const NotesPage: React.FC = () => {
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
+  const [showConfigModal, setShowConfigModal] = useState(false)
 
   // 检查是否需要刷新笔记列表
   useEffect(() => {
@@ -31,6 +32,18 @@ const NotesPage: React.FC = () => {
   // 显示消息提示
   const handleShowMessage = (text: string, type: 'success' | 'error') => {
     showMessage(setMessage, setMessageType, text, type)
+  }
+
+  // 处理创建笔记点击
+  const handleCreateNote = () => {
+    // 检查GitHub连接状态和登录状态
+    if (!isConnected || !isLoggedIn()) {
+      setShowConfigModal(true)
+      return
+    }
+    
+    // 如果已连接且已登录，直接跳转到创建笔记页面
+    navigate('/note/new')
   }
 
   // 编辑笔记
@@ -91,6 +104,39 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
+      {/* 配置环境提示模态框 */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">需要配置环境变量</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfigModal(false)
+                  navigate('/settings')
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                前往设置
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 搜索栏和刷新按钮 */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
@@ -138,13 +184,13 @@ const NotesPage: React.FC = () => {
           <p className="text-gray-600 mb-6">
             {searchQuery ? '尝试调整搜索关键词' : '创建你的第一篇笔记开始记录想法'}
           </p>
-          <Link
-            to="/note/new"
+          <button
+            onClick={handleCreateNote}
             className="btn-primary inline-flex items-center"
           >
             <Plus className="w-4 h-4 mr-2" />
             创建第一篇笔记
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="grid gap-4">

@@ -1,6 +1,6 @@
-import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Plus, Settings, BookOpen, X } from 'lucide-react'
+import React, { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Plus, Settings, BookOpen, X, AlertCircle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 interface SidebarProps {
@@ -9,12 +9,30 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
-  const { isLoggedIn } = useGitHub()
+  const navigate = useNavigate()
+  const { isLoggedIn, isConnected } = useGitHub()
+  const [showConfigModal, setShowConfigModal] = useState(false)
 
   console.log('Sidebar调试:', {
     isLoggedIn: isLoggedIn(),
+    isConnected,
     menuItems: isLoggedIn() ? '包含新建笔记' : '不包含新建笔记'
   })
+
+  // 处理创建笔记点击
+  const handleCreateNote = () => {
+    // 检查GitHub连接状态和登录状态
+    if (!isConnected || !isLoggedIn()) {
+      setShowConfigModal(true)
+      return
+    }
+    
+    // 如果已连接且已登录，直接跳转到创建笔记页面
+    navigate('/note/new')
+    if (onClose) {
+      onClose()
+    }
+  }
 
   const menuItems = [
     { icon: BookOpen, label: '所有笔记', path: '/notes' },
@@ -48,14 +66,49 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       {/* 新建笔记按钮置顶 */}
       {isLoggedIn() && (
         <div className="p-4 border-b border-gray-200">
-          <Link
-            to="/note/new"
+          <button
+            onClick={handleCreateNote}
             className="btn-neomorphic-primary flex items-center justify-center w-full font-semibold"
-            onClick={onClose}
           >
             <Plus className="w-4 h-4 mr-2" />
             新建笔记
-          </Link>
+          </button>
+        </div>
+      )}
+
+      {/* 配置环境提示模态框 */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">需要配置环境变量</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfigModal(false)
+                  navigate('/settings')
+                  if (onClose) {
+                    onClose()
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                前往设置
+              </button>
+            </div>
+          </div>
         </div>
       )}
       
