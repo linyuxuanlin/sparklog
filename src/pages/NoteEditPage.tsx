@@ -56,10 +56,10 @@ const NoteEditPage: React.FC = () => {
   // 如果正在加载GitHub状态，显示加载界面
   if (isGitHubLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">正在检查权限...</p>
+          <p className="text-gray-600 dark:text-gray-400">正在检查权限...</p>
         </div>
       </div>
     )
@@ -68,11 +68,11 @@ const NoteEditPage: React.FC = () => {
   // 如果未登录，显示权限不足界面
   if (!isLoggedInStable()) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">权限不足</h2>
-            <p className="text-gray-600 mb-6">您需要登录管理员账户才能创建和编辑笔记。</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">权限不足</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">您需要登录管理员账户才能创建和编辑笔记。</p>
             <button
               onClick={() => navigate('/settings')}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -372,13 +372,11 @@ const NoteEditPage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">检查GitHub连接状态...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">检查GitHub连接状态...</p>
         </div>
       </div>
     )
   }
-
-
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -386,8 +384,8 @@ const NoteEditPage: React.FC = () => {
       {message && (
         <div className={`mb-4 p-4 rounded-lg ${
           messageType === 'success' 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
+            ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700' 
+            : 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-700'
         }`}>
           <div className="flex items-center">
             <div className={`w-4 h-4 rounded-full mr-3 ${
@@ -398,32 +396,32 @@ const NoteEditPage: React.FC = () => {
         </div>
       )}
       
-             <div className="mb-6">
-         <h1 className="text-2xl font-bold text-gray-900">
-           {isNewNote ? '创建新笔记' : '编辑笔记'}
-         </h1>
-       </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {isNewNote ? '创建新笔记' : '编辑笔记'}
+        </h1>
+      </div>
 
-       <div className="card p-6">
-         {isLoading ? (
-           <div className="text-center py-8">
-             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-             <p className="mt-4 text-gray-600">加载笔记中...</p>
-           </div>
-         ) : (
-           <div className="space-y-4">
-             <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 内容
-               </label>
-               <textarea
-                 value={content}
-                 onChange={(e) => setContent(e.target.value)}
-                 placeholder="开始编写你的笔记..."
-                 rows={20}
-                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-               />
-             </div>
+      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                内容
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="开始编写你的笔记..."
+                rows={20}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -435,13 +433,13 @@ const NoteEditPage: React.FC = () => {
                       checked={isPrivate}
                       onChange={(e) => setIsPrivate(e.target.checked)}
                     />
-                    <div className="w-5 h-5 bg-gray-200 border-2 border-gray-300 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 transition-colors group-hover:bg-gray-100 peer-checked:group-hover:bg-blue-700">
+                    <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 dark:peer-focus:ring-offset-gray-800 transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-600 peer-checked:group-hover:bg-blue-700">
                       <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
                   </div>
-                  <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900 transition-colors">
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
                     设为私密笔记
                   </span>
                 </label>
@@ -455,11 +453,11 @@ const NoteEditPage: React.FC = () => {
                 >
                   取消
                 </button>
-                                 <button 
-                   onClick={handleSave}
-                   disabled={isSaving || isLoading || !content.trim()}
-                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-                 >
+                <button 
+                  onClick={handleSave}
+                  disabled={isSaving || isLoading || !content.trim()}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                >
                   {isSaving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

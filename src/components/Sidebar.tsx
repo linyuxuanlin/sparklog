@@ -40,23 +40,23 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   ]
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
       {/* 移动端关闭按钮 */}
-      <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="text-center flex-1">
           <h1 className="logo-title">SparkLog</h1>
           <p className="logo-subtitle">妙想笔记</p>
         </div>
         <button
           onClick={onClose}
-          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
       
       {/* 桌面端Logo */}
-      <div className="hidden lg:block p-6 border-b border-gray-200">
+      <div className="hidden lg:block p-6 border-b border-gray-200 dark:border-gray-700">
         <Link to="/" className="block text-center">
           <h1 className="logo-title">SparkLog</h1>
           <p className="logo-subtitle">妙想笔记</p>
@@ -65,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       
       {/* 新建笔记按钮置顶 */}
       {isLoggedIn() && (
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={handleCreateNote}
             className="btn-neomorphic-primary flex items-center justify-center w-full font-semibold"
@@ -79,18 +79,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       {/* 配置环境提示模态框 */}
       {showConfigModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900">需要配置环境变量</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 取消
               </button>
@@ -124,8 +124,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors font-semibold ${
                     isActive
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-r-2 border-blue-700 dark:border-blue-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                   onClick={onClose}
                 >

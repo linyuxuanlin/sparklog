@@ -64,15 +64,15 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">设置</h1>
-        <p className="text-gray-600">管理您的SparkLog应用配置</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">设置</h1>
+        <p className="text-gray-600 dark:text-gray-400">管理您的SparkLog应用配置</p>
       </div>
 
       {/* 消息提示 */}
       {message && (
         <div className={`mb-6 p-4 rounded-lg ${
-          messageType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 
-          'bg-red-50 text-red-800 border border-red-200'
+          messageType === 'success' ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-700' : 
+          'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-700'
         }`}>
           {message}
         </div>
@@ -80,23 +80,23 @@ const SettingsPage: React.FC = () => {
 
       <div className="grid gap-6">
         {/* 欢迎信息 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center mb-4">
-            <Shield className="w-6 h-6 text-blue-600 mr-3" />
-            <h2 className="text-xl font-semibold text-gray-900">欢迎使用 SparkLog</h2>
+            <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">欢迎使用 SparkLog</h2>
           </div>
           
-          <div className="space-y-4 text-gray-600">
+          <div className="space-y-4 text-gray-600 dark:text-gray-300">
             <p>
               SparkLog 是一个基于GitHub仓库的静态笔记应用，支持公开笔记分享和私密笔记保护。
             </p>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">当前配置</h3>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前配置</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>GitHub仓库:</span>
-                  <span className="font-mono text-blue-800">
+                  <span className="font-mono text-blue-800 dark:text-blue-200">
                     {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : '未配置'}
                   </span>
                 </div>
@@ -112,16 +112,16 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* 管理员身份验证 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <Lock className="w-6 h-6 text-gray-700 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">管理员身份验证</h2>
+              <Lock className="w-6 h-6 text-gray-700 dark:text-gray-300 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">管理员身份验证</h2>
             </div>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               isConnected 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
+                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
             }`}>
               {isConnected ? '已登录' : '未登录'}
             </div>
@@ -129,7 +129,7 @@ const SettingsPage: React.FC = () => {
 
           {isConnected ? (
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 您已登录为管理员，可以创建、编辑和删除笔记，以及查看私密笔记。
               </p>
               <button
@@ -142,12 +142,12 @@ const SettingsPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 输入管理员密码以获得完整功能，包括创建、编辑、删除笔记和查看私密笔记。
               </p>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h3 className="font-semibold text-yellow-900 mb-2">功能说明</h3>
-                <ul className="text-sm text-yellow-800 space-y-1">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                <h3 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">功能说明</h3>
+                <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
                   <li>• 普通用户：只能查看公开笔记</li>
                   <li>• 管理员：可以管理所有笔记（公开和私密）</li>
                   <li>• 私密笔记：只有管理员才能查看和管理</li>
@@ -157,7 +157,7 @@ const SettingsPage: React.FC = () => {
               {showLoginForm ? (
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       管理员密码
                     </label>
                     <input
@@ -167,7 +167,7 @@ const SettingsPage: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                       placeholder="请输入管理员密码"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     />
                   </div>
                   <div className="flex space-x-3">
@@ -180,7 +180,7 @@ const SettingsPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setShowLoginForm(false)}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                      className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
                     >
                       取消
                     </button>
@@ -200,15 +200,15 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* 调试信息 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
-              <Info className="w-6 h-6 text-gray-700 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900">调试信息</h2>
+              <Info className="w-6 h-6 text-gray-700 dark:text-gray-300 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">调试信息</h2>
             </div>
             <button
               onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               {showDebugInfo ? '隐藏' : '显示'}
             </button>
@@ -216,13 +216,13 @@ const SettingsPage: React.FC = () => {
           
           {showDebugInfo && (
             <div className="space-y-3">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">环境变量</h3>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">环境变量</h3>
                 <div className="space-y-1 text-sm">
                   {Object.entries(envVars).map(([key, value]) => (
                     <div key={key} className="flex justify-between">
-                      <span className="font-mono text-gray-600">{key}:</span>
-                      <span className={`font-mono ${value && value !== '未设置' ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="font-mono text-gray-600 dark:text-gray-400">{key}:</span>
+                      <span className={`font-mono ${value && value !== '未设置' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {value || '未设置'}
                       </span>
                     </div>
@@ -230,12 +230,12 @@ const SettingsPage: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">本地存储</h3>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">本地存储</h3>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span>管理员认证:</span>
-                    <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600' : 'text-red-600'}>
+                    <span className={localStorage.getItem('sparklog_admin_auth') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
                       {localStorage.getItem('sparklog_admin_auth') ? '已保存' : '未保存'}
                     </span>
                   </div>
@@ -246,16 +246,16 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* 功能说明 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center mb-4">
-            <Settings className="w-6 h-6 text-gray-700 mr-3" />
-            <h2 className="text-xl font-semibold text-gray-900">功能特性</h2>
+            <Settings className="w-6 h-6 text-gray-700 dark:text-gray-300 mr-3" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">功能特性</h2>
           </div>
           
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">公开笔记</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">公开笔记</h3>
+              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                 <li>• 任何人都可以查看</li>
                 <li>• 适合分享知识和文章</li>
                 <li>• 无需登录即可访问</li>
@@ -263,8 +263,8 @@ const SettingsPage: React.FC = () => {
             </div>
             
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">私密笔记</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">私密笔记</h3>
+              <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                 <li>• 只有管理员可访问</li>
                 <li>• 适合个人日记和私密内容</li>
                 <li>• 需要管理员密码登录</li>
@@ -274,15 +274,15 @@ const SettingsPage: React.FC = () => {
         </div>
 
         {/* 帮助链接 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">帮助与支持</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">帮助与支持</h2>
           
           <div className="space-y-3">
             <a
               href="https://github.com/linyuxuanlin/sparklog"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+              className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               项目主页
@@ -292,7 +292,7 @@ const SettingsPage: React.FC = () => {
               href="https://github.com/linyuxuanlin/sparklog/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+              className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
               问题反馈

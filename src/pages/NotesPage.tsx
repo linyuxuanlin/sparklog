@@ -92,8 +92,8 @@ const NotesPage: React.FC = () => {
       {message && (
         <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
           messageType === 'success' 
-            ? 'bg-green-50 text-green-800 border-green-200' 
-            : 'bg-red-50 text-red-800 border-red-200'
+            ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700' 
+            : 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
         }`}>
           <div className="flex items-center">
             <div className={`w-4 h-4 rounded-full mr-3 ${
@@ -107,18 +107,18 @@ const NotesPage: React.FC = () => {
       {/* 配置环境提示模态框 */}
       {showConfigModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900">需要配置环境变量</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
               在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
             </p>
             <div className="flex space-x-3">
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 取消
               </button>
@@ -141,13 +141,13 @@ const NotesPage: React.FC = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
             <input
               type="text"
               placeholder="搜索笔记..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
           <button
@@ -164,7 +164,7 @@ const NotesPage: React.FC = () => {
           </button>
         </div>
         {searchQuery && (
-          <div className="mt-2 text-sm text-gray-500">
+          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             搜索: "{searchQuery}" - 找到 {filteredNotes.length} 个笔记
           </div>
         )}
@@ -173,15 +173,15 @@ const NotesPage: React.FC = () => {
       {isLoadingNotes ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载笔记中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>
         </div>
       ) : filteredNotes.length === 0 ? (
         <div className="text-center py-12">
-          <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
             {searchQuery ? '没有找到匹配的笔记' : '还没有笔记'}
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             {searchQuery ? '尝试调整搜索关键词' : '创建你的第一篇笔记开始记录想法'}
           </p>
           <button

@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply text-gray-900 bg-gray-50;
+    @apply text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900;
   }
 }
 
@@ -18,11 +18,11 @@
   }
   
   .btn-secondary {
-    @apply px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors;
+    @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
   }
   
   .btn-neomorphic {
-    @apply px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-200 shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] active:transform active:translate-y-0.5 transition-all duration-150;
+    @apply px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700 shadow-[0_2px_4px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_4px_rgba(0,0,0,0.3),0_1px_2px_rgba(0,0,0,0.2)] hover:shadow-[0_4px_6px_rgba(0,0,0,0.1),0_2px_4px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_4px_6px_rgba(0,0,0,0.3),0_2px_4px_rgba(0,0,0,0.2)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] dark:active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)] active:transform active:translate-y-0.5 transition-all duration-150;
   }
   
   .btn-neomorphic-primary {
@@ -34,11 +34,11 @@
   }
   
   .logo-subtitle {
-    @apply text-base font-semibold text-gray-500;
+    @apply text-base font-semibold text-gray-500 dark:text-gray-400;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
   }
   
   /* 内容预览样式 */
