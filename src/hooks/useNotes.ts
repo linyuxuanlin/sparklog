@@ -15,6 +15,7 @@ export const useNotes = () => {
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 })
   const [preloadedNotes, setPreloadedNotes] = useState<Note[]>([])
   const [isPreloading, setIsPreloading] = useState(false)
+  const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -23,7 +24,7 @@ export const useNotes = () => {
     setIsPreloading(true)
     
     try {
-      const pageSize = 5
+      const pageSize = 3 // 每页3篇笔记
       const endIndex = startIndex + pageSize
       const nextBatchFiles = markdownFiles.slice(startIndex, endIndex)
       
@@ -91,7 +92,7 @@ export const useNotes = () => {
     } finally {
       setIsPreloading(false)
     }
-  }, [isPreloading])
+  }, [isPreloading, isLoggedIn, getGitHubToken])
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
@@ -150,6 +151,7 @@ export const useNotes = () => {
           setIsLoadingNotes(false)
           setHasLoaded(true)
           setHasMoreNotes(false)
+          setAllMarkdownFiles([])
           return
         }
         const errorData = await response.json().catch(() => ({}))
@@ -168,8 +170,11 @@ export const useNotes = () => {
           return timeB.localeCompare(timeA)
         })
       
+      // 保存所有markdown文件列表，用于预加载
+      setAllMarkdownFiles(markdownFiles)
+      
       // 分页处理
-      const pageSize = 5 // 每页加载5个笔记
+      const pageSize = 3 // 每页加载3个笔记
       const startIndex = (page - 1) * pageSize
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
@@ -271,7 +276,7 @@ export const useNotes = () => {
         throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
-  }, [isConnected, getGitHubToken])
+  }, [isConnected, getGitHubToken, preloadNextBatch])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -279,14 +284,30 @@ export const useNotes = () => {
       // 如果有预加载的笔记，立即显示
       if (preloadedNotes.length > 0) {
         setNotes(prev => [...prev, ...preloadedNotes])
-        setCurrentPage(prev => prev + 1)
+        const newCurrentPage = currentPage + 1
+        setCurrentPage(newCurrentPage)
         setPreloadedNotes([])
         
         // 检查是否还有更多笔记需要预加载
-        if (currentPage * 5 + 5 < notes.length + preloadedNotes.length + 10) {
-          // 这里需要重新获取文件列表来预加载下一批
-          // 暂时先清空预加载状态，下次加载时会重新预加载
-          setHasMoreNotes(true)
+        const nextPage = newCurrentPage + 1
+        const pageSize = 3
+        const nextStartIndex = nextPage * pageSize
+        const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
+        
+        if (hasMoreToPreload) {
+          // 预加载下一批
+          const authData = {
+            username: getDefaultRepoConfig()?.owner,
+            accessToken: getDefaultGitHubToken()
+          }
+          const currentLoginStatus = isLoggedIn()
+          if (currentLoginStatus) {
+            const adminToken = getGitHubToken()
+            if (adminToken) {
+              authData.accessToken = adminToken
+            }
+          }
+          preloadNextBatch(allMarkdownFiles, nextStartIndex, authData, currentLoginStatus)
         } else {
           setHasMoreNotes(false)
         }
@@ -295,7 +316,7 @@ export const useNotes = () => {
         loadNotes(false, currentPage + 1)
       }
     }
-  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, notes.length])
+  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
 
   // 监听登录状态变化
   useEffect(() => {

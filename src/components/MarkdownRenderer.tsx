@@ -10,8 +10,7 @@ interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
   content, 
-  className = '',
-  preview = false
+  className = ''
 }) => {
   return (
     <div className={`prose max-w-none dark:prose-invert ${className}`}>
