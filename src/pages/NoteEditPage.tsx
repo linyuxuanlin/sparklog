@@ -19,6 +19,7 @@ const NoteEditPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [originalFile, setOriginalFile] = useState<{ path: string; sha: string } | null>(null)
+  const [originalCreatedAt, setOriginalCreatedAt] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 直接使用isLoggedIn，现在它已经是稳定的了
@@ -218,6 +219,9 @@ const NoteEditPage: React.FC = () => {
       const lines = fullContent.split('\n')
       let inFrontmatter = false
       let frontmatterEndIndex = -1
+      let originalCreatedAt = ''
+      let originalUpdatedAt = ''
+      let originalIsPrivate = false
       
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim()
@@ -229,17 +233,35 @@ const NoteEditPage: React.FC = () => {
           frontmatterEndIndex = i
           break
         }
+        
+        // 解析Frontmatter内容
+        if (inFrontmatter && line.includes(':')) {
+          const colonIndex = line.indexOf(':')
+          const key = line.substring(0, colonIndex).trim()
+          const value = line.substring(colonIndex + 1).trim()
+          if (key === 'created_at') {
+            originalCreatedAt = value.replace(/"/g, '').trim()
+          } else if (key === 'updated_at') {
+            originalUpdatedAt = value.replace(/"/g, '').trim()
+          } else if (key === 'private') {
+            originalIsPrivate = value === 'true'
+          }
+        }
       }
       
-             // 提取内容
-       const contentLines = frontmatterEndIndex >= 0 
-         ? lines.slice(frontmatterEndIndex + 1) 
-         : lines
-       
-               const extractedContent = contentLines.join('\n')
-        setContent(extractedContent.trim())
-        // 内容加载完成后调整尺寸
-        setTimeout(adjustTextareaSize, 100)
+      // 保存原始的创建时间
+      setOriginalCreatedAt(originalCreatedAt)
+      setIsPrivate(originalIsPrivate)
+      
+      // 提取内容
+      const contentLines = frontmatterEndIndex >= 0 
+        ? lines.slice(frontmatterEndIndex + 1) 
+        : lines
+      
+      const extractedContent = contentLines.join('\n')
+      setContent(extractedContent.trim())
+      // 内容加载完成后调整尺寸
+      setTimeout(adjustTextareaSize, 100)
       
     } catch (error) {
       console.error('加载笔记失败:', error)
@@ -330,9 +352,13 @@ const NoteEditPage: React.FC = () => {
        }
        
        // 创建笔记内容
+       const currentTime = new Date().toISOString()
+       const createdAt = isEditMode && originalCreatedAt ? originalCreatedAt : currentTime
+       const updatedAt = currentTime
+       
        const noteContent = `---
- created_at: ${new Date().toISOString()}
- updated_at: ${new Date().toISOString()}
+ created_at: ${createdAt}
+ updated_at: ${updatedAt}
  private: ${isPrivate}
  ---
 
