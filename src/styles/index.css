@@ -21,6 +21,11 @@
     height: 100%;
     overflow-x: hidden;
   }
+  
+  /* 确保当页面出现滚动条时，布局元素能够正确适应 */
+  * {
+    box-sizing: border-box;
+  }
 }
 
 @layer components {

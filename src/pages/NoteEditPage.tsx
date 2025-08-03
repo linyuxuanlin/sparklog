@@ -253,19 +253,11 @@ const NoteEditPage: React.FC = () => {
     navigate('/')
   }
 
-  // 自动调整textarea高度和宽度
+  // 自动调整textarea高度
   const adjustTextareaSize = () => {
     if (textareaRef.current) {
-      // 重置样式以获取自然尺寸
+      // 重置高度以获取自然尺寸
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.width = 'auto'
-      
-      // 获取父容器的宽度
-      const parentWidth = textareaRef.current.parentElement?.offsetWidth || 0
-      const maxWidth = parentWidth // 不减去任何间距，让textarea占满容器宽度
-      
-      // 设置宽度为父容器的宽度
-      textareaRef.current.style.width = `${maxWidth}px`
       
       // 调整高度
       const scrollHeight = textareaRef.current.scrollHeight
@@ -449,7 +441,7 @@ const NoteEditPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-6 min-w-0">
+    <div className="w-full max-w-4xl mx-auto py-6 min-w-0 overflow-x-hidden">
       {/* 消息提示 */}
       {message && (
         <div className={`mb-4 p-4 rounded-lg ${
@@ -472,15 +464,15 @@ const NoteEditPage: React.FC = () => {
         </h1>
       </div>
 
-      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full min-w-0">
+      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full min-w-0 overflow-hidden">
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>
           </div>
         ) : (
-                     <div className="space-y-4 min-w-0">
-            <div>
+                     <div className="space-y-4 min-w-0 w-full">
+            <div className="w-full">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 内容
               </label>
@@ -490,8 +482,13 @@ const NoteEditPage: React.FC = () => {
                   onChange={handleContentChange}
                   placeholder="开始编写你的笔记..."
                   rows={1}
-                  className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words"
-                  style={{ boxSizing: 'border-box', wordWrap: 'break-word', width: '100%', paddingLeft: '12px', paddingRight: '12px' }}
+                  className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
+                  style={{ 
+                    boxSizing: 'border-box', 
+                    wordWrap: 'break-word', 
+                    paddingLeft: '12px', 
+                    paddingRight: '12px'
+                  }}
                 />
             </div>
 
