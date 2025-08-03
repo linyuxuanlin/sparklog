@@ -36,8 +36,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-      <div className="flex items-center justify-between">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 min-w-0">
+      <div className="flex items-center justify-between min-w-0">
         {/* 移动端菜单按钮 */}
         <button
           onClick={onMenuClick}
@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         {/* 桌面端占位符 */}
         <div className="hidden lg:block"></div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 flex-shrink-0">
           {/* 主题切换按钮 */}
           <button
             onClick={toggleTheme}

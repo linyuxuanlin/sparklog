@@ -7,7 +7,7 @@ const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* 移动端遮罩层 */}
       {sidebarOpen && (
         <div 
@@ -25,9 +25,9 @@ const Layout: React.FC = () => {
       </div>
       
       {/* 主内容区域 */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-900">
+        <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto overflow-x-hidden min-w-0">
           <Outlet />
         </main>
       </div>

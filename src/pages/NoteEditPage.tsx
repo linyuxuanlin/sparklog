@@ -238,7 +238,10 @@ const NoteEditPage: React.FC = () => {
     if (textareaRef.current) {
       const currentWidth = textareaRef.current.offsetWidth
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      const scrollHeight = textareaRef.current.scrollHeight
+      const maxHeight = window.innerHeight * 0.6 // 60vh
+      const newHeight = Math.min(scrollHeight, maxHeight)
+      textareaRef.current.style.height = `${newHeight}px`
       // 确保宽度保持不变
       textareaRef.current.style.width = `${currentWidth}px`
     }
@@ -418,7 +421,7 @@ const NoteEditPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto py-6 min-w-0">
       {/* 消息提示 */}
       {message && (
         <div className={`mb-4 p-4 rounded-lg ${
@@ -441,31 +444,31 @@ const NoteEditPage: React.FC = () => {
         </h1>
       </div>
 
-      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+      <div className="card p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 w-full min-w-0">
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>
           </div>
         ) : (
-          <div className="space-y-4">
+                     <div className="space-y-4 min-w-0">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 内容
               </label>
-                             <textarea
-                 ref={textareaRef}
-                 value={content}
-                 onChange={handleContentChange}
-                 placeholder="开始编写你的笔记..."
-                 rows={1}
-                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] resize-none overflow-hidden"
-                 style={{ boxSizing: 'border-box' }}
-               />
+                                             <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={handleContentChange}
+                  placeholder="开始编写你的笔记..."
+                  rows={1}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words"
+                  style={{ boxSizing: 'border-box', wordWrap: 'break-word' }}
+                />
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-4">
+                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full min-w-0">
+              <div className="flex items-center space-x-4 flex-shrink-0">
                 <label className="flex items-center cursor-pointer group">
                   <div className="relative">
                     <input 
@@ -486,7 +489,7 @@ const NoteEditPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
                 <button 
                   onClick={handleCancel}
                   disabled={isSaving}

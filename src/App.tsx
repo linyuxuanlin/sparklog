@@ -21,7 +21,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <Routes>
         <Route path="/" element={<Layout />}>
           {/* 首页直接显示所有笔记页面 */}
