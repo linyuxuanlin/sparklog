@@ -31,7 +31,7 @@ const NotesPage: React.FC = () => {
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }
-  }, [location.state, loadNotes, navigate, location.pathname])
+  }, [location.state, navigate, location.pathname]) // 移除loadNotes依赖
 
   // 处理URL参数，如果有noteId参数则打开对应的笔记
   useEffect(() => {

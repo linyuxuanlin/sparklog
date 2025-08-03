@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
@@ -16,6 +16,10 @@ export const useNotes = () => {
   const [preloadedNotes, setPreloadedNotes] = useState<Note[]>([])
   const [isPreloading, setIsPreloading] = useState(false)
   const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
+  
+  // 使用ref来避免重复加载
+  const isInitialLoadRef = useRef(false)
+  const lastLoginStatusRef = useRef(loginStatus)
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -92,7 +96,7 @@ export const useNotes = () => {
     } finally {
       setIsPreloading(false)
     }
-  }, [isPreloading, isLoggedIn, getGitHubToken])
+  }, [isPreloading])
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
@@ -287,7 +291,7 @@ export const useNotes = () => {
         throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
-  }, [isConnected, getGitHubToken, preloadNextBatch])
+  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -335,19 +339,6 @@ export const useNotes = () => {
       }
     }
   }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
-
-  // 监听登录状态变化
-  useEffect(() => {
-    if (!isLoading) {
-      const currentStatus = isLoggedIn()
-      if (currentStatus !== loginStatus) {
-        setLoginStatus(currentStatus)
-        if (hasLoaded) {
-          loadNotes(true)
-        }
-      }
-    }
-  }, [isLoggedIn, loginStatus, hasLoaded, loadNotes, isLoading])
 
   // 删除笔记
   const deleteNote = async (note: Note) => {
@@ -401,14 +392,26 @@ export const useNotes = () => {
     }
   }
 
-  // 当连接状态改变时加载笔记，以及组件挂载时加载
+  // 优化后的初始化加载逻辑
   useEffect(() => {
-    if (!isLoading) {
-      if (!hasLoaded || isConnected) {
+    if (!isLoading && !isInitialLoadRef.current) {
+      isInitialLoadRef.current = true
+      loadNotes(true)
+    }
+  }, [isLoading, loadNotes])
+
+  // 优化后的登录状态监听
+  useEffect(() => {
+    if (!isLoading && hasLoaded) {
+      const currentStatus = isLoggedIn()
+      if (currentStatus !== lastLoginStatusRef.current) {
+        lastLoginStatusRef.current = currentStatus
+        setLoginStatus(currentStatus)
+        // 只有在登录状态真正改变时才重新加载
         loadNotes(true)
       }
     }
-  }, [isConnected, isLoading, hasLoaded])
+  }, [isLoading, hasLoaded, loadNotes])
 
   return {
     notes,

@@ -25,7 +25,7 @@ export const useGitHub = () => {
       setIsOwner(authData.isAuthenticated) // 如果通过密码验证，就是所有者
     }
     setIsLoading(false)
-  }, [forceUpdate])
+  }, []) // 移除forceUpdate依赖，只在组件挂载时执行一次
 
   const authenticate = useCallback((password: string) => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
