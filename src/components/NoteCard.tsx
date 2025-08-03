@@ -135,7 +135,7 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
     <div className="flex items-center">
       <Calendar className="w-4 h-4 mr-1" />
       <span 
-        className="cursor-help hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        className="cursor-help hover:text-gray-700 dark:hover:text-gray-200 transition-colors whitespace-nowrap"
         title={getTooltipContent()}
       >
         {formatTimeDisplay(displayTime)}
@@ -175,7 +175,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
             </div>
           )}
           
-          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <TimeDisplay note={note} />
             {isLoggedIn() && (
               <div className="flex items-center space-x-1">
