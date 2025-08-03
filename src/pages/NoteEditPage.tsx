@@ -441,7 +441,7 @@ const NoteEditPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center space-x-4">
                 <label className="flex items-center cursor-pointer group">
                   <div className="relative">
@@ -463,7 +463,7 @@ const NoteEditPage: React.FC = () => {
                 </label>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button 
                   onClick={handleCancel}
                   disabled={isSaving}
@@ -471,23 +471,23 @@ const NoteEditPage: React.FC = () => {
                 >
                   取消
                 </button>
-                <button 
-                  onClick={handleSave}
-                  disabled={isSaving || isLoading || !content.trim()}
-                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      保存中...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4 mr-2" />
-                      保存笔记
-                    </>
-                  )}
-                </button>
+                                 <button 
+                   onClick={handleSave}
+                   disabled={isSaving || isLoading || !content.trim()}
+                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                 >
+                   {isSaving ? (
+                     <>
+                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                       保存中...
+                     </>
+                   ) : (
+                     <>
+                       <Save className="w-4 h-4 mr-2" />
+                       保存笔记
+                     </>
+                   )}
+                 </button>
               </div>
             </div>
           </div>
