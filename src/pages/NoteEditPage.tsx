@@ -220,7 +220,6 @@ const NoteEditPage: React.FC = () => {
       let inFrontmatter = false
       let frontmatterEndIndex = -1
       let originalCreatedAt = ''
-      let originalUpdatedAt = ''
       let originalIsPrivate = false
       
       for (let i = 0; i < lines.length; i++) {
@@ -241,8 +240,6 @@ const NoteEditPage: React.FC = () => {
           const value = line.substring(colonIndex + 1).trim()
           if (key === 'created_at') {
             originalCreatedAt = value.replace(/"/g, '').trim()
-          } else if (key === 'updated_at') {
-            originalUpdatedAt = value.replace(/"/g, '').trim()
           } else if (key === 'private') {
             originalIsPrivate = value === 'true'
           }
