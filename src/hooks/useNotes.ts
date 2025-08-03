@@ -24,7 +24,7 @@ export const useNotes = () => {
     setIsPreloading(true)
     
     try {
-      const pageSize = 3 // 每页3篇笔记
+      const pageSize = 5 // 预加载5篇笔记
       const endIndex = startIndex + pageSize
       const nextBatchFiles = markdownFiles.slice(startIndex, endIndex)
       
@@ -174,8 +174,19 @@ export const useNotes = () => {
       setAllMarkdownFiles(markdownFiles)
       
       // 分页处理
-      const pageSize = 3 // 每页加载3个笔记
-      const startIndex = (page - 1) * pageSize
+      let startIndex: number
+      let pageSize: number
+      
+      if (page === 1) {
+        // 首次加载：加载前8篇
+        startIndex = 0
+        pageSize = 8
+      } else {
+        // 后续加载：每次加载5篇
+        startIndex = 8 + (page - 2) * 5 // 8 + (page-2)*5
+        pageSize = 5
+      }
+      
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
       
@@ -289,9 +300,16 @@ export const useNotes = () => {
         setPreloadedNotes([])
         
         // 检查是否还有更多笔记需要预加载
-        const nextPage = newCurrentPage + 1
-        const pageSize = 3
-        const nextStartIndex = nextPage * pageSize
+        let nextStartIndex: number
+        
+        if (newCurrentPage === 1) {
+          // 第一页后，预加载第9-13篇
+          nextStartIndex = 8
+        } else {
+          // 后续页面，预加载下一批5篇
+          nextStartIndex = 8 + (newCurrentPage - 1) * 5
+        }
+        
         const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
         
         if (hasMoreToPreload) {
