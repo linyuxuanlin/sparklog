@@ -52,16 +52,7 @@ const formatTimeDisplay = (dateString: string | undefined): string => {
     const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const yesterdayOnly = new Date(todayOnly.getTime() - 24 * 60 * 60 * 1000)
     
-    // 调试信息
-    console.log('时间计算调试:', {
-      originalDate: dateString,
-      parsedDate: date.toISOString(),
-      dateOnly: dateOnly.toISOString(),
-      todayOnly: todayOnly.toISOString(),
-      yesterdayOnly: yesterdayOnly.toISOString(),
-      isToday: dateOnly.getTime() === todayOnly.getTime(),
-      isYesterday: dateOnly.getTime() === yesterdayOnly.getTime()
-    })
+
     
     if (dateOnly.getTime() === todayOnly.getTime()) {
       return '今天'

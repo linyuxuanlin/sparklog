@@ -55,12 +55,12 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
-              // 简化时间获取：使用文件的基本信息，避免额外的API调用
-              let created_at = file.created_at
-              let updated_at = file.updated_at
-              
               // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
+              
+              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
+              let created_at = parsed.createdDate || file.created_at
+              let updated_at = parsed.updatedDate || file.updated_at
               
               return {
                 ...file,
@@ -222,12 +222,12 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
-              // 简化时间获取：使用文件的基本信息，避免额外的API调用
-              let created_at = file.created_at
-              let updated_at = file.updated_at
-              
               // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
+              
+              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
+              let created_at = parsed.createdDate || file.created_at
+              let updated_at = parsed.updatedDate || file.updated_at
               
               // 更新加载进度
               setLoadingProgress(prev => ({ ...prev, current: index + 1 }))

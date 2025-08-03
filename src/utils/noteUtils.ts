@@ -84,7 +84,9 @@ export const parseNoteContent = (content: string, fileName: string) => {
     
     // 解析Frontmatter内容
     if (inFrontmatter && line.includes(':')) {
-      const [key, value] = line.split(':').map(s => s.trim())
+      const colonIndex = line.indexOf(':')
+      const key = line.substring(0, colonIndex).trim()
+      const value = line.substring(colonIndex + 1).trim()
       if (key === 'created_at') {
         createdDate = value.replace(/"/g, '').trim()
       } else if (key === 'updated_at') {
