@@ -46,28 +46,4 @@ export const isDevelopment = (): boolean => {
 // 获取当前域名
 export const getCurrentDomain = (): string => {
   return window.location.hostname
-}
-
-// 检测环境变量是否都已配置
-export const checkEnvironmentVariables = (): {
-  isConfigured: boolean
-  missingVars: string[]
-  hasAdminPassword: boolean
-} => {
-  const missingVars: string[] = []
-  
-  // 检查必需的仓库配置
-  const repoConfig = getRepoConfigFromEnv()
-  if (!repoConfig) {
-    missingVars.push('VITE_REPO_OWNER', 'VITE_REPO_NAME')
-  }
-  
-  // 检查管理员密码
-  const hasAdminPassword = !!(import.meta.env.VITE_ADMIN_PASSWORD)
-  
-  return {
-    isConfigured: missingVars.length === 0,
-    missingVars,
-    hasAdminPassword
-  }
 } 

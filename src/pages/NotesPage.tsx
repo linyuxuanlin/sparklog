@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle, Lock } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import { Note } from '@/types/Note'
 import { showMessage, filterNotes } from '@/utils/noteUtils'
-import { checkEnvironmentVariables } from '@/config/env'
 
 const NotesPage: React.FC = () => {
-  const { isLoading, isConnected, isLoggedIn, authenticate } = useGitHub()
+  const { isLoading, isConnected, isLoggedIn } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
@@ -21,8 +20,6 @@ const NotesPage: React.FC = () => {
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
-  const [adminPassword, setAdminPassword] = useState('')
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -76,47 +73,12 @@ const NotesPage: React.FC = () => {
   const handleCreateNote = () => {
     // 检查GitHub连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
-      // 检查环境变量配置
-      const envCheck = checkEnvironmentVariables()
-      
-      if (!envCheck.isConfigured) {
-        // 环境变量未配置，显示配置提示
-        setShowConfigModal(true)
-        return
-      }
-      
-      if (envCheck.hasAdminPassword) {
-        // 环境变量已配置，需要输入管理员密码
-        setShowPasswordModal(true)
-        return
-      }
-      
-      // 环境变量已配置但没有管理员密码，显示配置提示
       setShowConfigModal(true)
       return
     }
     
     // 如果已连接且已登录，直接跳转到创建笔记页面
     navigate('/note/new')
-  }
-
-  // 处理管理员密码验证
-  const handleAdminLogin = () => {
-    if (!adminPassword.trim()) {
-      handleShowMessage('请输入管理员密码', 'error')
-      return
-    }
-
-    if (authenticate(adminPassword)) {
-      handleShowMessage('登录成功！您现在拥有管理员权限', 'success')
-      setAdminPassword('')
-      setShowPasswordModal(false)
-      // 登录成功后跳转到创建笔记页面
-      navigate('/note/new')
-    } else {
-      handleShowMessage('密码错误，请重试', 'error')
-      setAdminPassword('')
-    }
   }
 
   // 编辑笔记
@@ -217,55 +179,6 @@ const NotesPage: React.FC = () => {
               >
                 <Settings className="w-4 h-4 mr-2" />
                 前往设置
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 管理员密码验证模态框 */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center mb-4">
-              <Lock className="w-6 h-6 text-purple-500 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">管理员密码验证</h3>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              您需要输入管理员密码才能创建笔记。
-            </p>
-            <div className="mb-4">
-              <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                管理员密码
-              </label>
-                             <input
-                 type="password"
-                 id="adminPassword"
-                 value={adminPassword}
-                 onChange={(e) => setAdminPassword(e.target.value)}
-                 onKeyPress={(e) => {
-                   if (e.key === 'Enter') {
-                     handleAdminLogin()
-                   }
-                 }}
-                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                 placeholder="请输入管理员密码"
-                 autoFocus
-               />
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowPasswordModal(false)}
-                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleAdminLogin}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <Lock className="w-4 h-4 mr-2" />
-                验证密码
               </button>
             </div>
           </div>
