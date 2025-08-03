@@ -187,27 +187,27 @@ const NotesPage: React.FC = () => {
 
       {/* 搜索栏和按钮区域 */}
       <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索笔记..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            />
-          </div>
-                     <div className="flex items-center space-x-3">
-             <button
-               onClick={handleCreateNote}
-               className="btn-neomorphic-primary inline-flex items-center"
-             >
-               <Plus className="w-4 h-4 mr-2" />
-               新建笔记
-             </button>
+                 <div className="flex items-center justify-between">
+           <div className="relative max-w-md">
+             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+             <input
+               type="text"
+               placeholder="搜索笔记..."
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+             />
            </div>
-        </div>
+                      <div className="flex items-center space-x-3 ml-4">
+                                                       <button
+                 onClick={handleCreateNote}
+                 className="btn-neomorphic-primary inline-flex items-center justify-center h-10"
+               >
+                                   <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline ml-2">新建笔记</span>
+               </button>
+           </div>
+         </div>
         {searchQuery && (
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             搜索: "{searchQuery}" - 找到 {filteredNotes.length} 个笔记
@@ -229,13 +229,13 @@ const NotesPage: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             {searchQuery ? '尝试调整搜索关键词' : '创建你的第一篇笔记开始记录想法'}
           </p>
-          <button
-            onClick={handleCreateNote}
-            className="btn-primary inline-flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            创建第一篇笔记
-          </button>
+                                           <button
+              onClick={handleCreateNote}
+              className="btn-primary inline-flex items-center justify-center h-10"
+            >
+                                                           <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline ml-2">创建第一篇笔记</span>
+            </button>
         </div>
              ) : (
          <div className="space-y-4">
