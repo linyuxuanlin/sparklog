@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Loader2 } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -19,6 +19,7 @@ const NoteEditPage: React.FC = () => {
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [originalFile, setOriginalFile] = useState<{ path: string; sha: string } | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 直接使用isLoggedIn，现在它已经是稳定的了
   const isLoggedInStable = isLoggedIn
@@ -215,8 +216,10 @@ const NoteEditPage: React.FC = () => {
          ? lines.slice(frontmatterEndIndex + 1) 
          : lines
        
-       const extractedContent = contentLines.join('\n')
-       setContent(extractedContent.trim())
+               const extractedContent = contentLines.join('\n')
+        setContent(extractedContent.trim())
+        // 内容加载完成后调整高度
+        setTimeout(adjustTextareaHeight, 100)
       
     } catch (error) {
       console.error('加载笔记失败:', error)
@@ -228,6 +231,24 @@ const NoteEditPage: React.FC = () => {
 
   const handleCancel = () => {
     navigate('/')
+  }
+
+  // 自动调整textarea高度
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      const currentWidth = textareaRef.current.offsetWidth
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+      // 确保宽度保持不变
+      textareaRef.current.style.width = `${currentWidth}px`
+    }
+  }
+
+  // 处理内容变化
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value)
+    // 延迟调整高度，确保内容已更新
+    setTimeout(adjustTextareaHeight, 0)
   }
 
   // 显示消息提示
@@ -432,13 +453,15 @@ const NoteEditPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 内容
               </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="开始编写你的笔记..."
-                rows={20}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              />
+                             <textarea
+                 ref={textareaRef}
+                 value={content}
+                 onChange={handleContentChange}
+                 placeholder="开始编写你的笔记..."
+                 rows={1}
+                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] resize-none overflow-hidden"
+                 style={{ boxSizing: 'border-box' }}
+               />
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
