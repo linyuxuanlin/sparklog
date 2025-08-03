@@ -57,6 +57,26 @@ const NoteEditPage: React.FC = () => {
     }
   }, [isEditMode, title, isLoggedInStable])
 
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      adjustTextareaSize()
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  // 组件挂载时初始化textarea尺寸
+  useEffect(() => {
+    if (textareaRef.current) {
+      // 延迟执行，确保DOM已完全渲染
+      setTimeout(adjustTextareaSize, 0)
+    }
+  }, [])
+
   // 如果正在加载GitHub状态，显示加载界面
   if (isGitHubLoading) {
     return (
@@ -218,8 +238,8 @@ const NoteEditPage: React.FC = () => {
        
                const extractedContent = contentLines.join('\n')
         setContent(extractedContent.trim())
-        // 内容加载完成后调整高度
-        setTimeout(adjustTextareaHeight, 100)
+        // 内容加载完成后调整尺寸
+        setTimeout(adjustTextareaSize, 100)
       
     } catch (error) {
       console.error('加载笔记失败:', error)
@@ -233,25 +253,33 @@ const NoteEditPage: React.FC = () => {
     navigate('/')
   }
 
-  // 自动调整textarea高度
-  const adjustTextareaHeight = () => {
+  // 自动调整textarea高度和宽度
+  const adjustTextareaSize = () => {
     if (textareaRef.current) {
-      const currentWidth = textareaRef.current.offsetWidth
+      // 重置样式以获取自然尺寸
       textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.width = 'auto'
+      
+      // 获取父容器的宽度
+      const parentWidth = textareaRef.current.parentElement?.offsetWidth || 0
+      const maxWidth = parentWidth // 不减去任何间距，让textarea占满容器宽度
+      
+      // 设置宽度为父容器的宽度
+      textareaRef.current.style.width = `${maxWidth}px`
+      
+      // 调整高度
       const scrollHeight = textareaRef.current.scrollHeight
       const maxHeight = window.innerHeight * 0.6 // 60vh
       const newHeight = Math.min(scrollHeight, maxHeight)
       textareaRef.current.style.height = `${newHeight}px`
-      // 确保宽度保持不变
-      textareaRef.current.style.width = `${currentWidth}px`
     }
   }
 
   // 处理内容变化
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value)
-    // 延迟调整高度，确保内容已更新
-    setTimeout(adjustTextareaHeight, 0)
+    // 延迟调整尺寸，确保内容已更新
+    setTimeout(adjustTextareaSize, 0)
   }
 
   // 显示消息提示
@@ -462,8 +490,8 @@ const NoteEditPage: React.FC = () => {
                   onChange={handleContentChange}
                   placeholder="开始编写你的笔记..."
                   rows={1}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words"
-                  style={{ boxSizing: 'border-box', wordWrap: 'break-word' }}
+                  className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words"
+                  style={{ boxSizing: 'border-box', wordWrap: 'break-word', width: '100%', paddingLeft: '12px', paddingRight: '12px' }}
                 />
             </div>
 
