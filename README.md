@@ -524,6 +524,7 @@ class CacheManager {
 欢迎提交Issue和Pull Request！
 
 ### 开发流程
+
 1. Fork项目
 2. 创建功能分支
 3. 提交代码
@@ -532,8 +533,3 @@ class CacheManager {
 ## 📄 许可证
 
 MIT License
-
-## 🙏 致谢
-
-- 灵感来源于 [Memos](https://github.com/usememos/memos)
-- 感谢所有开源项目的贡献者 
