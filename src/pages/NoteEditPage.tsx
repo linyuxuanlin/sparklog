@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Save, Loader2 } from 'lucide-react'
+import { Save, Loader2, AlertCircle, Settings } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { decodeBase64Content, encodeBase64Content } from '@/utils/noteUtils'
+import { checkEnvVarsConfigured } from '@/config/env'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
@@ -85,6 +86,43 @@ const NoteEditPage: React.FC = () => {
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600 dark:text-gray-400">正在检查权限...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 检查环境变量是否已配置
+  const envConfigured = checkEnvVarsConfigured()
+  
+  // 如果环境变量未配置，显示配置提示
+  if (!envConfigured) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
+            <div className="flex items-center justify-center mb-4">
+              <AlertCircle className="w-8 h-8 text-orange-500 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              环境变量未配置，请配置后前往设置查看是否生效。
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/settings')}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                前往设置
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                返回首页
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
