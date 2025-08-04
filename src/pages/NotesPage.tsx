@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle, Lock } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import { Note } from '@/types/Note'
 import { showMessage, filterNotes } from '@/utils/noteUtils'
+import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
   const { isLoading, isConnected, isLoggedIn } = useGitHub()
@@ -20,6 +21,7 @@ const NotesPage: React.FC = () => {
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
+  const [configModalType, setConfigModalType] = useState<'env' | 'password'>('env')
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -73,7 +75,18 @@ const NotesPage: React.FC = () => {
   const handleCreateNote = () => {
     // 检查GitHub连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
-      setShowConfigModal(true)
+      // 检查环境变量是否已配置
+      const envConfigured = checkEnvVarsConfigured()
+      
+      if (!envConfigured) {
+        // 环境变量未配置，显示环境变量配置提示
+        setConfigModalType('env')
+        setShowConfigModal(true)
+      } else {
+        // 环境变量已配置，显示管理员密码输入提示
+        setConfigModalType('password')
+        setShowConfigModal(true)
+      }
       return
     }
     
@@ -156,31 +169,65 @@ const NotesPage: React.FC = () => {
       {showConfigModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center mb-4">
-              <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h3>
-            </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowConfigModal(false)}
-                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={() => {
-                  setShowConfigModal(false)
-                  navigate('/settings')
-                }}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                前往设置
-              </button>
-            </div>
+            {configModalType === 'env' ? (
+              // 环境变量配置提示
+              <>
+                <div className="flex items-center mb-4">
+                  <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h3>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  在创建笔记之前，您需要先配置环境变量。请在配置后前往设置页面查看是否生效。
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowConfigModal(false)}
+                    className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfigModal(false)
+                      navigate('/settings')
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    前往设置
+                  </button>
+                </div>
+              </>
+            ) : (
+              // 管理员密码输入提示
+              <>
+                <div className="flex items-center mb-4">
+                  <Lock className="w-6 h-6 text-blue-500 mr-3" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">需要输入管理员密码</h3>
+                </div>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                 请输入管理员密码验证，以编辑笔记
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowConfigModal(false)}
+                    className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfigModal(false)
+                      navigate('/settings')
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    前往设置
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
