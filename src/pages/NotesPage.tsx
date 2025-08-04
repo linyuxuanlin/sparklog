@@ -25,17 +25,17 @@ const NotesPage: React.FC = () => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Check if notes list needs to be refreshed
+  // 检查是否需要刷新笔记列表
   useEffect(() => {
     if (location.state?.shouldRefresh) {
-      console.log('Detected need to refresh notes list')
+      console.log('检测到需要刷新笔记列表')
       loadNotes(true)
-      // Clear state to avoid duplicate refresh
+      // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [location.state, loadNotes, navigate, location.pathname])
 
-  // Handle URL parameters, if there's noteId parameter, open corresponding note
+  // 处理URL参数，如果有noteId参数则打开对应的笔记
   useEffect(() => {
     if (params.noteId && notes.length > 0) {
       const noteId = decodeURIComponent(params.noteId)
@@ -43,13 +43,13 @@ const NotesPage: React.FC = () => {
       if (targetNote) {
         setSelectedNote(targetNote)
         setIsModalOpen(true)
-        // Update URL without reloading page
+        // 更新URL但不重新加载页面
         navigate(`/note/${params.noteId}`, { replace: true })
       }
     }
   }, [params.noteId, notes, navigate])
 
-  // Handle opening note
+  // 处理打开笔记
   const handleOpenNote = (note: Note) => {
     setSelectedNote(note)
     setIsModalOpen(true)
@@ -57,55 +57,56 @@ const NotesPage: React.FC = () => {
     navigate(`/note/${noteId}`)
   }
 
-  // Handle closing modal
+  // 处理关闭模态框
   const handleCloseModal = () => {
     setIsModalOpen(false)
     setSelectedNote(null)
     navigate('/')
   }
 
-  // Show message prompt
+
+
+  // 显示消息提示
   const handleShowMessage = (text: string, type: 'success' | 'error') => {
     showMessage(setMessage, setMessageType, text, type)
   }
 
-  // Handle create note click
+  // 处理创建笔记点击
   const handleCreateNote = () => {
-    // Check GitHub connection status and login status
+    // 检查GitHub连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
-      // Check if environment variables are configured
+      // 检查环境变量是否已配置
       const envConfigured = checkEnvVarsConfigured()
       
       if (!envConfigured) {
-        // Environment variables not configured, show environment variable configuration prompt
+        // 环境变量未配置，显示环境变量配置提示
         setConfigModalType('env')
         setShowConfigModal(true)
       } else {
-        // Environment variables configured, show admin password input prompt
+        // 环境变量已配置，显示管理员密码输入提示
         setConfigModalType('password')
         setShowConfigModal(true)
       }
       return
     }
     
-    // If connected and logged in, directly navigate to create note page
+    // 如果已连接且已登录，直接跳转到创建笔记页面
     navigate('/note/new')
   }
 
-  // Edit note
+  // 编辑笔记
   const handleEditNote = (note: Note) => {
-    // Close modal first
+    // 先关闭模态框
     setIsModalOpen(false)
+    setSelectedNote(null)
     
-    // Generate timestamp for new filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
-    console.log('Edit note:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
-    
-    // Navigate to edit page with timestamp
+    // 然后跳转到编辑页面
+    const timestamp = note.name.replace(/\.md$/, '')
+    console.log('编辑笔记:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
     navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
-  // Delete note
+  // 删除笔记
   const handleDeleteNote = async (note: Note) => {
     setConfirmingDelete(note.sha)
   }
@@ -118,7 +119,7 @@ const NotesPage: React.FC = () => {
       await deleteNote(note)
       handleShowMessage('笔记删除成功！', 'success')
       
-      // If a modal is open, close it and navigate to home
+      // 如果当前有模态框打开，关闭它并跳转到首页
       if (isModalOpen) {
         setIsModalOpen(false)
         setSelectedNote(null)
@@ -132,7 +133,7 @@ const NotesPage: React.FC = () => {
     }
   }
 
-  // Filter notes
+  // 过滤笔记
   const filteredNotes = filterNotes(notes, searchQuery)
 
   if (isLoading) {
@@ -148,7 +149,7 @@ const NotesPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Overlay message prompt */}
+      {/* 覆盖式消息提示 */}
       {message && (
         <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
           messageType === 'success' 
@@ -164,12 +165,12 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Environment variable configuration modal */}
+      {/* 配置环境提示模态框 */}
       {showConfigModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
             {configModalType === 'env' ? (
-              // Environment variable configuration prompt
+              // 环境变量配置提示
               <>
                 <div className="flex items-center mb-4">
                   <AlertCircle className="w-6 h-6 text-orange-500 mr-3" />
@@ -198,7 +199,7 @@ const NotesPage: React.FC = () => {
                 </div>
               </>
             ) : (
-              // Admin password input prompt
+              // 管理员密码输入提示
               <>
                 <div className="flex items-center mb-4">
                   <Lock className="w-6 h-6 text-blue-500 mr-3" />
@@ -231,7 +232,7 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Search bar and button area */}
+      {/* 搜索栏和按钮区域 */}
       <div className="mb-6">
                  <div className="flex items-center justify-between">
            <div className="relative max-w-md">
@@ -301,7 +302,7 @@ const NotesPage: React.FC = () => {
              ))}
            </div>
            
-                       {/* Load more button */}
+                       {/* 加载更多按钮 */}
             {hasMoreNotes && (
               <div className="text-center pt-6">
                 <button
@@ -324,7 +325,7 @@ const NotesPage: React.FC = () => {
               </div>
             )}
            
-           {/* Loading progress display */}
+           {/* 加载进度显示 */}
            {isLoadingNotes && loadingProgress.total > 0 && (
              <div className="text-center py-4">
                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
@@ -341,7 +342,7 @@ const NotesPage: React.FC = () => {
          </div>
        )}
       
-      {/* Note detail modal */}
+      {/* 笔记详情模态框 */}
       <NoteDetailModal
         note={selectedNote}
         isOpen={isModalOpen}

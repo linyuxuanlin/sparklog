@@ -11,9 +11,9 @@ export const useGitHub = () => {
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
-    // Check admin authentication status
+    // 检查管理员身份验证状态
     const auth = localStorage.getItem('sparklog_admin_auth')
-    console.log('useGitHub debug info:', {
+    console.log('useGitHub调试信息:', {
       hasAuth: !!auth,
       authData: auth ? JSON.parse(auth) : null
     })
@@ -21,14 +21,14 @@ export const useGitHub = () => {
     if (auth) {
       const authData: AdminAuth = JSON.parse(auth)
       setIsConnected(authData.isAuthenticated)
-      setIsOwner(authData.isAuthenticated) // If authenticated by password, is owner
+      setIsOwner(authData.isAuthenticated) // 如果通过密码验证，就是所有者
     }
     setIsLoading(false)
-  }, []) // Remove forceUpdate dependency, only execute once when component mounts
+  }, []) // 移除forceUpdate依赖，只在组件挂载时执行一次
 
   const authenticate = useCallback((password: string) => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
-    console.log('Authentication debug:', {
+    console.log('认证调试:', {
       inputPassword: password,
       adminPassword: adminPassword,
       isMatch: password === adminPassword
@@ -42,25 +42,25 @@ export const useGitHub = () => {
       localStorage.setItem('sparklog_admin_auth', JSON.stringify(authData))
       setIsConnected(true)
       setIsOwner(true)
-      console.log('Authentication successful, status updated')
+      console.log('认证成功，状态已更新')
       return true
     }
     return false
   }, [])
 
-  // Get GitHub Token (for API calls)
+  // 获取GitHub Token（用于API调用）
   const getGitHubToken = useCallback(() => {
-    // If admin and authenticated, return Token from environment variables
+    // 如果是管理员且已认证，返回环境变量中的Token
     if (isConnected && isOwner) {
       const token = import.meta.env.VITE_GITHUB_TOKEN
-      console.log('Get GitHub Token:', {
+      console.log('获取GitHub Token:', {
         isConnected,
         isOwner,
         hasToken: !!token
       })
       return token || null
     }
-    console.log('Failed to get GitHub Token:', { isConnected, isOwner })
+    console.log('未获取到GitHub Token:', { isConnected, isOwner })
     return null
   }, [isConnected, isOwner])
 
@@ -68,15 +68,15 @@ export const useGitHub = () => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
-    console.log('Disconnected, status updated')
+    console.log('已断开连接，状态已更新')
   }, [])
 
-  // Check if has management permissions (authenticated admin)
+  // 检查是否有管理权限（已认证的管理员）
   const hasManagePermission = useCallback(() => {
     return isConnected && isOwner
   }, [isConnected, isOwner])
 
-  // Check if logged in
+  // 检查是否已登录
   const isLoggedIn = useCallback(() => {
     return isConnected
   }, [isConnected])

@@ -11,27 +11,27 @@ import { debugEnvironment } from '@/utils/debugUtils'
 function App() {
   const { isLoading } = useGitHub()
 
-  // Add environment check
+  // 添加环境检查
   useEffect(() => {
-    console.log('App initialization:', {
+    console.log('App初始化:', {
       mode: import.meta.env.MODE,
       isDev: import.meta.env.DEV,
       envConfigured: checkEnvVarsConfigured()
     })
     
-    // Run debug in Cloudflare Pages environment
+    // 在Cloudflare Pages环境中运行调试
     if (!import.meta.env.DEV) {
       debugEnvironment()
     }
   }, [])
 
-  // If loading, show loading state
+  // 如果正在加载，显示加载状态
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Checking GitHub connection status...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">检查GitHub连接状态...</p>
         </div>
       </div>
     )
@@ -41,7 +41,7 @@ function App() {
     <div className="h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       <Routes>
         <Route path="/" element={<Layout />}>
-          {/* Home page directly shows all notes page */}
+          {/* 首页直接显示所有笔记页面 */}
           <Route index element={<NotesPage />} />
           <Route path="notes" element={<NotesPage />} />
           <Route path="note/new" element={<NoteEditPage />} />

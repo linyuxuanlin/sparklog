@@ -18,22 +18,22 @@ export const useNotes = () => {
   const [isPreloading, setIsPreloading] = useState(false)
   const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
   
-  // Use ref to avoid duplicate loading
+  // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
   const lastLoginStatusRef = useRef(loginStatus)
 
-  // Preload next batch of notes
+  // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
     if (isPreloading) return
     
     setIsPreloading(true)
     
     try {
-      const pageSize = 5 // Preload 5 notes
+      const pageSize = 5 // 预加载5篇笔记
       const endIndex = startIndex + pageSize
       const nextBatchFiles = markdownFiles.slice(startIndex, endIndex)
       
-      // Concurrently load next batch of note content
+      // 并发加载下一批笔记内容
       const nextBatchNotes = await Promise.all(
         nextBatchFiles.map(async (file: any) => {
           try {
@@ -45,7 +45,7 @@ export const useNotes = () => {
               contentHeaders['Authorization'] = `token ${authData.accessToken}`
             }
             
-            // Get note content
+            // 获取笔记内容
             const timestamp = Date.now()
             const separator = file.url.includes('?') ? '&' : '?'
             const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
@@ -56,10 +56,10 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
-              // Parse note content
+              // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
               
-              // Prioritize dates parsed from frontmatter, if not available use GitHub file metadata
+              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
               let created_at = parsed.createdDate || file.created_at
               let updated_at = parsed.updatedDate || file.updated_at
               
@@ -77,13 +77,13 @@ export const useNotes = () => {
             
             return file
           } catch (error) {
-            console.error(`Failed to preload note content: ${file.name}`, error)
+            console.error(`预加载笔记内容失败: ${file.name}`, error)
             return file
           }
         })
       )
       
-      // Filter notes - display notes based on login status
+      // 过滤笔记 - 根据登录状态显示笔记
       const visibleNextBatchNotes = nextBatchNotes.filter(note => {
         if (!currentLoginStatus) {
           return !note.isPrivate
@@ -93,20 +93,20 @@ export const useNotes = () => {
       
       setPreloadedNotes(visibleNextBatchNotes)
     } catch (error) {
-      console.error('Failed to preload notes:', error)
+      console.error('预加载笔记失败:', error)
     } finally {
       setIsPreloading(false)
     }
   }, [isPreloading])
 
-  // Load notes from GitHub repository (paged loading)
+  // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
-    // If loading and not force refresh, avoid duplicate requests
+    // 如果正在加载且不是强制刷新，避免重复请求
     if (isLoadingNotes && !forceRefresh) {
       return
     }
     
-    console.log('Start loading notes:', {
+    console.log('开始加载笔记:', {
       forceRefresh,
       page,
       isCloudflarePages: isCloudflarePages(),
@@ -120,23 +120,23 @@ export const useNotes = () => {
       let authData: any = null
       let selectedRepo: string | null = null
       
-      // Get default repository configuration
+      // 获取默认仓库配置
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
-        throw new Error('Default repository not configured, please set environment variables')
+        throw new Error('未配置默认仓库，请设置环境变量')
       }
       
-      // Basic configuration uses environment variables
+      // 基础配置使用环境变量
       selectedRepo = defaultConfig.repo
       authData = { 
         username: defaultConfig.owner,
         accessToken: getDefaultGitHubToken()
       }
       
-      // Get current login status
+      // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
       
-      // If admin and logged in, use GitHub Token
+      // 如果是管理员且已登录，使用GitHub Token
       if (currentLoginStatus) {
         const adminToken = getGitHubToken()
         if (adminToken) {
@@ -144,14 +144,14 @@ export const useNotes = () => {
         }
       }
       
-      console.log('GitHub API configuration:', {
+      console.log('GitHub API配置:', {
         username: authData.username,
         repo: selectedRepo,
         hasToken: !!authData.accessToken,
         isCloudflarePages: isCloudflarePages()
       })
       
-      // Call GitHub API to get files in notes directory
+      // 调用GitHub API获取notes目录下的文件
       const headers: any = {
         'Accept': 'application/vnd.github.v3+json'
       }
@@ -163,17 +163,17 @@ export const useNotes = () => {
       const timestamp = Date.now()
       const apiUrl = `https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${timestamp}`
       
-      console.log('Request GitHub API:', apiUrl)
+      console.log('请求GitHub API:', apiUrl)
       
       const response = await fetch(apiUrl, {
         headers
       })
       
-      console.log('GitHub API response status:', response.status, response.statusText)
+      console.log('GitHub API响应状态:', response.status, response.statusText)
       
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('notes directory does not exist, return empty list')
+          console.log('notes目录不存在，返回空列表')
           setNotes([])
           setIsLoadingNotes(false)
           setHasLoaded(true)
@@ -183,38 +183,38 @@ export const useNotes = () => {
         }
         
         const errorData = await response.json().catch(() => ({}))
-        console.error('GitHub API error details:', errorData)
-        throw new Error(`GitHub API error: ${response.status} - ${errorData.message || response.statusText}`)
+        console.error('GitHub API错误详情:', errorData)
+        throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
       }
       
       const files = await response.json()
-      console.log('Retrieved file list:', files.length, 'files')
+      console.log('获取到文件列表:', files.length, '个文件')
       
-      // Filter .md files and sort by time (new to old)
+      // 过滤出.md文件并按时间排序（新到旧）
       const markdownFiles = files
         .filter((file: any) => file.type === 'file' && file.name.endsWith('.md'))
         .sort((a: any, b: any) => {
-          // Sort by timestamp in filename (new to old)
+          // 按文件名中的时间戳排序（新到旧）
           const timeA = a.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
           const timeB = b.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
           return timeB.localeCompare(timeA)
         })
       
-      console.log('Filtered markdown files:', markdownFiles.length, 'files')
+      console.log('过滤后的markdown文件:', markdownFiles.length, '个')
       
-      // Save all markdown file list for preloading
+      // 保存所有markdown文件列表，用于预加载
       setAllMarkdownFiles(markdownFiles)
       
-      // Paging processing
+      // 分页处理
       let startIndex: number
       let pageSize: number
       
       if (page === 1) {
-        // First load: load first 8
+        // 首次加载：加载前8篇
         startIndex = 0
         pageSize = 8
       } else {
-        // Subsequent loads: load 5 each time
+        // 后续加载：每次加载5篇
         startIndex = 8 + (page - 2) * 5 // 8 + (page-2)*5
         pageSize = 5
       }
@@ -222,7 +222,7 @@ export const useNotes = () => {
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
       
-      console.log('Current page files:', {
+      console.log('当前页文件:', {
         startIndex,
         endIndex,
         pageSize,
@@ -231,10 +231,10 @@ export const useNotes = () => {
       
       setLoadingProgress({ current: 0, total: currentPageFiles.length })
       
-      // Check if there are more notes
+      // 检查是否还有更多笔记
       setHasMoreNotes(endIndex < markdownFiles.length)
       
-      // Concurrently load current page note content
+      // 并发加载当前页的笔记内容
       const notesWithContent = await Promise.all(
         currentPageFiles.map(async (file: any, index: number) => {
           try {
@@ -246,7 +246,7 @@ export const useNotes = () => {
               contentHeaders['Authorization'] = `token ${authData.accessToken}`
             }
             
-            // Get note content
+            // 获取笔记内容
             const timestamp = Date.now()
             const separator = file.url.includes('?') ? '&' : '?'
             const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
@@ -257,14 +257,14 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
-              // Parse note content
+              // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
               
-              // Prioritize dates parsed from frontmatter, if not available use GitHub file metadata
+              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
               let created_at = parsed.createdDate || file.created_at
               let updated_at = parsed.updatedDate || file.updated_at
               
-              // Update loading progress
+              // 更新加载进度
               setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
               
               return {
@@ -281,14 +281,14 @@ export const useNotes = () => {
             
             return file
           } catch (error) {
-            console.error(`Failed to get note content: ${file.name}`, error)
+            console.error(`获取笔记内容失败: ${file.name}`, error)
             setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
             return file
           }
         })
       )
       
-      // Filter notes - display notes based on login status
+      // 过滤笔记 - 根据登录状态显示笔记
       const visibleNotes = notesWithContent.filter(note => {
         if (!currentLoginStatus) {
           return !note.isPrivate
@@ -296,20 +296,20 @@ export const useNotes = () => {
         return true
       })
       
-      console.log('Final visible notes:', visibleNotes.length, 'notes')
+      console.log('最终可见笔记:', visibleNotes.length, '个')
       
-      // If first page or force refresh, replace note list; otherwise append
+      // 如果是第一页或强制刷新，替换笔记列表；否则追加
       if (page === 1 || forceRefresh) {
         setNotes(visibleNotes)
         setCurrentPage(1)
-        // Preload next batch of notes
+        // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
         }
       } else {
         setNotes(prev => [...prev, ...visibleNotes])
         setCurrentPage(page)
-        // Preload next batch of notes
+        // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
         }
@@ -319,13 +319,13 @@ export const useNotes = () => {
       setHasLoaded(true)
       
     } catch (error) {
-      console.error('Failed to load notes:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Please retry'
+      console.error('加载笔记失败:', error)
+      const errorMessage = error instanceof Error ? error.message : '请重试'
       
-      if (errorMessage.includes('Default repository not configured')) {
-        throw new Error('Website default repository not configured, please contact administrator or connect GitHub to view notes')
+      if (errorMessage.includes('未配置默认仓库')) {
+        throw new Error('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
       } else {
-        throw new Error(`Failed to load notes: ${errorMessage}`)
+        throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
   }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])

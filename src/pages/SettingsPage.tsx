@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Lock, Settings, ExternalLink, LogOut, LogIn } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig } from '@/config/defaultRepo'
@@ -52,15 +52,14 @@ const SettingsPage: React.FC = () => {
     VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
 
-  // Debug environment variables
-  useEffect(() => {
-    console.log('Environment variables debug info:', {
-      owner: import.meta.env.VITE_REPO_OWNER,
-      repo: import.meta.env.VITE_REPO_NAME,
-      hasToken: !!import.meta.env.VITE_GITHUB_TOKEN,
-      hasPassword: !!import.meta.env.VITE_ADMIN_PASSWORD
-    })
-  }, [])
+  // 调试信息
+  console.log('环境变量调试信息:', {
+    VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
+    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
+    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
+    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置',
+    defaultConfig: getDefaultRepoConfig()
+  })
 
   return (
     <div className="max-w-4xl mx-auto p-6">
