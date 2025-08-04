@@ -31,4 +31,10 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
+  // 添加对Cloudflare Pages的支持
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
+  },
+  // 确保环境变量在构建时可用
+  envPrefix: ['VITE_', 'GITHUB_', 'REPO_']
 }) 

@@ -24,6 +24,16 @@ export const checkEnvVarsConfigured = (): boolean => {
 
   const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
 
+  // 添加调试信息
+  console.log('环境变量检查:', {
+    owner: owner ? '已设置' : '未设置',
+    repo: repo ? '已设置' : '未设置',
+    token: token ? '已设置' : '未设置',
+    adminPassword: adminPassword ? '已设置' : '未设置',
+    env: import.meta.env.MODE,
+    isDev: import.meta.env.DEV
+  })
+
   // 检查必要的环境变量是否都已配置
   return !!(owner && repo && token && adminPassword)
 }
@@ -42,6 +52,7 @@ export const getRepoConfigFromEnv = (): RepoConfig | null => {
                import.meta.env.GITHUB_REPO
 
   if (owner && repo) {
+    console.log('获取仓库配置成功:', { owner, repo })
     return {
       owner,
       repo,
@@ -49,14 +60,18 @@ export const getRepoConfigFromEnv = (): RepoConfig | null => {
     }
   }
 
+  console.log('获取仓库配置失败:', { owner, repo })
   return null
 }
 
 // 获取GitHub Access Token（用于未连接用户访问私有仓库）
 export const getGitHubToken = (): string | null => {
-  return import.meta.env.VITE_GITHUB_TOKEN || 
+  const token = import.meta.env.VITE_GITHUB_TOKEN || 
          import.meta.env.GITHUB_TOKEN || 
          null
+  
+  console.log('获取GitHub Token:', token ? '已设置' : '未设置')
+  return token
 }
 
 // 检查是否为开发环境
@@ -67,4 +82,11 @@ export const isDevelopment = (): boolean => {
 // 获取当前域名
 export const getCurrentDomain = (): string => {
   return window.location.hostname
+}
+
+// 检查是否为Cloudflare Pages环境
+export const isCloudflarePages = (): boolean => {
+  return window.location.hostname.includes('pages.dev') || 
+         window.location.hostname.includes('workers.dev') ||
+         import.meta.env.MODE === 'production'
 } 

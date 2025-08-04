@@ -1,3 +1,17 @@
 name = "sparklog"
 compatibility_date = "2025-08-01"
-pages_build_output_dir = "dist" 
+pages_build_output_dir = "dist"
+
+[env.production]
+name = "sparklog-prod"
+
+[env.staging]
+name = "sparklog-staging"
+
+# 添加CORS配置
+[[headers]]
+for = "/*"
+[headers.values]
+Access-Control-Allow-Origin = "*"
+Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+Access-Control-Allow-Headers = "Content-Type, Authorization" 
