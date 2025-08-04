@@ -184,12 +184,12 @@ export const useNotes = () => {
       let pageSize: number
       
       if (page === 1) {
-        // 首次加载：加载前5篇
+        // 首次加载：加载前10篇
         startIndex = 0
-        pageSize = 5
+        pageSize = 10
       } else {
         // 后续加载：每次加载5篇
-        startIndex = 5 + (page - 2) * 5 // 5 + (page-2)*5
+        startIndex = 10 + (page - 2) * 5 // 10 + (page-2)*5
         pageSize = 5
       }
       
@@ -301,11 +301,11 @@ export const useNotes = () => {
         let nextStartIndex: number
         
         if (newCurrentPage === 1) {
-          // 第一页后，预加载第6-10篇
-          nextStartIndex = 5
+          // 第一页后，预加载第11-15篇
+          nextStartIndex = 10
         } else {
           // 后续页面，预加载下一批5篇
-          nextStartIndex = 5 + (newCurrentPage - 1) * 5
+          nextStartIndex = 10 + (newCurrentPage - 1) * 5
         }
         
         const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
