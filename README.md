@@ -23,7 +23,7 @@ SparkLog 是一个使用 Github 仓库作存储的静态笔记应用，支持在
 然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），  
 获取的令牌格式例如：`ghp_xxxxxxxx`。
 
-### 本地开发
+### 一. 本地开发
 
 ```bash
 # 克隆项目
@@ -36,13 +36,13 @@ npm install
 # 创建环境变量文件
 cp .env.example .env  # 复制环境变量模板
 
-# 编辑.env文件，配置GitHub仓库信息
+# 编辑.env文件，配置 GitHub 仓库信息
 
 # 启动开发服务器
 npm run dev
 ```
 
-### 部署到 Cloudflare Pages
+### 二、部署到 Cloudflare Pages
 
 1. **Fork 项目**
 
@@ -80,7 +80,7 @@ npm run dev
 
 ---
 
-## 🎯 功能特性（待更新）
+## 🎯 其他功能特性（待更新）
 
 - **公开笔记分享**: 任何人都可以查看公开笔记
 - **私密笔记保护**: 只有通过管理员密码验证的用户才能管理私密笔记
