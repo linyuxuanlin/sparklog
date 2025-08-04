@@ -4,26 +4,9 @@ import NotesPage from '@/pages/NotesPage'
 import NoteEditPage from '@/pages/NoteEditPage'
 import SettingsPage from '@/pages/SettingsPage'
 import { useGitHub } from '@/hooks/useGitHub'
-import { checkEnvVarsConfigured } from '@/config/env'
-import { useEffect } from 'react'
-import { debugEnvironment } from '@/utils/debugUtils'
 
 function App() {
   const { isLoading } = useGitHub()
-
-  // 添加环境检查
-  useEffect(() => {
-    console.log('App初始化:', {
-      mode: import.meta.env.MODE,
-      isDev: import.meta.env.DEV,
-      envConfigured: checkEnvVarsConfigured()
-    })
-    
-    // 在Cloudflare Pages环境中运行调试
-    if (!import.meta.env.DEV) {
-      debugEnvironment()
-    }
-  }, [])
 
   // 如果正在加载，显示加载状态
   if (isLoading) {

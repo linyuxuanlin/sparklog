@@ -3,7 +3,6 @@ import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
-import { isCloudflarePages } from '@/config/env'
 
 export const useNotes = () => {
   const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
@@ -106,14 +105,6 @@ export const useNotes = () => {
       return
     }
     
-    console.log('开始加载笔记:', {
-      forceRefresh,
-      page,
-      isCloudflarePages: isCloudflarePages(),
-      isConnected,
-      loginStatus: isLoggedIn()
-    })
-    
     setIsLoadingNotes(true)
     
     try {
@@ -144,13 +135,6 @@ export const useNotes = () => {
         }
       }
       
-      console.log('GitHub API配置:', {
-        username: authData.username,
-        repo: selectedRepo,
-        hasToken: !!authData.accessToken,
-        isCloudflarePages: isCloudflarePages()
-      })
-      
       // 调用GitHub API获取notes目录下的文件
       const headers: any = {
         'Accept': 'application/vnd.github.v3+json'
@@ -161,19 +145,12 @@ export const useNotes = () => {
       }
       
       const timestamp = Date.now()
-      const apiUrl = `https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${timestamp}`
-      
-      console.log('请求GitHub API:', apiUrl)
-      
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${timestamp}`, {
         headers
       })
       
-      console.log('GitHub API响应状态:', response.status, response.statusText)
-      
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('notes目录不存在，返回空列表')
           setNotes([])
           setIsLoadingNotes(false)
           setHasLoaded(true)
@@ -181,14 +158,11 @@ export const useNotes = () => {
           setAllMarkdownFiles([])
           return
         }
-        
         const errorData = await response.json().catch(() => ({}))
-        console.error('GitHub API错误详情:', errorData)
         throw new Error(`GitHub API错误: ${response.status} - ${errorData.message || response.statusText}`)
       }
       
       const files = await response.json()
-      console.log('获取到文件列表:', files.length, '个文件')
       
       // 过滤出.md文件并按时间排序（新到旧）
       const markdownFiles = files
@@ -199,8 +173,6 @@ export const useNotes = () => {
           const timeB = b.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
           return timeB.localeCompare(timeA)
         })
-      
-      console.log('过滤后的markdown文件:', markdownFiles.length, '个')
       
       // 保存所有markdown文件列表，用于预加载
       setAllMarkdownFiles(markdownFiles)
@@ -221,13 +193,6 @@ export const useNotes = () => {
       
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
-      
-      console.log('当前页文件:', {
-        startIndex,
-        endIndex,
-        pageSize,
-        currentPageFiles: currentPageFiles.length
-      })
       
       setLoadingProgress({ current: 0, total: currentPageFiles.length })
       
@@ -295,8 +260,6 @@ export const useNotes = () => {
         }
         return true
       })
-      
-      console.log('最终可见笔记:', visibleNotes.length, '个')
       
       // 如果是第一页或强制刷新，替换笔记列表；否则追加
       if (page === 1 || forceRefresh) {

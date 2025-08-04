@@ -1,7 +1,1 @@
-/*    /index.html   200
-
-# 确保API请求不被重定向
-/api/*    /index.html   200
-
-# 静态资源缓存
-/assets/*  /index.html  200 
+/*    /index.html   200 
