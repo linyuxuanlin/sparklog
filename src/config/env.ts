@@ -7,27 +7,6 @@ export interface RepoConfig {
   description: string
 }
 
-// 检测环境变量是否已配置
-export const checkEnvVarsConfigured = (): boolean => {
-  const owner = import.meta.env.VITE_REPO_OWNER || 
-                import.meta.env.VITE_GITHUB_OWNER ||
-                import.meta.env.REPO_OWNER ||
-                import.meta.env.GITHUB_OWNER
-
-  const repo = import.meta.env.VITE_REPO_NAME || 
-               import.meta.env.VITE_GITHUB_REPO ||
-               import.meta.env.REPO_NAME ||
-               import.meta.env.GITHUB_REPO
-
-  const token = import.meta.env.VITE_GITHUB_TOKEN || 
-                import.meta.env.GITHUB_TOKEN
-
-  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
-
-  // 检查必要的环境变量是否都已配置
-  return !!(owner && repo && token && adminPassword)
-}
-
 // 从环境变量获取仓库配置
 export const getRepoConfigFromEnv = (): RepoConfig | null => {
   // 支持多种环境变量格式

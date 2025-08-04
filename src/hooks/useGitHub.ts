@@ -9,6 +9,7 @@ export const useGitHub = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isOwner, setIsOwner] = useState(false)
+  const [forceUpdate, setForceUpdate] = useState(0)
 
   useEffect(() => {
     // 检查管理员身份验证状态
@@ -24,7 +25,7 @@ export const useGitHub = () => {
       setIsOwner(authData.isAuthenticated) // 如果通过密码验证，就是所有者
     }
     setIsLoading(false)
-  }, []) // 移除forceUpdate依赖，只在组件挂载时执行一次
+  }, [forceUpdate])
 
   const authenticate = useCallback((password: string) => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
@@ -42,6 +43,7 @@ export const useGitHub = () => {
       localStorage.setItem('sparklog_admin_auth', JSON.stringify(authData))
       setIsConnected(true)
       setIsOwner(true)
+      setForceUpdate(prev => prev + 1)
       console.log('认证成功，状态已更新')
       return true
     }
@@ -68,6 +70,7 @@ export const useGitHub = () => {
     localStorage.removeItem('sparklog_admin_auth')
     setIsConnected(false)
     setIsOwner(false)
+    setForceUpdate(prev => prev + 1)
     console.log('已断开连接，状态已更新')
   }, [])
 

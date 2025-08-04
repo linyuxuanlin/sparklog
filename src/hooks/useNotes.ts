@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
@@ -16,10 +16,6 @@ export const useNotes = () => {
   const [preloadedNotes, setPreloadedNotes] = useState<Note[]>([])
   const [isPreloading, setIsPreloading] = useState(false)
   const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
-  
-  // 使用ref来避免重复加载
-  const isInitialLoadRef = useRef(false)
-  const lastLoginStatusRef = useRef(loginStatus)
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -55,12 +51,12 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
+              // 简化时间获取：使用文件的基本信息，避免额外的API调用
+              let created_at = file.created_at
+              let updated_at = file.updated_at
+              
               // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
-              
-              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
-              let created_at = parsed.createdDate || file.created_at
-              let updated_at = parsed.updatedDate || file.updated_at
               
               return {
                 ...file,
@@ -96,7 +92,7 @@ export const useNotes = () => {
     } finally {
       setIsPreloading(false)
     }
-  }, [isPreloading])
+  }, [isPreloading, isLoggedIn, getGitHubToken])
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
@@ -222,12 +218,12 @@ export const useNotes = () => {
               const contentData = await contentResponse.json()
               const content = decodeBase64Content(contentData.content)
               
+              // 简化时间获取：使用文件的基本信息，避免额外的API调用
+              let created_at = file.created_at
+              let updated_at = file.updated_at
+              
               // 解析笔记内容
               const parsed = parseNoteContent(content, file.name)
-              
-              // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
-              let created_at = parsed.createdDate || file.created_at
-              let updated_at = parsed.updatedDate || file.updated_at
               
               // 更新加载进度
               setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
@@ -291,7 +287,7 @@ export const useNotes = () => {
         throw new Error(`加载笔记失败: ${errorMessage}`)
       }
     }
-  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
+  }, [isConnected, getGitHubToken, preloadNextBatch])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -339,6 +335,19 @@ export const useNotes = () => {
       }
     }
   }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
+
+  // 监听登录状态变化
+  useEffect(() => {
+    if (!isLoading) {
+      const currentStatus = isLoggedIn()
+      if (currentStatus !== loginStatus) {
+        setLoginStatus(currentStatus)
+        if (hasLoaded) {
+          loadNotes(true)
+        }
+      }
+    }
+  }, [isLoggedIn, loginStatus, hasLoaded, loadNotes, isLoading])
 
   // 删除笔记
   const deleteNote = async (note: Note) => {
@@ -392,26 +401,14 @@ export const useNotes = () => {
     }
   }
 
-  // 优化后的初始化加载逻辑
+  // 当连接状态改变时加载笔记，以及组件挂载时加载
   useEffect(() => {
-    if (!isLoading && !isInitialLoadRef.current) {
-      isInitialLoadRef.current = true
-      loadNotes(true)
-    }
-  }, [isLoading, loadNotes])
-
-  // 优化后的登录状态监听
-  useEffect(() => {
-    if (!isLoading && hasLoaded) {
-      const currentStatus = isLoggedIn()
-      if (currentStatus !== lastLoginStatusRef.current) {
-        lastLoginStatusRef.current = currentStatus
-        setLoginStatus(currentStatus)
-        // 只有在登录状态真正改变时才重新加载
+    if (!isLoading) {
+      if (!hasLoaded || isConnected) {
         loadNotes(true)
       }
     }
-  }, [isLoading, hasLoaded, loadNotes])
+  }, [isConnected, isLoading, hasLoaded])
 
   return {
     notes,
