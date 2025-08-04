@@ -2,6 +2,8 @@
 
 SparkLog 是一个使用 Github 仓库作存储的静态笔记应用，支持在线撰写，不错过你的每一个妙想。
 
+Demo: <https://sparklog.wiki-power.com/>
+
 ## 🌟 项目特点
 
 - **纯静态部署**: 你可以把它托管在 Cloudflare Pages / Vercel 等平台，不需要维护。
