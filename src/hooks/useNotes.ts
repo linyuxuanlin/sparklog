@@ -76,7 +76,57 @@ export const useNotes = () => {
         return true
       })
       
-      setPreloadedNotes(visibleNextBatchNotes)
+      // 检查是否还有更多笔记可以预加载
+      const nextStartIndex = endIndex
+      const hasMoreToPreload = nextStartIndex < markdownFiles.length
+      
+      if (hasMoreToPreload) {
+        // 预加载下一批
+        const nextNextBatchFiles = markdownFiles.slice(nextStartIndex, nextStartIndex + pageSize)
+        const nextBatchContent = await githubService.getBatchNotesContent(nextNextBatchFiles)
+        
+        // 处理下一批的内容
+        const nextNextBatchNotes = nextNextBatchFiles.map((file: any) => {
+          const contentData = nextBatchContent[file.path]
+          
+          if (contentData) {
+            const content = decodeBase64Content(contentData.content)
+            
+            // 解析笔记内容
+            const parsed = parseNoteContent(content, file.name)
+            
+            // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
+            let created_at = parsed.createdDate || file.created_at
+            let updated_at = parsed.updatedDate || file.updated_at
+            
+            return {
+              ...file,
+              contentPreview: parsed.contentPreview,
+              fullContent: content,
+              createdDate: parsed.createdDate,
+              updatedDate: parsed.updatedDate,
+              isPrivate: parsed.isPrivate,
+              created_at: created_at,
+              updated_at: updated_at
+            }
+          }
+          
+          return file
+        })
+        
+        // 过滤下一批笔记
+        const visibleNextNextBatchNotes = nextNextBatchNotes.filter(note => {
+          if (!currentLoginStatus) {
+            return !note.isPrivate
+          }
+          return true
+        })
+        
+        // 合并两批笔记
+        setPreloadedNotes([...visibleNextBatchNotes, ...visibleNextNextBatchNotes])
+      } else {
+        setPreloadedNotes(visibleNextBatchNotes)
+      }
     } catch (error) {
       console.error('预加载笔记失败:', error)
     } finally {
@@ -261,7 +311,7 @@ export const useNotes = () => {
         const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
         
         if (hasMoreToPreload) {
-          // 预加载下一批
+          // 预加载下一批（现在会自动预加载多一批）
           const authData = {
             username: getDefaultRepoConfig()?.owner,
             repo: getDefaultRepoConfig()?.repo,
