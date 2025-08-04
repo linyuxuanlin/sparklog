@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="text-center flex-1">
           <h1 className="logo-title">SparkLog</h1>
-          <p className="logo-subtitle">妙想笔记</p>
+          <p className="logo-subtitle"> </p>
         </div>
         <button
           onClick={onClose}
@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       <div className="hidden lg:block p-6 border-b border-gray-200 dark:border-gray-700">
         <Link to="/" className="block text-center">
           <h1 className="logo-title">SparkLog</h1>
-          <p className="logo-subtitle">妙想笔记</p>
+          <p className="logo-subtitle"> </p>
         </Link>
       </div>
       
