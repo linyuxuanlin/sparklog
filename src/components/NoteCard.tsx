@@ -158,6 +158,11 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
 
+  const handleEditClick = () => {
+    console.log('NoteCard edit button clicked:', { noteName: note.name, noteSha: note.sha })
+    onEdit(note)
+  }
+
   return (
     <div 
       className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
@@ -224,11 +229,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
               {isLoggedIn() && (
                 <>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      console.log('NoteCard编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
-                      onEdit(note)
-                    }}
+                    onClick={handleEditClick}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     title="编辑笔记"
                   >

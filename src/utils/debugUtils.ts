@@ -1,44 +1,41 @@
-// 调试工具 - 用于诊断Cloudflare Pages环境中的问题
+// Debug tools - for diagnosing issues in Cloudflare Pages environment
 
-import { debugAllEnvVars, checkEnvVarsConfigured, isCloudflarePages } from '@/config/env'
+import { checkEnvVarsConfigured, isCloudflarePages } from '@/config/env'
 
 export const debugEnvironment = () => {
-  console.log('=== 环境调试信息 ===')
-  console.log('当前URL:', window.location.href)
-  console.log('用户代理:', navigator.userAgent)
+  console.log('=== Environment Debug Information ===')
+  console.log('Current URL:', window.location.href)
+  console.log('User Agent:', navigator.userAgent)
   
-  // 运行详细的环境变量检查
-  debugAllEnvVars()
-  
-  // 检查环境变量配置状态
+  // Check environment variables configuration status
   const envConfigured = checkEnvVarsConfigured()
-  console.log('环境变量配置状态:', envConfigured)
+  console.log('Environment variables configuration status:', envConfigured)
   
-  // 检查是否为Cloudflare Pages环境
+  // Check if it's Cloudflare Pages environment
   const isCloudflare = isCloudflarePages()
-  console.log('是否为Cloudflare Pages:', isCloudflare)
+  console.log('Is Cloudflare Pages:', isCloudflare)
   
-  // 检查localStorage
+  // Check localStorage
   try {
     const auth = localStorage.getItem('sparklog_admin_auth')
-    console.log('localStorage认证状态:', auth ? JSON.parse(auth) : '无')
+    console.log('localStorage authentication status:', auth ? JSON.parse(auth) : 'None')
   } catch (error) {
-    console.error('localStorage访问失败:', error)
+    console.error('localStorage access failed:', error)
   }
   
-  // 测试网络连接
+  // Test network connection
   testNetworkConnection()
   
-  // 如果是Cloudflare Pages环境，运行特殊检查
+  // If it's Cloudflare Pages environment, run special checks
   if (isCloudflare) {
     debugCloudflareSpecific()
   }
 }
 
 export const debugCloudflareSpecific = () => {
-  console.log('=== Cloudflare Pages 特殊检查 ===')
+  console.log('=== Cloudflare Pages Special Checks ===')
   
-  // 检查Cloudflare特定的环境变量
+  // Check Cloudflare-specific environment variables
   const cfKeys = [
     'CF_PAGES_URL',
     'CF_PAGES_BRANCH',
@@ -54,8 +51,8 @@ export const debugCloudflareSpecific = () => {
     }
   })
   
-  // 检查构建时环境变量
-  console.log('构建时环境变量检查:')
+  // Check build-time environment variables
+  console.log('Build-time environment variables check:')
   const buildTimeKeys = [
     'VITE_REPO_OWNER',
     'VITE_REPO_NAME', 
@@ -70,10 +67,10 @@ export const debugCloudflareSpecific = () => {
 }
 
 export const testNetworkConnection = async () => {
-  console.log('=== 网络连接测试 ===')
+  console.log('=== Network Connection Test ===')
   
   try {
-    // 测试GitHub API连接
+    // Test GitHub API connection
     const response = await fetch('https://api.github.com/rate_limit', {
       method: 'GET',
       headers: {
@@ -81,7 +78,7 @@ export const testNetworkConnection = async () => {
       }
     })
     
-    console.log('GitHub API连接测试:', {
+    console.log('GitHub API connection test:', {
       status: response.status,
       ok: response.ok,
       statusText: response.statusText
@@ -89,26 +86,26 @@ export const testNetworkConnection = async () => {
     
     if (response.ok) {
       const data = await response.json()
-      console.log('GitHub API限制信息:', data)
+      console.log('GitHub API rate limit info:', data)
     }
   } catch (error) {
-    console.error('GitHub API连接失败:', error)
+    console.error('GitHub API connection failed:', error)
   }
   
   try {
-    // 测试基本网络连接
+    // Test basic network connection
     const response = await fetch('https://httpbin.org/get')
-    console.log('基本网络连接测试:', {
+    console.log('Basic network connection test:', {
       status: response.status,
       ok: response.ok
     })
   } catch (error) {
-    console.error('基本网络连接失败:', error)
+    console.error('Basic network connection failed:', error)
   }
 }
 
 export const debugGitHubAPI = async (owner: string, repo: string, token?: string) => {
-  console.log('=== GitHub API调试 ===')
+  console.log('=== GitHub API Debug ===')
   
   const headers: any = {
     'Accept': 'application/vnd.github.v3+json'
@@ -120,49 +117,49 @@ export const debugGitHubAPI = async (owner: string, repo: string, token?: string
   
   try {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/notes`
-    console.log('请求URL:', url)
-    console.log('请求头:', headers)
+    console.log('Request URL:', url)
+    console.log('Request headers:', headers)
     
     const response = await fetch(url, { headers })
     
-    console.log('响应状态:', response.status, response.statusText)
-    console.log('响应头:', Object.fromEntries(response.headers.entries()))
+    console.log('Response status:', response.status, response.statusText)
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()))
     
     if (response.ok) {
       const data = await response.json()
-      console.log('响应数据:', data)
+      console.log('Response data:', data)
     } else {
       const errorData = await response.json().catch(() => ({}))
-      console.error('API错误:', errorData)
+      console.error('API error:', errorData)
     }
   } catch (error) {
-    console.error('GitHub API请求失败:', error)
+    console.error('GitHub API request failed:', error)
   }
 }
 
-// 手动触发环境变量重新检查
+// Manually trigger environment variables recheck
 export const recheckEnvironmentVariables = () => {
-  console.log('=== 手动重新检查环境变量 ===')
+  console.log('=== Manual Environment Variables Recheck ===')
   
-  // 清除可能的缓存
+  // Clear possible cache
   if (typeof window !== 'undefined') {
-    // 尝试重新加载页面来刷新环境变量
-    console.log('建议刷新页面以重新加载环境变量')
+    // Try to reload page to refresh environment variables
+    console.log('Suggest refreshing page to reload environment variables')
   }
   
-  // 重新运行环境检查
+  // Re-run environment check
   debugEnvironment()
 }
 
-// 在开发环境中自动运行调试
+// Auto-run debug in development environment
 if (import.meta.env.DEV) {
-  // 延迟执行，确保应用完全加载
+  // Delay execution to ensure app is fully loaded
   setTimeout(() => {
     debugEnvironment()
   }, 1000)
 }
 
-// 在生产环境中也运行调试（Cloudflare Pages）
+// Also run debug in production environment (Cloudflare Pages)
 if (import.meta.env.PROD) {
   setTimeout(() => {
     debugEnvironment()
