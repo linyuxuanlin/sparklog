@@ -122,6 +122,8 @@ export const useNotes = () => {
       
       // Get default repository configuration
       const defaultConfig = getDefaultRepoConfig()
+      console.log('Default config:', defaultConfig)
+      
       if (!defaultConfig) {
         throw new Error('Default repository not configured, please set environment variables')
       }
@@ -330,31 +332,31 @@ export const useNotes = () => {
     }
   }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
 
-  // 加载更多笔记
+  // Load more notes
   const loadMoreNotes = useCallback(() => {
     if (!isLoadingNotes && hasMoreNotes) {
-      // 如果有预加载的笔记，立即显示
+      // If there are preloaded notes, display them immediately
       if (preloadedNotes.length > 0) {
         setNotes(prev => [...prev, ...preloadedNotes])
         const newCurrentPage = currentPage + 1
         setCurrentPage(newCurrentPage)
         setPreloadedNotes([])
         
-        // 检查是否还有更多笔记需要预加载
+        // Check if there are more notes to preload
         let nextStartIndex: number
         
         if (newCurrentPage === 1) {
-          // 第一页后，预加载第9-13篇
+          // After first page, preload notes 9-13
           nextStartIndex = 8
         } else {
-          // 后续页面，预加载下一批5篇
+          // Subsequent pages, preload next batch of 5
           nextStartIndex = 8 + (newCurrentPage - 1) * 5
         }
         
         const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
         
         if (hasMoreToPreload) {
-          // 预加载下一批
+          // Preload next batch
           const authData = {
             username: getDefaultRepoConfig()?.owner,
             accessToken: getDefaultGitHubToken()
@@ -371,18 +373,18 @@ export const useNotes = () => {
           setHasMoreNotes(false)
         }
       } else {
-        // 如果没有预加载的笔记，正常加载
+        // If no preloaded notes, load normally
         loadNotes(false, currentPage + 1)
       }
     }
   }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
 
-  // 删除笔记
+  // Delete note
   const deleteNote = async (note: Note) => {
     try {
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
-        throw new Error('未配置默认仓库')
+        throw new Error('Default repository not configured')
       }
       
       let authData: any = null
@@ -411,25 +413,25 @@ export const useNotes = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `删除笔记: ${note.name}`,
+          message: `Delete note: ${note.name}`,
           sha: note.sha
         })
       })
       
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(`删除失败: ${errorData.message || response.statusText}`)
+        throw new Error(`Delete failed: ${errorData.message || response.statusText}`)
       }
       
       setNotes(prev => prev.filter(n => n.sha !== note.sha))
       return true
     } catch (error) {
-      console.error('删除笔记失败:', error)
+      console.error('Failed to delete note:', error)
       throw error
     }
   }
 
-  // 优化后的初始化加载逻辑
+  // Optimized initialization loading logic
   useEffect(() => {
     if (!isLoading && !isInitialLoadRef.current) {
       isInitialLoadRef.current = true
@@ -437,14 +439,14 @@ export const useNotes = () => {
     }
   }, [isLoading, loadNotes])
 
-  // 优化后的登录状态监听
+  // Optimized login status monitoring
   useEffect(() => {
     if (!isLoading && hasLoaded) {
       const currentStatus = isLoggedIn()
       if (currentStatus !== lastLoginStatusRef.current) {
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
-        // 只有在登录状态真正改变时才重新加载
+        // Only reload when login status actually changes
         loadNotes(true)
       }
     }
