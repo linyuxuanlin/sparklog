@@ -1,16 +1,11 @@
 // Debug tools - for diagnosing issues in Cloudflare Pages environment
 
 import { checkEnvVarsConfigured, isCloudflarePages } from '@/config/env'
-import { checkEnvironmentVariables, getEffectiveConfig } from './envChecker'
 
 export const debugEnvironment = () => {
   console.log('=== Environment Debug Information ===')
   console.log('Current URL:', window.location.href)
   console.log('User Agent:', navigator.userAgent)
-  
-  // Run detailed environment variables check
-  checkEnvironmentVariables()
-  const effectiveConfig = getEffectiveConfig()
   
   // Check environment variables configuration status
   const envConfigured = checkEnvVarsConfigured()
@@ -34,11 +29,6 @@ export const debugEnvironment = () => {
   // If it's Cloudflare Pages environment, run special checks
   if (isCloudflare) {
     debugCloudflareSpecific()
-  }
-  
-  // Test GitHub API with effective config
-  if (effectiveConfig.hasValidConfig) {
-    debugGitHubAPI(effectiveConfig.owner, effectiveConfig.repo, effectiveConfig.token || undefined)
   }
 }
 
