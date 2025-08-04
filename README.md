@@ -18,8 +18,8 @@ SparkLog 是一个使用 Github 仓库作存储的静态笔记应用，支持在
 - Node.js 18+
 - npm/yarn/pnpm
 
-你需要首先创建一个私有 GitHub 仓库用于存放笔记文件，  
-然后获取 GitHub 个人访问令牌（需要`repo`权限），例如：`ghp_xxxxxxxx`。
+你需要首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于存放笔记文件，  
+然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），获取的令牌格式例如：`ghp_xxxxxxxx`。
 
 ### 本地开发
 
