@@ -12,7 +12,7 @@ import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
   const { isLoading, isConnected, isLoggedIn } = useGitHub()
-  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress } = useNotes()
+  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
@@ -313,7 +313,34 @@ const NotesPage: React.FC = () => {
         )}
       </div>
 
-      {isLoadingNotes ? (
+      {error ? (
+        <div className="text-center py-12">
+          <AlertCircle className="w-16 h-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {isRateLimited ? 'GitHub API 访问限制' : '加载出错'}
+          </h2>
+          <div className="max-w-md mx-auto text-gray-600 dark:text-gray-400 mb-6">
+            <p className="mb-4">{error}</p>
+            {isRateLimited}
+          </div>
+          <div className="space-x-3">
+            <button
+              onClick={() => loadNotes(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              重试
+            </button>
+            {!isLoggedIn() && (
+              <button
+                onClick={() => navigate('/settings')}
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                前往登录
+              </button>
+            )}
+          </div>
+        </div>
+      ) : isLoadingNotes ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>

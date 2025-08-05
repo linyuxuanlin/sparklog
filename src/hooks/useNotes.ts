@@ -17,6 +17,8 @@ export const useNotes = () => {
   const [preloadedNotes, setPreloadedNotes] = useState<Note[]>([])
   const [isPreloading, setIsPreloading] = useState(false)
   const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [isRateLimited, setIsRateLimited] = useState(false)
   
   // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
@@ -144,6 +146,8 @@ export const useNotes = () => {
     }
     
     setIsLoadingNotes(true)
+    setError(null)
+    setIsRateLimited(false)
     
     try {
       // 获取当前登录状态
@@ -282,11 +286,18 @@ export const useNotes = () => {
       console.error('加载笔记失败:', error)
       const errorMessage = error instanceof Error ? error.message : '请重试'
       
-      if (errorMessage.includes('未配置默认仓库')) {
-        throw new Error('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
+      // 检测GitHub API速率限制错误
+      if (errorMessage.includes('API rate limit exceeded') || errorMessage.includes('403')) {
+        setIsRateLimited(true)
+        setError('API 访问已达上限（每小时 5000 次），请稍作等待后刷新。')
+      } else if (errorMessage.includes('未配置默认仓库')) {
+        setError('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
       } else {
-        throw new Error(`加载笔记失败: ${errorMessage}`)
+        setError(`加载笔记失败: ${errorMessage}`)
       }
+      
+      setIsLoadingNotes(false)
+      return
     }
   }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
 
@@ -405,6 +416,8 @@ export const useNotes = () => {
     hasMoreNotes,
     loadingProgress,
     isPreloading,
-    preloadedNotes
+    preloadedNotes,
+    error,
+    isRateLimited
   }
 } 
