@@ -198,21 +198,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
         
         {/* 右侧区域：标签和操作按钮 */}
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          {/* 标签显示 - 放在笔记卡片最右侧 */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 justify-end">
-              {note.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                >
-                  <Tag className="w-3 h-3 mr-1" />
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-          
           {/* 操作按钮 */}
           <div className="flex items-center space-x-2">
             {isConfirming ? (
@@ -283,6 +268,21 @@ const NoteCard: React.FC<NoteCardProps> = ({
               </>
             )}
           </div>
+          
+          {/* 标签显示 - 放在最右最底侧 */}
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-end">
+              {note.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                >
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
