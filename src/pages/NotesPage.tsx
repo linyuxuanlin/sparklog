@@ -237,26 +237,29 @@ const NotesPage: React.FC = () => {
 
       {/* 搜索栏、标签筛选和按钮区域 */}
       <div className="mb-6 space-y-4">
-        {/* 搜索栏、标签筛选和新建按钮 */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索笔记..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+        {/* 搜索栏和标签筛选 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="搜索笔记..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
+            
+            {/* 标签筛选按钮 */}
+            <TagFilter
+              availableTags={getAllTags(notes)}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
             />
           </div>
           
-          {/* 标签筛选按钮 */}
-          <TagFilter
-            availableTags={getAllTags(notes)}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-          />
-          
+          {/* 新建按钮右对齐 */}
           <button
             onClick={handleCreateNote}
             className="btn-neomorphic-primary inline-flex items-center justify-center h-10 flex-shrink-0"
@@ -350,8 +353,8 @@ const NotesPage: React.FC = () => {
              ))}
            </div>
            
-                       {/* 加载更多按钮 */}
-            {hasMoreNotes && (
+                       {/* 加载更多按钮 - 只在没有筛选条件时显示 */}
+            {hasMoreNotes && selectedTags.length === 0 && !searchQuery && (
               <div className="text-center pt-6">
                 <button
                   onClick={loadMoreNotes}
