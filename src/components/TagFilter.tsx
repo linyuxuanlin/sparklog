@@ -48,10 +48,10 @@ const TagFilter: React.FC<TagFilterProps> = ({
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="inline-flex items-center px-3 h-10 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <Filter className="w-4 h-4 mr-2" />
-          按标签筛选
+          <Filter className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">按标签筛选</span>
           {selectedTags.length > 0 && (
             <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
               {selectedTags.length}

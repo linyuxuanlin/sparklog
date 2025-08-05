@@ -238,7 +238,7 @@ const NotesPage: React.FC = () => {
       {/* 搜索栏、标签筛选和按钮区域 */}
       <div className="mb-6 space-y-4">
         {/* 搜索栏和标签筛选 */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
