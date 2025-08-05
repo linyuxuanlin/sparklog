@@ -17,4 +17,5 @@ export interface Note {
   createdDate?: string
   updatedDate?: string
   isPrivate?: boolean
+  tags?: string[]
 } 

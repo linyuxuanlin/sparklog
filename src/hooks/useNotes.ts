@@ -60,6 +60,7 @@ export const useNotes = () => {
             createdDate: parsed.createdDate,
             updatedDate: parsed.updatedDate,
             isPrivate: parsed.isPrivate,
+            tags: parsed.tags,
             created_at: created_at,
             updated_at: updated_at
           }
@@ -106,6 +107,7 @@ export const useNotes = () => {
               createdDate: parsed.createdDate,
               updatedDate: parsed.updatedDate,
               isPrivate: parsed.isPrivate,
+              tags: parsed.tags,
               created_at: created_at,
               updated_at: updated_at
             }
@@ -235,6 +237,7 @@ export const useNotes = () => {
             createdDate: parsed.createdDate,
             updatedDate: parsed.updatedDate,
             isPrivate: parsed.isPrivate,
+            tags: parsed.tags,
             created_at: created_at,
             updated_at: updated_at
           }

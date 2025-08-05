@@ -1,5 +1,5 @@
 import React from 'react'
-import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2 } from 'lucide-react'
+import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
 
@@ -22,6 +22,7 @@ interface Note {
   createdDate?: string
   updatedDate?: string
   isPrivate?: boolean
+  tags?: string[]
 }
 
 interface NoteCardProps {
@@ -172,6 +173,21 @@ const NoteCard: React.FC<NoteCardProps> = ({
                 content={note.contentPreview}
                 preview={true}
               />
+            </div>
+          )}
+          
+          {/* 标签显示 */}
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {note.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                >
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
           

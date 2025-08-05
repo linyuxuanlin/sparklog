@@ -5,8 +5,9 @@ import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
+import TagFilter from '@/components/TagFilter'
 import { Note } from '@/types/Note'
-import { showMessage, filterNotes } from '@/utils/noteUtils'
+import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
@@ -16,6 +17,7 @@ const NotesPage: React.FC = () => {
   const location = useLocation()
   const params = useParams()
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
@@ -134,7 +136,8 @@ const NotesPage: React.FC = () => {
   }
 
   // 过滤笔记
-  const filteredNotes = filterNotes(notes, searchQuery)
+  let filteredNotes = filterNotes(notes, searchQuery)
+  filteredNotes = filterNotesByTags(filteredNotes, selectedTags)
 
   if (isLoading) {
     return (
@@ -232,32 +235,45 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* 搜索栏和按钮区域 */}
-      <div className="mb-6">
-                 <div className="flex items-center justify-between">
-           <div className="relative max-w-md">
-             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-             <input
-               type="text"
-               placeholder="搜索笔记..."
-               value={searchQuery}
-               onChange={(e) => setSearchQuery(e.target.value)}
-               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-             />
-           </div>
-                      <div className="flex items-center space-x-3 ml-4">
-                                                       <button
-                 onClick={handleCreateNote}
-                 className="btn-neomorphic-primary inline-flex items-center justify-center h-10"
-               >
-                                   <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline ml-2">新建笔记</span>
-               </button>
-           </div>
-         </div>
-        {searchQuery && (
-          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            搜索: "{searchQuery}" - 找到 {filteredNotes.length} 个笔记
+      {/* 搜索栏、标签筛选和按钮区域 */}
+      <div className="mb-6 space-y-4">
+        {/* 标签筛选 */}
+        <TagFilter
+          availableTags={getAllTags(notes)}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+        />
+        
+        {/* 搜索栏和新建按钮 */}
+        <div className="flex items-center justify-between">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="搜索笔记..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            />
+          </div>
+          <div className="flex items-center space-x-3 ml-4">
+            <button
+              onClick={handleCreateNote}
+              className="btn-neomorphic-primary inline-flex items-center justify-center h-10"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline ml-2">新建笔记</span>
+            </button>
+          </div>
+        </div>
+        
+        {/* 筛选结果统计 */}
+        {(searchQuery || selectedTags.length > 0) && (
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {searchQuery && `搜索: "${searchQuery}"`}
+            {searchQuery && selectedTags.length > 0 && " · "}
+            {selectedTags.length > 0 && `标签筛选: ${selectedTags.length} 个标签`}
+            {" - 找到 "}{filteredNotes.length} 个笔记
           </div>
         )}
       </div>
@@ -271,10 +287,10 @@ const NotesPage: React.FC = () => {
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            {searchQuery ? '没有找到匹配的笔记' : '还没有笔记'}
+            {(searchQuery || selectedTags.length > 0) ? '没有找到匹配的笔记' : '还没有笔记'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {searchQuery ? '尝试调整搜索关键词' : '创建你的第一篇笔记开始记录想法'}
+            {(searchQuery || selectedTags.length > 0) ? '尝试调整搜索关键词或标签筛选' : '创建你的第一篇笔记开始记录想法'}
           </p>
                                            <button
               onClick={handleCreateNote}

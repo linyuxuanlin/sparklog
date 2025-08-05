@@ -3,18 +3,22 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Loader2, AlertCircle, Settings } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { decodeBase64Content, encodeBase64Content } from '@/utils/noteUtils'
+import { decodeBase64Content, encodeBase64Content, formatTagsForFrontMatter, getAllTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
+import TagManager from '@/components/TagManager'
+import { useNotes } from '@/hooks/useNotes'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
   const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
+  const { notes } = useNotes()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
+  const [tags, setTags] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -259,6 +263,7 @@ const NoteEditPage: React.FC = () => {
       let frontmatterEndIndex = -1
       let originalCreatedAt = ''
       let originalIsPrivate = false
+      let originalTags: string[] = []
       
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim()
@@ -280,13 +285,28 @@ const NoteEditPage: React.FC = () => {
             originalCreatedAt = value.replace(/"/g, '').trim()
           } else if (key === 'private') {
             originalIsPrivate = value === 'true'
+          } else if (key === 'tags') {
+            // 解析标签
+            const tagValue = value.replace(/"/g, '').trim()
+            if (tagValue.startsWith('[') && tagValue.endsWith(']')) {
+              // YAML数组格式: [tag1, tag2, tag3]
+              const tagArray = tagValue.slice(1, -1).split(',').map(tag => tag.trim()).filter(tag => tag)
+              originalTags = tagArray
+            } else if (tagValue.includes(',')) {
+              // 逗号分隔格式: tag1, tag2, tag3
+              originalTags = tagValue.split(',').map(tag => tag.trim()).filter(tag => tag)
+            } else if (tagValue) {
+              // 单个标签
+              originalTags = [tagValue]
+            }
           }
         }
       }
       
-      // 保存原始的创建时间
+      // 保存原始的创建时间和标签
       setOriginalCreatedAt(originalCreatedAt)
       setIsPrivate(originalIsPrivate)
+      setTags(originalTags)
       
       // 提取内容
       const contentLines = frontmatterEndIndex >= 0 
@@ -395,6 +415,7 @@ const NoteEditPage: React.FC = () => {
  created_at: ${createdAt}
  updated_at: ${updatedAt}
  private: ${isPrivate}
+ tags: ${formatTagsForFrontMatter(tags)}
  ---
 
  ${content.trim()}
@@ -533,24 +554,38 @@ const NoteEditPage: React.FC = () => {
           </div>
         ) : (
                      <div className="space-y-4 min-w-0 w-full">
-            <div className="w-full">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                内容
-              </label>
-                                             <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={handleContentChange}
-                  placeholder="开始编写你的笔记..."
-                  rows={1}
-                  className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
-                  style={{ 
-                    boxSizing: 'border-box', 
-                    wordWrap: 'break-word', 
-                    paddingLeft: '12px', 
-                    paddingRight: '12px'
-                  }}
+            <div className="w-full space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  标签
+                </label>
+                <TagManager
+                  tags={tags}
+                  onChange={setTags}
+                  availableTags={getAllTags(notes)}
+                  placeholder="添加标签..."
                 />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  内容
+                </label>
+                                               <textarea
+                    ref={textareaRef}
+                    value={content}
+                    onChange={handleContentChange}
+                    placeholder="开始编写你的笔记..."
+                    rows={1}
+                    className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
+                    style={{ 
+                      boxSizing: 'border-box', 
+                      wordWrap: 'break-word', 
+                      paddingLeft: '12px', 
+                      paddingRight: '12px'
+                    }}
+                  />
+              </div>
             </div>
 
                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full min-w-0">

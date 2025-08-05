@@ -64,6 +64,7 @@ export const parseNoteContent = (content: string, fileName: string) => {
   let createdDate = ''
   let updatedDate = ''
   let isPrivate = false
+  let tags: string[] = []
   let inFrontmatter = false
   let frontmatterEndIndex = -1
   
@@ -93,6 +94,20 @@ export const parseNoteContent = (content: string, fileName: string) => {
         updatedDate = value.replace(/"/g, '').trim()
       } else if (key === 'private') {
         isPrivate = value === 'true'
+      } else if (key === 'tags') {
+        // 解析标签数组或字符串
+        const tagValue = value.replace(/"/g, '').trim()
+        if (tagValue.startsWith('[') && tagValue.endsWith(']')) {
+          // YAML数组格式: [tag1, tag2, tag3]
+          const tagArray = tagValue.slice(1, -1).split(',').map(tag => tag.trim()).filter(tag => tag)
+          tags = tagArray
+        } else if (tagValue.includes(',')) {
+          // 逗号分隔格式: tag1, tag2, tag3
+          tags = tagValue.split(',').map(tag => tag.trim()).filter(tag => tag)
+        } else if (tagValue) {
+          // 单个标签
+          tags = [tagValue]
+        }
       }
     }
   }
@@ -111,7 +126,8 @@ export const parseNoteContent = (content: string, fileName: string) => {
     contentPreview,
     createdDate,
     updatedDate,
-    isPrivate
+    isPrivate,
+    tags
   }
 }
 
@@ -123,6 +139,35 @@ export const filterNotes = (notes: Note[], searchQuery: string) => {
   
   return notes.filter(note => {
     const content = note.contentPreview?.toLowerCase() || ''
-    return content.includes(searchLower)
+    const tags = note.tags?.join(' ').toLowerCase() || ''
+    return content.includes(searchLower) || tags.includes(searchLower)
   })
+}
+
+// 按标签过滤笔记
+export const filterNotesByTags = (notes: Note[], selectedTags: string[]) => {
+  if (selectedTags.length === 0) return notes
+  
+  return notes.filter(note => {
+    if (!note.tags || note.tags.length === 0) return false
+    return selectedTags.every(tag => note.tags!.includes(tag))
+  })
+}
+
+// 获取所有标签
+export const getAllTags = (notes: Note[]): string[] => {
+  const tagSet = new Set<string>()
+  notes.forEach(note => {
+    if (note.tags) {
+      note.tags.forEach(tag => tagSet.add(tag))
+    }
+  })
+  return Array.from(tagSet).sort()
+}
+
+// 格式化标签为Front Matter字符串
+export const formatTagsForFrontMatter = (tags: string[]): string => {
+  if (tags.length === 0) return '[]'
+  if (tags.length === 1) return tags[0]
+  return `[${tags.join(', ')}]`
 } 
