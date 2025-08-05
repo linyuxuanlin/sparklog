@@ -26,6 +26,8 @@ export class GitHubService {
   private baseHeaders: any = {
     'Accept': 'application/vnd.github.v3+json'
   }
+  private cache: Map<string, { data: any, timestamp: number, etag?: string }> = new Map()
+  private readonly CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
 
   private constructor() {
     this.initializeAuth()
@@ -53,12 +55,51 @@ export class GitHubService {
     this.authData = authData
   }
 
-  private getHeaders(): any {
+  private getHeaders(etag?: string): any {
     const headers = { ...this.baseHeaders }
     if (this.authData?.accessToken) {
       headers['Authorization'] = `token ${this.authData.accessToken}`
     }
+    if (etag) {
+      headers['If-None-Match'] = etag
+    }
     return headers
+  }
+
+  private isValidCache(cacheKey: string): boolean {
+    const cached = this.cache.get(cacheKey)
+    if (!cached) return false
+    return Date.now() - cached.timestamp < this.CACHE_DURATION
+  }
+
+  private getCacheKey(endpoint: string): string {
+    return `${this.authData?.username}-${this.authData?.repo}-${endpoint}`
+  }
+
+  // 清除缓存
+  public clearCache(): void {
+    this.cache.clear()
+    console.log('GitHub API 缓存已清除')
+  }
+
+  // 清除特定类型的缓存
+  public clearCacheByType(type: 'files' | 'content' | 'all' = 'all'): void {
+    if (type === 'all') {
+      this.clearCache()
+      return
+    }
+
+    const keysToDelete: string[] = []
+    for (const [key] of this.cache) {
+      if (type === 'files' && key.includes('-notes-files')) {
+        keysToDelete.push(key)
+      } else if (type === 'content' && key.includes('-content-')) {
+        keysToDelete.push(key)
+      }
+    }
+
+    keysToDelete.forEach(key => this.cache.delete(key))
+    console.log(`已清除 ${type} 类型的缓存，共 ${keysToDelete.length} 项`)
   }
 
   // 获取notes目录下的所有文件
@@ -67,14 +108,30 @@ export class GitHubService {
       throw new Error('未配置认证信息')
     }
 
-    const timestamp = Date.now()
-    const apiUrl = `https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/notes?t=${timestamp}`
+    const cacheKey = this.getCacheKey('notes-files')
+    
+    // 检查缓存
+    if (this.isValidCache(cacheKey)) {
+      console.log('使用缓存的文件列表')
+      return this.cache.get(cacheKey)!.data
+    }
+
+    const cached = this.cache.get(cacheKey)
+    const apiUrl = `https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/notes`
     
     console.log('请求GitHub API获取文件列表:', apiUrl)
     
     const response = await fetch(apiUrl, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(cached?.etag)
     })
+
+    // 如果返回304，说明内容未改变，使用缓存
+    if (response.status === 304 && cached) {
+      console.log('文件列表未改变，使用缓存')
+      // 更新缓存时间戳
+      this.cache.set(cacheKey, { ...cached, timestamp: Date.now() })
+      return cached.data
+    }
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -100,6 +157,14 @@ export class GitHubService {
         return timeB.localeCompare(timeA)
       })
 
+    // 缓存结果
+    const etag = response.headers.get('ETag')
+    this.cache.set(cacheKey, {
+      data: markdownFiles,
+      timestamp: Date.now(),
+      etag: etag || undefined
+    })
+
     return markdownFiles
   }
 
@@ -109,7 +174,6 @@ export class GitHubService {
       return {}
     }
 
-    const timestamp = Date.now()
     const batchResponses: BatchContentResponse = {}
 
     // 由于GitHub API没有直接的批量获取内容接口，我们使用并发请求
@@ -131,13 +195,42 @@ export class GitHubService {
       // 并发处理当前批次
       const batchPromises = batch.map(async (file) => {
         try {
-          const separator = file.url.includes('?') ? '&' : '?'
-          const contentResponse = await fetch(`${file.url}${separator}t=${timestamp}`, {
-            headers: this.getHeaders()
+          // 检查单个文件缓存
+          const fileCacheKey = this.getCacheKey(`content-${file.sha}`)
+          if (this.isValidCache(fileCacheKey)) {
+            console.log(`使用缓存的文件内容: ${file.name}`)
+            return {
+              path: file.path,
+              content: this.cache.get(fileCacheKey)!.data
+            }
+          }
+
+          const cached = this.cache.get(fileCacheKey)
+          const contentResponse = await fetch(file.url, {
+            headers: this.getHeaders(cached?.etag)
           })
+
+          // 如果返回304，使用缓存
+          if (contentResponse.status === 304 && cached) {
+            console.log(`文件内容未改变，使用缓存: ${file.name}`)
+            this.cache.set(fileCacheKey, { ...cached, timestamp: Date.now() })
+            return {
+              path: file.path,
+              content: cached.data
+            }
+          }
 
           if (contentResponse.ok) {
             const contentData = await contentResponse.json()
+            
+            // 缓存内容
+            const etag = contentResponse.headers.get('ETag')
+            this.cache.set(fileCacheKey, {
+              data: contentData,
+              timestamp: Date.now(),
+              etag: etag || undefined
+            })
+            
             return {
               path: file.path,
               content: contentData
