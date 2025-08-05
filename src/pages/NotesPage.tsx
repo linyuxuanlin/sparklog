@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle, Lock } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
@@ -237,16 +237,9 @@ const NotesPage: React.FC = () => {
 
       {/* 搜索栏、标签筛选和按钮区域 */}
       <div className="mb-6 space-y-4">
-        {/* 标签筛选 */}
-        <TagFilter
-          availableTags={getAllTags(notes)}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-        />
-        
-        {/* 搜索栏和新建按钮 */}
-        <div className="flex items-center justify-between">
-          <div className="relative max-w-md">
+        {/* 搜索栏、标签筛选和新建按钮 */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
             <input
               type="text"
@@ -256,24 +249,63 @@ const NotesPage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
-          <div className="flex items-center space-x-3 ml-4">
-            <button
-              onClick={handleCreateNote}
-              className="btn-neomorphic-primary inline-flex items-center justify-center h-10"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline ml-2">新建笔记</span>
-            </button>
-          </div>
+          
+          {/* 标签筛选按钮 */}
+          <TagFilter
+            availableTags={getAllTags(notes)}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
+          
+          <button
+            onClick={handleCreateNote}
+            className="btn-neomorphic-primary inline-flex items-center justify-center h-10 flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline ml-2">新建笔记</span>
+          </button>
         </div>
         
-        {/* 筛选结果统计 */}
-        {(searchQuery || selectedTags.length > 0) && (
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {searchQuery && `搜索: "${searchQuery}"`}
-            {searchQuery && selectedTags.length > 0 && " · "}
-            {selectedTags.length > 0 && `标签筛选: ${selectedTags.length} 个标签`}
-            {" - 找到 "}{filteredNotes.length} 个笔记
+        {/* 已选标签显示和筛选结果统计 */}
+        {(selectedTags.length > 0 || searchQuery || (searchQuery || selectedTags.length > 0)) && (
+          <div className="space-y-2">
+            {/* 已选标签显示 */}
+            {selectedTags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">已选标签:</span>
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    {tag}
+                    <button
+                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                      className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 focus:outline-none"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+                >
+                  清除所有
+                </button>
+              </div>
+            )}
+            
+            {/* 筛选结果统计 */}
+            {(searchQuery || selectedTags.length > 0) && (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {searchQuery && `搜索: "${searchQuery}"`}
+                {searchQuery && selectedTags.length > 0 && " · "}
+                {selectedTags.length > 0 && `标签筛选: ${selectedTags.length} 个标签`}
+                {" - 找到 "}{filteredNotes.length} 个笔记
+              </div>
+            )}
           </div>
         )}
       </div>

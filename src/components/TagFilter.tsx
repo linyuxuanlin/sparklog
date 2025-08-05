@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Filter, X, Tag, ChevronDown } from 'lucide-react'
+import { Filter, Tag, ChevronDown } from 'lucide-react'
 
 interface TagFilterProps {
   availableTags: string[]
@@ -37,13 +37,6 @@ const TagFilter: React.FC<TagFilterProps> = ({
     }
   }
 
-  const removeTag = (tag: string) => {
-    onTagsChange(selectedTags.filter(t => t !== tag))
-  }
-
-  const clearAllTags = () => {
-    onTagsChange([])
-  }
 
   if (availableTags.length === 0) {
     return null
@@ -51,34 +44,6 @@ const TagFilter: React.FC<TagFilterProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      {/* 已选标签显示 */}
-      {selectedTags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <span className="text-sm text-gray-600 dark:text-gray-400">已选标签:</span>
-          {selectedTags.map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
-            >
-              <Tag className="w-3 h-3 mr-1" />
-              {tag}
-              <button
-                onClick={() => removeTag(tag)}
-                className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 focus:outline-none"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          ))}
-          <button
-            onClick={clearAllTags}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
-          >
-            清除所有
-          </button>
-        </div>
-      )}
-
       {/* 下拉筛选按钮 */}
       <div ref={dropdownRef} className="relative">
         <button

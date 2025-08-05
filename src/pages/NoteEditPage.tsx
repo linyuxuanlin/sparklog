@@ -557,18 +557,6 @@ const NoteEditPage: React.FC = () => {
             <div className="w-full space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  标签
-                </label>
-                <TagManager
-                  tags={tags}
-                  onChange={setTags}
-                  availableTags={getAllTags(notes)}
-                  placeholder="添加标签..."
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   内容
                 </label>
                                                <textarea
@@ -585,6 +573,18 @@ const NoteEditPage: React.FC = () => {
                       paddingRight: '12px'
                     }}
                   />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  标签
+                </label>
+                <TagManager
+                  tags={tags}
+                  onChange={setTags}
+                  availableTags={getAllTags(notes)}
+                  placeholder="添加标签..."
+                />
               </div>
             </div>
 
