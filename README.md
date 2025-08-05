@@ -1,8 +1,15 @@
-# SparkLog 妙想
-
-SparkLog 是一个使用 Github 仓库作存储的静态笔记应用，支持在线撰写，不错过你的每一个妙想。
-
-**Demo**: <https://sparklog.wiki-power.com/>
+<div align="center">
+  <img src="public/sparklog-favicon.svg" alt="SparkLog Logo" width="120" height="120">
+  
+  **SparkLog** 是一个优雅免维护的想法记录应用，不错过你的每一个奇思妙想。
+  
+  [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
+  [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+  [![Vite](https://img.shields.io/badge/vite-5.0-646CFF)](https://vitejs.dev)
+  [![React](https://img.shields.io/badge/react-18.2-61DAFB)](https://reactjs.org)
+  
+  [演示站点](https://sparklog.wiki-power.com/) · [快速开始](#-快速开始) · [功能特性](#-功能特性) · [详细文档](#-详细文档)
+</div>
 
 ## 🌟 项目特点
 
@@ -81,9 +88,7 @@ npm run dev
    - 访问你的部署地址，输入管理员密码
    - 开始记录你的妙想。
 
----
-
-## 🎯 其他功能特性（待更新）
+## 🎯 功能特性
 
 - **公开笔记分享**: 任何人都可以查看公开笔记
 - **私密笔记保护**: 只有通过管理员密码验证的用户才能管理私密笔记
