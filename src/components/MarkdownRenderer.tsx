@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkBreaks from 'remark-breaks'
 
 interface MarkdownRendererProps {
   content: string
@@ -15,7 +16,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   return (
     <div className={`prose max-w-none dark:prose-invert ${className}`}>
       <ReactMarkdown 
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
                      // 段落处理
            p: ({ children }) => (
