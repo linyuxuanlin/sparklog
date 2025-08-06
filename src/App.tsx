@@ -4,7 +4,6 @@ import NotesPage from '@/pages/NotesPage'
 import NoteEditPage from '@/pages/NoteEditPage'
 import SettingsPage from '@/pages/SettingsPage'
 import { useGitHub } from '@/hooks/useGitHub'
-import { MessageProvider } from '@/contexts/MessageContext'
 
 function App() {
   const { isLoading } = useGitHub()
@@ -22,21 +21,19 @@ function App() {
   }
 
   return (
-    <MessageProvider>
-      <div className="h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            {/* 首页直接显示所有笔记页面 */}
-            <Route index element={<NotesPage />} />
-            <Route path="notes" element={<NotesPage />} />
-            <Route path="note/new" element={<NoteEditPage />} />
-            <Route path="note/edit/:title" element={<NoteEditPage />} />
-            <Route path="note/:noteId" element={<NotesPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
-      </div>
-    </MessageProvider>
+    <div className="h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          {/* 首页直接显示所有笔记页面 */}
+          <Route index element={<NotesPage />} />
+          <Route path="notes" element={<NotesPage />} />
+          <Route path="note/new" element={<NoteEditPage />} />
+          <Route path="note/edit/:title" element={<NoteEditPage />} />
+          <Route path="note/:noteId" element={<NotesPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+      </Routes>
+    </div>
   )
 }
 

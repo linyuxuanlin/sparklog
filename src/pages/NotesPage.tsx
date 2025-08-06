@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X, RefreshCw } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import TagFilter from '@/components/TagFilter'
 import { Note } from '@/types/Note'
-import { filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
+import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
-import { useMessage } from '@/contexts/MessageContext'
 
 const NotesPage: React.FC = () => {
   const { isLoading, isConnected, isLoggedIn } = useGitHub()
-  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited, cacheState, isSyncing, forceSync } = useNotes()
-  const { showMessage } = useMessage()
+  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [deletingNote, setDeletingNote] = useState<string | null>(null)
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
@@ -68,7 +68,10 @@ const NotesPage: React.FC = () => {
 
 
 
-
+  // 显示消息提示
+  const handleShowMessage = (text: string, type: 'success' | 'error') => {
+    showMessage(setMessage, setMessageType, text, type)
+  }
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
@@ -116,7 +119,7 @@ const NotesPage: React.FC = () => {
     
     try {
       await deleteNote(note)
-      showMessage('笔记删除成功！', 'success')
+      handleShowMessage('笔记删除成功！', 'success')
       
       // 如果当前有模态框打开，关闭它并跳转到首页
       if (isModalOpen) {
@@ -126,7 +129,7 @@ const NotesPage: React.FC = () => {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '请重试'
-      showMessage(`删除失败: ${errorMessage}`, 'error')
+      handleShowMessage(`删除失败: ${errorMessage}`, 'error')
     } finally {
       setDeletingNote(null)
     }
@@ -149,6 +152,21 @@ const NotesPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* 覆盖式消息提示 */}
+      {message && (
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
+          messageType === 'success' 
+            ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700' 
+            : 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
+        }`}>
+          <div className="flex items-center">
+            <div className={`w-4 h-4 rounded-full mr-3 ${
+              messageType === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            <span>{message}</span>
+          </div>
+        </div>
+      )}
 
       {/* 配置环境提示模态框 */}
       {showConfigModal && (
@@ -241,43 +259,15 @@ const NotesPage: React.FC = () => {
             />
           </div>
           
-          {/* 同步和新建按钮 */}
-          <div className="flex items-center gap-2">
-            {/* 同步按钮 */}
-            <button
-              onClick={forceSync}
-              disabled={isSyncing || isLoadingNotes}
-              className="btn-neomorphic inline-flex items-center justify-center h-10 flex-shrink-0"
-              title={cacheState.isCached ? `上次同步: ${new Date(cacheState.lastSyncTime!).toLocaleString()}` : '强制同步'}
-            >
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline ml-2">同步</span>
-            </button>
-            
-            {/* 新建按钮 */}
-            <button
-              onClick={handleCreateNote}
-              className="btn-neomorphic-primary inline-flex items-center justify-center h-10 flex-shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline ml-2">新建笔记</span>
-            </button>
-          </div>
+          {/* 新建按钮右对齐 */}
+          <button
+            onClick={handleCreateNote}
+            className="btn-neomorphic-primary inline-flex items-center justify-center h-10 flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline ml-2">新建笔记</span>
+          </button>
         </div>
-        
-        {/* 缓存状态显示 */}
-        {cacheState.isCached && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              📦 使用缓存数据 ({cacheState.cacheSize} 个笔记)
-              {cacheState.lastSyncTime && (
-                <span className="ml-2">
-                  · 上次同步: {new Date(cacheState.lastSyncTime).toLocaleString()}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
         
         {/* 已选标签显示和筛选结果统计 */}
         {(selectedTags.length > 0 || searchQuery || (searchQuery || selectedTags.length > 0)) && (

@@ -12,7 +12,7 @@ const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
   const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
-  const { notes, clearCache } = useNotes()
+  const { notes } = useNotes()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
@@ -500,8 +500,6 @@ const NoteEditPage: React.FC = () => {
        }
        
        showMessage('笔记保存成功！', 'success')
-       // 清除缓存，确保下次加载时获取最新数据
-       clearCache()
        // 立即刷新，不等待
        navigate('/', { state: { shouldRefresh: true } })
     } catch (error) {
