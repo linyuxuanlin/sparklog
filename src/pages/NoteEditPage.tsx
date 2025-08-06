@@ -565,7 +565,7 @@ const NoteEditPage: React.FC = () => {
                     onChange={handleContentChange}
                     placeholder="开始编写你的笔记..."
                     rows={1}
-                    className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
+                    className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
                     style={{ 
                       boxSizing: 'border-box', 
                       wordWrap: 'break-word', 
@@ -595,7 +595,7 @@ const NoteEditPage: React.FC = () => {
                     type="checkbox" 
                     checked={isPrivate}
                     onChange={(e) => setIsPrivate(e.target.checked)}
-                    className="mr-2"
+                    className="mr-2 focus:outline-none"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     设为私密笔记
@@ -607,14 +607,14 @@ const NoteEditPage: React.FC = () => {
                 <button 
                   onClick={handleCancel}
                   disabled={isSaving}
-                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
                 >
                   取消
                 </button>
                                  <button 
                    onClick={handleSave}
                    disabled={isSaving || isLoading || !content.trim()}
-                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center"
+                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center focus:outline-none"
                  >
                    {isSaving ? (
                      <>
