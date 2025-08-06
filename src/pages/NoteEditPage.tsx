@@ -590,21 +590,14 @@ const NoteEditPage: React.FC = () => {
 
                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full min-w-0">
               <div className="flex items-center space-x-4 flex-shrink-0">
-                <label className="flex items-center cursor-pointer group">
-                  <div className="relative">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer"
-                      checked={isPrivate}
-                      onChange={(e) => setIsPrivate(e.target.checked)}
-                    />
-                    <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 peer-focus:ring-2 peer-focus:ring-blue-500 peer-focus:ring-offset-2 dark:peer-focus:ring-offset-gray-800 transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-600 peer-checked:group-hover:bg-blue-700">
-                      <svg className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+                <label className="flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={isPrivate}
+                    onChange={(e) => setIsPrivate(e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     设为私密笔记
                   </span>
                 </label>
