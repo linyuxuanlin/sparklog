@@ -252,8 +252,14 @@ export const useNotes = () => {
         return file
       })
       
-      // 过滤笔记 - 根据登录状态显示笔记
+      // 过滤笔记 - 根据登录状态显示笔记，并确保每个笔记都有有效的sha
       const visibleNotes = notesWithContent.filter(note => {
+        // 确保笔记有有效的sha
+        if (!note.sha) {
+          console.warn('发现没有sha的笔记:', note.name || note.path)
+          return false
+        }
+        
         if (!currentLoginStatus) {
           return !note.isPrivate
         }
@@ -262,7 +268,7 @@ export const useNotes = () => {
       
       console.log('最终可见笔记:', visibleNotes.length, '个')
       
-      // 如果是第一页或强制刷新，替换笔记列表；否则追加
+      // 如果是第一页或强制刷新，替换笔记列表；否则追加（去重）
       if (page === 1 || forceRefresh) {
         setNotes(visibleNotes)
         setCurrentPage(1)
@@ -271,7 +277,12 @@ export const useNotes = () => {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
         }
       } else {
-        setNotes(prev => [...prev, ...visibleNotes])
+        // 追加时去重，避免重复的笔记
+        setNotes(prev => {
+          const existingShas = new Set(prev.map(note => note.sha))
+          const newNotes = visibleNotes.filter(note => !existingShas.has(note.sha))
+          return [...prev, ...newNotes]
+        })
         setCurrentPage(page)
         // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
@@ -304,9 +315,13 @@ export const useNotes = () => {
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
     if (!isLoadingNotes && hasMoreNotes) {
-      // 如果有预加载的笔记，立即显示
+      // 如果有预加载的笔记，立即显示（去重）
       if (preloadedNotes.length > 0) {
-        setNotes(prev => [...prev, ...preloadedNotes])
+        setNotes(prev => {
+          const existingShas = new Set(prev.map(note => note.sha))
+          const newNotes = preloadedNotes.filter(note => !existingShas.has(note.sha))
+          return [...prev, ...newNotes]
+        })
         const newCurrentPage = currentPage + 1
         setCurrentPage(newCurrentPage)
         setPreloadedNotes([])

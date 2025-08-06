@@ -365,9 +365,9 @@ const NotesPage: React.FC = () => {
              ) : (
          <div className="space-y-4">
            <div className="grid gap-4">
-             {filteredNotes.map((note) => (
+             {filteredNotes.map((note, index) => (
                <NoteCard
-                 key={note.sha}
+                 key={`${note.sha}-${note.path || index}`}
                  note={note}
                  onEdit={handleEditNote}
                  onDelete={handleDeleteNote}
