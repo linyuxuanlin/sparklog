@@ -4,9 +4,25 @@ import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 import { GitHubService } from '@/services/githubService'
+import { useMessage } from '@/contexts/MessageContext'
+
+// 缓存相关的类型定义
+interface CacheData {
+  notes: Note[]
+  timestamp: number
+  etag?: string
+  lastSyncTime: number
+}
+
+interface CacheState {
+  isCached: boolean
+  lastSyncTime: number | null
+  cacheSize: number
+}
 
 export const useNotes = () => {
   const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
+  const { showMessage } = useMessage()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -20,9 +36,105 @@ export const useNotes = () => {
   const [error, setError] = useState<string | null>(null)
   const [isRateLimited, setIsRateLimited] = useState(false)
   
+  // 新增缓存相关状态
+  const [cacheState, setCacheState] = useState<CacheState>({
+    isCached: false,
+    lastSyncTime: null,
+    cacheSize: 0
+  })
+  const [isSyncing, setIsSyncing] = useState(false)
+  
   // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
   const lastLoginStatusRef = useRef(loginStatus)
+
+  // 缓存相关的常量
+  const CACHE_KEY = 'sparklog_notes_cache'
+  const CACHE_DURATION = 30 * 60 * 1000 // 30分钟缓存
+
+  // 获取缓存键（基于登录状态）
+  const getCacheKey = useCallback(() => {
+    const loginStatus = isLoggedIn()
+    return `${CACHE_KEY}_${loginStatus ? 'admin' : 'guest'}`
+  }, [isLoggedIn])
+
+  // 保存笔记到本地缓存
+  const saveToCache = useCallback((notes: Note[], etag?: string) => {
+    try {
+      const cacheKey = getCacheKey()
+      const cacheData: CacheData = {
+        notes,
+        timestamp: Date.now(),
+        etag,
+        lastSyncTime: Date.now()
+      }
+      localStorage.setItem(cacheKey, JSON.stringify(cacheData))
+      
+      // 更新缓存状态
+      setCacheState({
+        isCached: true,
+        lastSyncTime: Date.now(),
+        cacheSize: notes.length
+      })
+      
+      console.log('笔记已缓存到本地:', notes.length, '个笔记')
+    } catch (error) {
+      console.error('保存缓存失败:', error)
+    }
+  }, [getCacheKey])
+
+  // 从本地缓存加载笔记
+  const loadFromCache = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey()
+      const cachedData = localStorage.getItem(cacheKey)
+      
+      if (cachedData) {
+        const cache: CacheData = JSON.parse(cachedData)
+        const now = Date.now()
+        
+        // 检查缓存是否有效
+        if (now - cache.timestamp < CACHE_DURATION) {
+          console.log('从本地缓存加载笔记:', cache.notes.length, '个笔记')
+          setNotes(cache.notes)
+          setCacheState({
+            isCached: true,
+            lastSyncTime: cache.lastSyncTime,
+            cacheSize: cache.notes.length
+          })
+          setHasLoaded(true)
+          return true
+        } else {
+          console.log('缓存已过期，需要重新加载')
+          // 清除过期缓存
+          localStorage.removeItem(cacheKey)
+        }
+      }
+      
+      return false
+    } catch (error) {
+      console.error('加载缓存失败:', error)
+      return false
+    }
+  }, [getCacheKey])
+
+  // 清除本地缓存
+  const clearCache = useCallback(() => {
+    try {
+      const cacheKey = getCacheKey()
+      localStorage.removeItem(cacheKey)
+      setCacheState({
+        isCached: false,
+        lastSyncTime: null,
+        cacheSize: 0
+      })
+      console.log('本地缓存已清除')
+    } catch (error) {
+      console.error('清除缓存失败:', error)
+    }
+  }, [getCacheKey])
+
+
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -143,6 +255,15 @@ export const useNotes = () => {
     // 如果正在加载且不是强制刷新，避免重复请求
     if (isLoadingNotes && !forceRefresh) {
       return
+    }
+    
+    // 如果不是强制刷新且是第一页，尝试从缓存加载
+    if (!forceRefresh && page === 1) {
+      const cached = loadFromCache()
+      if (cached) {
+        console.log('使用缓存数据，跳过API调用')
+        return
+      }
     }
     
     setIsLoadingNotes(true)
@@ -272,6 +393,12 @@ export const useNotes = () => {
       if (page === 1 || forceRefresh) {
         setNotes(visibleNotes)
         setCurrentPage(1)
+        
+        // 保存到缓存（仅在第一页或强制刷新时）
+        if (page === 1) {
+          saveToCache(visibleNotes)
+        }
+        
         // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
@@ -281,7 +408,12 @@ export const useNotes = () => {
         setNotes(prev => {
           const existingShas = new Set(prev.map(note => note.sha))
           const newNotes = visibleNotes.filter(note => !existingShas.has(note.sha))
-          return [...prev, ...newNotes]
+          const updatedNotes = [...prev, ...newNotes]
+          
+          // 更新缓存（追加模式）
+          saveToCache(updatedNotes)
+          
+          return updatedNotes
         })
         setCurrentPage(page)
         // 预加载下一批笔记
@@ -310,7 +442,25 @@ export const useNotes = () => {
       setIsLoadingNotes(false)
       return
     }
-  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
+  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn, loadFromCache, saveToCache])
+
+  // 强制同步功能
+  const forceSync = useCallback(async () => {
+    setIsSyncing(true)
+    setError(null)
+    
+    try {
+      console.log('开始强制同步...')
+      await loadNotes(true, 1)
+      showMessage('同步完成！', 'success')
+    } catch (error) {
+      console.error('强制同步失败:', error)
+      const errorMessage = error instanceof Error ? error.message : '同步失败'
+      showMessage(`同步失败: ${errorMessage}`, 'error')
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [loadNotes, showMessage])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -393,7 +543,14 @@ export const useNotes = () => {
       
       await githubService.deleteNote(note)
       
-      setNotes(prev => prev.filter(n => n.sha !== note.sha))
+      // 更新本地状态和缓存
+      setNotes(prev => {
+        const updatedNotes = prev.filter(n => n.sha !== note.sha)
+        // 更新缓存
+        saveToCache(updatedNotes)
+        return updatedNotes
+      })
+      
       return true
     } catch (error) {
       console.error('删除笔记失败:', error)
@@ -405,9 +562,13 @@ export const useNotes = () => {
   useEffect(() => {
     if (!isLoading && !isInitialLoadRef.current) {
       isInitialLoadRef.current = true
-      loadNotes(true)
+      // 优先尝试从缓存加载，如果缓存无效则从GitHub加载
+      const cached = loadFromCache()
+      if (!cached) {
+        loadNotes(true)
+      }
     }
-  }, [isLoading, loadNotes])
+  }, [isLoading, loadNotes, loadFromCache])
 
   // 优化后的登录状态监听
   useEffect(() => {
@@ -416,11 +577,12 @@ export const useNotes = () => {
       if (currentStatus !== lastLoginStatusRef.current) {
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
-        // 只有在登录状态真正改变时才重新加载
+        // 登录状态改变时清除缓存并重新加载
+        clearCache()
         loadNotes(true)
       }
     }
-  }, [isLoading, hasLoaded, loadNotes])
+  }, [isLoading, hasLoaded, loadNotes, clearCache])
 
   return {
     notes,
@@ -433,6 +595,10 @@ export const useNotes = () => {
     isPreloading,
     preloadedNotes,
     error,
-    isRateLimited
+    isRateLimited,
+    cacheState,
+    isSyncing,
+    forceSync,
+    clearCache
   }
 } 

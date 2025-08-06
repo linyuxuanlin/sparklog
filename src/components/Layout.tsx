@@ -2,12 +2,30 @@ import React, { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import { useMessage } from '@/contexts/MessageContext'
 
 const Layout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { message, messageType } = useMessage()
 
   return (
     <div className="flex h-full bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
+      {/* 全局消息提示 */}
+      {message && (
+        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
+          messageType === 'success' 
+            ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700' 
+            : 'bg-red-50 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-700'
+        }`}>
+          <div className="flex items-center">
+            <div className={`w-4 h-4 rounded-full mr-3 ${
+              messageType === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`}></div>
+            <span>{message}</span>
+          </div>
+        </div>
+      )}
+      
       {/* 移动端遮罩层 */}
       {sidebarOpen && (
         <div 
