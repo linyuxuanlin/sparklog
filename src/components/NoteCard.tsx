@@ -231,9 +231,9 @@ const NoteCard: React.FC<NoteCardProps> = ({
        </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div className="flex items-center justify-between mt-0">
-         {/* 左侧：标签显示 */}
-         <div className="flex flex-wrap gap-1">
+       <div className="flex items-center justify-between gap-2 mt-0">
+         {/* 第一组：标签显示 */}
+         <div className="flex flex-wrap gap-1 flex-1 min-w-0">
            {note.tags && note.tags.length > 0 && (
              note.tags.map((tag, index) => (
                <span
@@ -244,55 +244,57 @@ const NoteCard: React.FC<NoteCardProps> = ({
                  }}
                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                >
-                 <Tag className="w-3 h-3 mr-1" />
-                 {tag}
+                 <Tag className="w-3 h-3 mr-1 flex-shrink-0" />
+                 <span className="truncate">{tag}</span>
                </span>
              ))
            )}
          </div>
          
-                   {/* 右侧：按钮、时间显示和公开状态 */}
-          <div className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-            {/* 全文/收起按钮 */}
-            {note.contentPreview && note.contentPreview.length > 200 && (
-              <span 
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setIsExpanded(!isExpanded)
-                }}
-                className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    收起
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    全文
-                  </>
-                )}
-              </span>
-            )}
-            
-            <TimeDisplay note={note} />
-            {isLoggedIn() && (
-              <div className="flex items-center space-x-1">
-                {note.isPrivate ? (
-                  <>
-                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    <span className="text-red-600 dark:text-red-400">私密</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="text-green-600 dark:text-green-400">公开</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+         {/* 第二组：全文/收起按钮 */}
+         {note.contentPreview && note.contentPreview.length > 200 && (
+           <div className="flex-shrink-0">
+             <span 
+               onClick={(e) => {
+                 e.stopPropagation()
+                 setIsExpanded(!isExpanded)
+               }}
+               className="inline-flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 min-w-[2.5rem] h-7"
+             >
+               {isExpanded ? (
+                 <>
+                   <ChevronUp className="w-4 h-4" />
+                   <span className="hidden sm:inline">收起</span>
+                 </>
+               ) : (
+                 <>
+                   <ChevronDown className="w-4 h-4" />
+                   <span className="hidden sm:inline">全文</span>
+                 </>
+               )}
+             </span>
+           </div>
+         )}
+         
+         {/* 第三组：时间显示和公开状态 */}
+         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+           <TimeDisplay note={note} />
+           {isLoggedIn() && (
+             <div className="flex items-center space-x-1">
+               {note.isPrivate ? (
+                 <>
+                   <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                   <span className="text-red-600 dark:text-red-400">私密</span>
+                 </>
+               ) : (
+                 <>
+                   <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                   <span className="text-green-600 dark:text-green-400">公开</span>
+                 </>
+               )}
+             </div>
+           )}
+         </div>
        </div>
     </div>
   )
