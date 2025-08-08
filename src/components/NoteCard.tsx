@@ -235,7 +235,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                         preview={true}
                       />
                       {note.contentPreview.length > 200 && (
-                        <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 px-1">
+                        <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 px-1" style={{ width: '80px', height: '2rem' }}>
                           <span 
                             onClick={(e) => {
                               e.stopPropagation()
