@@ -256,14 +256,14 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
             
                          {/* 卡片内容 - 只显示笔记内容 */}
              <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-                {note.fullContent ? (
-                  <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-4">
-                    <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />
-                  </div>
-                ) : note.content ? (
-                  <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-4">
-                    <MarkdownRenderer content={removeFrontMatter(note.content)} />
-                  </div>
+                                 {note.fullContent ? (
+                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
+                     <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />
+                   </div>
+                 ) : note.content ? (
+                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
+                     <MarkdownRenderer content={removeFrontMatter(note.content)} />
+                   </div>
                ) : (
                  <div className="text-center py-12">
                    <div className="text-gray-500 dark:text-gray-400">
