@@ -1,7 +1,47 @@
-import React from 'react'
-import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag } from 'lucide-react'
+import React, { useState } from 'react'
+import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag, ChevronDown, ChevronUp } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
+
+// 过滤front matter的函数
+const removeFrontMatter = (content: string): string => {
+  // 按行分割内容
+  const lines = content.split('\n')
+  
+  let inFrontmatter = false
+  let frontmatterEndIndex = -1
+  
+  // 查找front matter的结束位置
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim()
+    if (line === '---' && !inFrontmatter) {
+      inFrontmatter = true
+      continue
+    }
+    if (line === '---' && inFrontmatter) {
+      frontmatterEndIndex = i
+      break
+    }
+  }
+  
+  // 如果找到了front matter，从结束位置后开始提取内容
+  if (frontmatterEndIndex >= 0) {
+    const contentLines = lines.slice(frontmatterEndIndex + 1)
+    return contentLines.join('\n').trim()
+  }
+  
+  // 如果没有找到标准front matter，使用原来的过滤方法
+  const filteredLines = lines.filter(line => {
+    const trimmedLine = line.trim()
+    // 跳过空行和包含front matter字段的行
+    return trimmedLine !== '' && 
+           !trimmedLine.includes('created_at:') && 
+           !trimmedLine.includes('updated_at:') && 
+           !trimmedLine.includes('private:')
+  })
+  
+  return filteredLines.join('\n').trim()
+}
 
 interface Note {
   name: string
@@ -154,25 +194,65 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const { isLoggedIn } = useGitHub()
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
     <div 
       className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
       onClick={() => onOpen(note)}
     >
-      <div className="flex items-start justify-between">
-                 <div className="flex-1 min-w-0 pr-0">
-          {/* 显示内容预览 */}
-          {note.contentPreview && (
-            <div className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">
-              <MarkdownRenderer 
-                content={note.contentPreview}
-                preview={true}
-              />
-            </div>
-          )}
-        </div>
-      </div>
+             <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0 pr-0">
+           {/* 显示内容预览 */}
+           {note.contentPreview && (
+             <div className="text-gray-600 dark:text-gray-300 mb-3">
+               {isExpanded ? (
+                 <div>
+                   <MarkdownRenderer 
+                     content={removeFrontMatter(note.fullContent || note.content || note.contentPreview)}
+                     preview={false}
+                   />
+                   
+                   {/* 收起按钮 */}
+                   <button
+                     onClick={(e) => {
+                       e.stopPropagation()
+                       setIsExpanded(false)
+                     }}
+                     className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors mt-2"
+                   >
+                     <ChevronUp className="w-4 h-4" />
+                     收起
+                   </button>
+                 </div>
+                               ) : (
+                  <div>
+                    <div className="line-clamp-3">
+                      <MarkdownRenderer 
+                        content={note.contentPreview}
+                        preview={true}
+                      />
+                    </div>
+                    
+                    {/* 全文按钮 - 只在内容被截断时显示 */}
+                    {note.contentPreview.length > 200 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsExpanded(true)
+                        }}
+                        className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors mt-1"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                        全文
+                      </button>
+                    )}
+                  </div>
+                )}
+             </div>
+           )}
+         </div>
+       </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
        <div className="flex items-center justify-between mt-0">
