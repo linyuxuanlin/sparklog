@@ -197,22 +197,22 @@ const NoteCard: React.FC<NoteCardProps> = ({
               )}
             </div>
           )}
+          
+          {/* 标签显示 - 贴近时间/状态信息 */}
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 ml-4">
+              {note.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                >
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        
-        {/* 中间区域：标签显示 */}
-        {note.tags && note.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 justify-center flex-shrink-0">
-            {note.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-              >
-                <Tag className="w-3 h-3 mr-1" />
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
         
         {/* 右侧区域：操作按钮 */}
         <div className="flex items-center space-x-2 flex-shrink-0">
