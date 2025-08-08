@@ -184,10 +184,7 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                   <>
                     {/* 编辑按钮 */}
                     <button
-                      onClick={() => {
-                        console.log('NoteDetailModal编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
-                        onEdit(note)
-                      }}
+                      onClick={() => onEdit(note)}
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
                       title="编辑笔记"
                     >
