@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag, ChevronDown, ChevronUp } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -197,6 +197,63 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
   const [isExpanded, setIsExpanded] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+  const [showButtonText, setShowButtonText] = useState(true)
+  const buttonRef = React.useRef<HTMLSpanElement>(null)
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 检测按钮文字显示空间
+  useEffect(() => {
+    const checkButtonSpace = () => {
+      if (!buttonRef.current || !containerRef.current) return
+      
+      const container = containerRef.current
+      const button = buttonRef.current
+      
+      // 测量按钮的当前宽度（可能包含或不包含文字）
+      const currentButtonWidth = button.offsetWidth
+      
+      // 临时显示文字来测量完整宽度
+      const originalDisplay = button.style.display
+      button.style.display = 'inline-flex'
+      
+      const buttonWithTextWidth = button.offsetWidth
+      const containerWidth = container.offsetWidth
+      
+      // 恢复原始状态
+      button.style.display = originalDisplay
+      
+      // 计算空余空间
+      const availableSpace = containerWidth - currentButtonWidth
+      
+      // 只有当空余空间小于60px时才隐藏文字
+      const minGap = 60 // 最小间隔空白
+      setShowButtonText(availableSpace >= minGap)
+    }
+
+    // 初始检查
+    checkButtonSpace()
+    
+    // 监听容器大小变化
+    const resizeObserver = new ResizeObserver(checkButtonSpace)
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current)
+    }
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [windowWidth])
 
   return (
     <div 
@@ -231,9 +288,13 @@ const NoteCard: React.FC<NoteCardProps> = ({
        </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div className="flex items-center justify-between gap-2 mt-0">
-         {/* 第一组：标签显示 */}
-         <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+       <div ref={containerRef} className="flex items-center justify-between gap-4 mt-0">
+         {/* 第一组：标签显示 - 动态宽度，支持横向滚动 */}
+         <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{
+           width: note.tags && note.tags.length > 0 
+             ? Math.min(Math.max(note.tags.length * 60, 60), Math.max(windowWidth * 0.3, 120)) 
+             : 0
+         }}>
            {note.tags && note.tags.length > 0 && (
              note.tags.map((tag, index) => (
                <span
@@ -242,7 +303,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                    e.stopPropagation()
                    onTagClick?.(tag)
                  }}
-                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex-shrink-0"
                >
                  <Tag className="w-3 h-3 mr-1 flex-shrink-0" />
                  <span className="truncate">{tag}</span>
@@ -251,10 +312,11 @@ const NoteCard: React.FC<NoteCardProps> = ({
            )}
          </div>
          
-         {/* 第二组：全文/收起按钮 */}
+         {/* 第二组：全文/收起按钮 - 智能显示文字 */}
          {note.contentPreview && note.contentPreview.length > 200 && (
-           <div className="flex-shrink-0">
+           <div className="flex-shrink-0 min-w-0">
              <span 
+               ref={buttonRef}
                onClick={(e) => {
                  e.stopPropagation()
                  setIsExpanded(!isExpanded)
@@ -264,20 +326,20 @@ const NoteCard: React.FC<NoteCardProps> = ({
                {isExpanded ? (
                  <>
                    <ChevronUp className="w-4 h-4" />
-                   <span className="hidden sm:inline">收起</span>
+                   {showButtonText && <span>收起</span>}
                  </>
                ) : (
                  <>
                    <ChevronDown className="w-4 h-4" />
-                   <span className="hidden sm:inline">全文</span>
+                   {showButtonText && <span>全文</span>}
                  </>
                )}
              </span>
            </div>
          )}
          
-         {/* 第三组：时间显示和公开状态 */}
-         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+         {/* 第三组：时间显示和公开状态 - 根据按钮文字显示状态决定堆叠 */}
+         <div className={`flex gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 min-w-0 ${showButtonText ? 'flex-row items-center' : 'flex-col sm:flex-row sm:items-center'}`}>
            <TimeDisplay note={note} />
            {isLoggedIn() && (
              <div className="flex items-center space-x-1">
