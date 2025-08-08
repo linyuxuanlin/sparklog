@@ -72,6 +72,7 @@ interface NoteCardProps {
   onConfirmDelete: (note: Note) => void
   onCancelDelete: () => void
   onOpen: (note: Note) => void
+  onTagClick?: (tag: string) => void
   confirmingDeleteId: string | null
   deletingNoteId: string | null
 }
@@ -188,6 +189,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onConfirmDelete,
   onCancelDelete,
   onOpen,
+  onTagClick,
   confirmingDeleteId,
   deletingNoteId
 }) => {
@@ -236,7 +238,11 @@ const NoteCard: React.FC<NoteCardProps> = ({
              note.tags.map((tag, index) => (
                <span
                  key={index}
-                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                 onClick={(e) => {
+                   e.stopPropagation()
+                   onTagClick?.(tag)
+                 }}
+                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
                >
                  <Tag className="w-3 h-3 mr-1" />
                  {tag}
