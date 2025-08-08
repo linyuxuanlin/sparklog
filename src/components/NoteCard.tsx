@@ -220,7 +220,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                           e.stopPropagation()
                           setIsExpanded(false)
                         }}
-                        className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                        className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium transition-all duration-200 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30"
                       >
                         <ChevronUp className="w-4 h-4" />
                         收起
@@ -231,18 +231,18 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   <div>
                     <div className="line-clamp-3">
                       <MarkdownRenderer 
-                        content={note.contentPreview}
+                        content={note.contentPreview.length > 200 ? note.contentPreview.slice(0, -15) + '...' : note.contentPreview}
                         preview={true}
                       />
                     </div>
                     {note.contentPreview.length > 200 && (
-                      <div className="flex justify-end mt-1">
+                      <div className="flex justify-end -mt-1">
                         <span 
                           onClick={(e) => {
                             e.stopPropagation()
                             setIsExpanded(true)
                           }}
-                          className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium cursor-pointer"
+                          className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
                         >
                           <ChevronDown className="w-4 h-4" />
                           全文
