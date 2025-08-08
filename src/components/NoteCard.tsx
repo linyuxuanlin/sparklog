@@ -175,45 +175,42 @@ const NoteCard: React.FC<NoteCardProps> = ({
       </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div className="flex items-center mt-4">
-         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-           {/* 标签显示 - 最左侧 */}
+       <div className="flex items-center justify-between mt-4">
+         {/* 左侧：标签显示 */}
+         <div className="flex flex-wrap gap-1">
            {note.tags && note.tags.length > 0 && (
-             <div className="flex flex-wrap gap-1">
-               {note.tags.map((tag, index) => (
-                 <span
-                   key={index}
-                   className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                 >
-                   <Tag className="w-3 h-3 mr-1" />
-                   {tag}
-                 </span>
-               ))}
+             note.tags.map((tag, index) => (
+               <span
+                 key={index}
+                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+               >
+                 <Tag className="w-3 h-3 mr-1" />
+                 {tag}
+               </span>
+             ))
+           )}
+         </div>
+         
+         {/* 右侧：时间显示和公开状态 */}
+         <div className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+           <TimeDisplay note={note} />
+           {isLoggedIn() && (
+             <div className="flex items-center space-x-1">
+               {note.isPrivate ? (
+                 <>
+                   <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                   <span className="text-red-600 dark:text-red-400">私密</span>
+                 </>
+               ) : (
+                 <>
+                   <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                   <span className="text-green-600 dark:text-green-400">公开</span>
+                 </>
+               )}
              </div>
            )}
-           
-           <div className="flex items-center gap-2 whitespace-nowrap">
-             <TimeDisplay note={note} />
-             {isLoggedIn() && (
-               <div className="flex items-center space-x-1">
-                 {note.isPrivate ? (
-                   <>
-                     <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                     <span className="text-red-600 dark:text-red-400">私密</span>
-                   </>
-                 ) : (
-                   <>
-                     <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                     <span className="text-green-600 dark:text-green-400">公开</span>
-                   </>
-                 )}
-               </div>
-             )}
-           </div>
          </div>
-        
-        
-      </div>
+       </div>
     </div>
   )
 }
