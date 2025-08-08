@@ -161,7 +161,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       onClick={() => onOpen(note)}
     >
       <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0 pr-4">
+                 <div className="flex-1 min-w-0 pr-0">
           {/* 显示内容预览 */}
           {note.contentPreview && (
             <div className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">
@@ -175,7 +175,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
       </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div className="flex items-center justify-between mt-4">
+       <div className="flex items-center justify-between mt-0">
          {/* 左侧：标签显示 */}
          <div className="flex flex-wrap gap-1">
            {note.tags && note.tags.length > 0 && (
