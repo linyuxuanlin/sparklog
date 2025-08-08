@@ -11,7 +11,7 @@ import { useNotes } from '@/hooks/useNotes'
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
-  const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
+  const { isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
   const { notes } = useNotes()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
@@ -32,15 +32,8 @@ const NoteEditPage: React.FC = () => {
 
   // 权限检查
   useEffect(() => {
-    console.log('NoteEditPage权限检查:', {
-      isLoggedIn: isLoggedInStable(),
-      isGitHubLoading,
-      isConnected
-    })
-    
     // 等待GitHub状态加载完成后再检查权限
     if (!isGitHubLoading && !isLoggedInStable()) {
-      console.log('权限检查失败，重定向到笔记页面')
       navigate('/')
       return
     }
@@ -48,17 +41,8 @@ const NoteEditPage: React.FC = () => {
 
   // 加载现有笔记
   useEffect(() => {
-    console.log('编辑笔记useEffect调试:', {
-      isEditMode,
-      title,
-      decodedTitle: title ? decodeURIComponent(title) : null,
-      isLoggedIn: isLoggedInStable(),
-      shouldLoad: isEditMode && title && isLoggedInStable()
-    })
-    
     if (isEditMode && title && isLoggedInStable()) {
       const decodedTitle = decodeURIComponent(title)
-      console.log('开始加载笔记:', decodedTitle)
       loadExistingNote(decodedTitle)
     }
   }, [isEditMode, title, isLoggedInStable])
@@ -173,19 +157,11 @@ const NoteEditPage: React.FC = () => {
       }
       selectedRepo = defaultConfig.repo
       
-      console.log('loadExistingNote配置:', {
-        noteTitle,
-        defaultConfig,
-        authData,
-        selectedRepo
-      })
-      
       // 如果是管理员且已登录，使用GitHub Token
       if (isLoggedInStable()) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken
-          console.log('管理员模式，使用GitHub Token加载笔记')
         }
       }
       
@@ -203,7 +179,6 @@ const NoteEditPage: React.FC = () => {
       }
       
       const files = await response.json()
-      console.log('获取到的文件列表:', files.map((f: any) => f.name))
       
       // 首先尝试精确匹配
       let noteFile = files.find((file: any) => 
@@ -218,15 +193,6 @@ const NoteEditPage: React.FC = () => {
           file.name.includes(noteTitle)
         )
       }
-      
-      console.log('查找笔记文件结果:', {
-        noteTitle,
-        foundFile: noteFile,
-        searchPattern: noteTitle,
-        allFiles: files.map((f: any) => f.name),
-        exactMatches: files.filter((f: any) => f.name.endsWith('.md') && f.name.replace(/\.md$/, '') === noteTitle).map((f: any) => f.name),
-        includesMatches: files.filter((f: any) => f.name.endsWith('.md') && f.name.includes(noteTitle)).map((f: any) => f.name)
-      })
       
       if (!noteFile) {
         throw new Error('未找到笔记文件')
@@ -429,19 +395,11 @@ const NoteEditPage: React.FC = () => {
          // 检查是否使用原始文件路径
          const isUsingOriginalPath = filePath === originalFile.path
          
-         console.log('文件路径比较:', {
-           originalPath: originalFile.path,
-           newPath: filePath,
-           isUsingOriginal: isUsingOriginalPath
-         })
-         
          if (isUsingOriginalPath) {
            // 使用原始文件路径，更新现有文件
            sha = originalFile.sha
-           console.log('编辑模式，更新现有文件，SHA:', sha)
          } else {
            // 使用新文件路径，创建新文件，稍后删除旧文件
-           console.log('编辑模式，创建新文件，稍后删除旧文件')
            shouldDeleteOriginal = true
          }
        }
@@ -475,7 +433,6 @@ const NoteEditPage: React.FC = () => {
        // 如果文件名改变了，删除原始文件
        if (shouldDeleteOriginal && originalFile) {
          try {
-           console.log('删除原始文件:', originalFile.path)
            const deleteResponse = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${originalFile.path}`, {
              method: 'DELETE',
              headers: {
@@ -491,8 +448,6 @@ const NoteEditPage: React.FC = () => {
            
            if (!deleteResponse.ok) {
              console.warn('删除原始文件失败:', deleteResponse.statusText)
-           } else {
-             console.log('原始文件删除成功')
            }
          } catch (error) {
            console.warn('删除原始文件时出错:', error)
