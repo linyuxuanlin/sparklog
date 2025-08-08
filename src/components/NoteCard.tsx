@@ -175,113 +175,113 @@ const NoteCard: React.FC<NoteCardProps> = ({
               />
             </div>
           )}
-          
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            <TimeDisplay note={note} />
-            {isLoggedIn() && (
-              <div className="flex items-center space-x-1">
-                {note.isPrivate ? (
-                  <>
-                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    <span className="text-red-600 dark:text-red-400">私密</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="text-green-600 dark:text-green-400">公开</span>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+        </div>
+      </div>
+      
+      {/* 底部信息栏：时间、状态、标签和操作按钮 */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <TimeDisplay note={note} />
+          {isLoggedIn() && (
+            <div className="flex items-center space-x-1">
+              {note.isPrivate ? (
+                <>
+                  <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                  <span className="text-red-600 dark:text-red-400">私密</span>
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-green-600 dark:text-green-400">公开</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
         
-        {/* 右侧区域：标签和操作按钮 */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          {/* 操作按钮 */}
-          <div className="flex items-center space-x-2">
-            {isConfirming ? (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onConfirmDelete(note)
-                  }}
-                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                  title="确认删除"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onCancelDelete()
-                  }}
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  title="取消删除"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <>
-                {isLoggedIn() && (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        console.log('NoteCard编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
-                        onEdit(note)
-                      }}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-                      title="编辑笔记"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDelete(note)
-                      }}
-                      disabled={isDeletingNote}
-                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="删除笔记"
-                    >
-                      {isDeletingNote ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
-                    <a
-                      href={note.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      title="在GitHub查看"
-                    >
-                      <Github className="w-4 h-4" />
-                    </a>
-                  </>
-                )}
-              </>
-            )}
+        {/* 中间区域：标签显示 */}
+        {note.tags && note.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 justify-center flex-shrink-0">
+            {note.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+              >
+                <Tag className="w-3 h-3 mr-1" />
+                {tag}
+              </span>
+            ))}
           </div>
-          
-          {/* 标签显示 - 放在最右最底侧 */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 justify-end">
-              {note.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                >
-                  <Tag className="w-3 h-3 mr-1" />
-                  {tag}
-                </span>
-              ))}
-            </div>
+        )}
+        
+        {/* 右侧区域：操作按钮 */}
+        <div className="flex items-center space-x-2 flex-shrink-0">
+          {isConfirming ? (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onConfirmDelete(note)
+                }}
+                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="确认删除"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onCancelDelete()
+                }}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                title="取消删除"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              {isLoggedIn() && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      console.log('NoteCard编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
+                      onEdit(note)
+                    }}
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    title="编辑笔记"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(note)
+                    }}
+                    disabled={isDeletingNote}
+                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="删除笔记"
+                  >
+                    {isDeletingNote ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                  </button>
+                  <a
+                    href={note.html_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    title="在GitHub查看"
+                  >
+                    <Github className="w-4 h-4" />
+                  </a>
+                </>
+              )}
+            </>
           )}
         </div>
       </div>
