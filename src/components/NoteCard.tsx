@@ -206,47 +206,49 @@ const NoteCard: React.FC<NoteCardProps> = ({
            {/* 显示内容预览 */}
            {note.contentPreview && (
              <div className="text-gray-600 dark:text-gray-300 mb-3">
-               {isExpanded ? (
-                 <div>
-                   <MarkdownRenderer 
-                     content={removeFrontMatter(note.fullContent || note.content || note.contentPreview)}
-                     preview={false}
-                   />
-                   
-                   {/* 收起按钮 */}
-                   <button
-                     onClick={(e) => {
-                       e.stopPropagation()
-                       setIsExpanded(false)
-                     }}
-                     className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors mt-2"
-                   >
-                     <ChevronUp className="w-4 h-4" />
-                     收起
-                   </button>
-                 </div>
-                               ) : (
+                               {isExpanded ? (
                   <div>
-                    <div className="line-clamp-3">
+                    <MarkdownRenderer 
+                      content={removeFrontMatter(note.fullContent || note.content || note.contentPreview)}
+                      preview={false}
+                    />
+                    
+                    {/* 收起按钮 - 右对齐 */}
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsExpanded(false)
+                        }}
+                        className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                        收起
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="line-clamp-3 relative">
                       <MarkdownRenderer 
                         content={note.contentPreview}
                         preview={true}
                       />
+                      
+                      {/* 全文按钮 - 覆盖在截断位置 */}
+                      {note.contentPreview.length > 200 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setIsExpanded(true)
+                          }}
+                          className="absolute bottom-0 right-0 inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors bg-white dark:bg-gray-800 px-1"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                          全文
+                        </button>
+                      )}
                     </div>
-                    
-                    {/* 全文按钮 - 只在内容被截断时显示 */}
-                    {note.contentPreview.length > 200 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsExpanded(true)
-                        }}
-                        className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors mt-1"
-                      >
-                        <ChevronDown className="w-4 h-4" />
-                        全文
-                      </button>
-                    )}
                   </div>
                 )}
              </div>
