@@ -69,13 +69,9 @@ const formatTimeDisplay = (dateString: string | undefined): string => {
       } else if (diffDays <= 30) {
         const weeks = Math.floor(diffDays / 7)
         return `${weeks}周前`
-      } else {
-        return date.toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        })
-      }
+             } else {
+         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+       }
     }
   } catch {
     return '未知日期'
@@ -178,41 +174,43 @@ const NoteCard: React.FC<NoteCardProps> = ({
         </div>
       </div>
       
-      {/* 底部信息栏：时间、状态、标签和操作按钮 */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-          <TimeDisplay note={note} />
-          {isLoggedIn() && (
-            <div className="flex items-center space-x-1">
-              {note.isPrivate ? (
-                <>
-                  <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  <span className="text-red-600 dark:text-red-400">私密</span>
-                </>
-              ) : (
-                <>
-                  <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <span className="text-green-600 dark:text-green-400">公开</span>
-                </>
-              )}
-            </div>
-          )}
-          
-          {/* 标签显示 - 贴近时间/状态信息 */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 ml-4">
-              {note.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                >
-                  <Tag className="w-3 h-3 mr-1" />
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+             {/* 底部信息栏：标签、时间、状态和操作按钮 */}
+       <div className="flex items-center justify-between mt-4">
+         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+           {/* 标签显示 - 最左侧 */}
+           {note.tags && note.tags.length > 0 && (
+             <div className="flex flex-wrap gap-1">
+               {note.tags.map((tag, index) => (
+                 <span
+                   key={index}
+                   className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                 >
+                   <Tag className="w-3 h-3 mr-1" />
+                   {tag}
+                 </span>
+               ))}
+             </div>
+           )}
+           
+           <div className="flex items-center gap-2 whitespace-nowrap">
+             <TimeDisplay note={note} />
+             {isLoggedIn() && (
+               <div className="flex items-center space-x-1">
+                 {note.isPrivate ? (
+                   <>
+                     <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                     <span className="text-red-600 dark:text-red-400">私密</span>
+                   </>
+                 ) : (
+                   <>
+                     <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                     <span className="text-green-600 dark:text-green-400">公开</span>
+                   </>
+                 )}
+               </div>
+             )}
+           </div>
+         </div>
         
         {/* 右侧区域：操作按钮 */}
         <div className="flex items-center space-x-2 flex-shrink-0">
