@@ -376,14 +376,8 @@ const NotesPage: React.FC = () => {
                <NoteCard
                  key={`${note.sha}-${note.path || index}`}
                  note={note}
-                 onEdit={handleEditNote}
-                 onDelete={handleDeleteNote}
-                 onConfirmDelete={confirmDelete}
-                 onCancelDelete={() => setConfirmingDelete(null)}
                  onOpen={handleOpenNote}
                  onTagClick={handleTagClick}
-                 confirmingDeleteId={confirmingDelete}
-                 deletingNoteId={deletingNote}
                />
              ))}
            </div>

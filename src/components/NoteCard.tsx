@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag, ChevronDown, ChevronUp } from 'lucide-react'
+import { Globe, Calendar, Tag, ChevronDown, ChevronUp } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
 
@@ -67,14 +67,8 @@ interface Note {
 
 interface NoteCardProps {
   note: Note
-  onEdit: (note: Note) => void
-  onDelete: (note: Note) => void
-  onConfirmDelete: (note: Note) => void
-  onCancelDelete: () => void
   onOpen: (note: Note) => void
   onTagClick?: (tag: string) => void
-  confirmingDeleteId: string | null
-  deletingNoteId: string | null
 }
 
 // 格式化时间显示
@@ -184,18 +178,10 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
 
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
-  onEdit,
-  onDelete,
-  onConfirmDelete,
-  onCancelDelete,
   onOpen,
-  onTagClick,
-  confirmingDeleteId,
-  deletingNoteId
+  onTagClick
 }) => {
   const { isLoggedIn } = useGitHub()
-  const isConfirming = confirmingDeleteId === note.sha
-  const isDeletingNote = deletingNoteId === note.sha
   const [isExpanded, setIsExpanded] = useState(false)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
@@ -227,7 +213,6 @@ const NoteCard: React.FC<NoteCardProps> = ({
       const originalDisplay = button.style.display
       button.style.display = 'inline-flex'
       
-      const buttonWithTextWidth = button.offsetWidth
       const containerWidth = container.offsetWidth
       
       // 恢复原始状态
