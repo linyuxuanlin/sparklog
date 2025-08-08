@@ -198,7 +198,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   return (
     <div 
-      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg"
       onClick={() => onOpen(note)}
     >
              <div className="flex items-start justify-between">

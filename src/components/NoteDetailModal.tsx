@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { X, Edit, Trash2, Share, Check, Github } from 'lucide-react'
+import { X, Edit, Trash2, Share, Check, Github, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -268,6 +268,23 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                  <div className="text-center py-12">
                    <div className="text-gray-500 dark:text-gray-400">
                      无法加载笔记内容
+                   </div>
+                 </div>
+               )}
+               
+               {/* 标签显示 */}
+               {note.tags && note.tags.length > 0 && (
+                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                   <div className="flex flex-wrap gap-2">
+                     {note.tags.map((tag, index) => (
+                       <span
+                         key={index}
+                         className="inline-flex items-center px-3 py-1.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-lg"
+                       >
+                         <Tag className="w-4 h-4 mr-1.5" />
+                         {tag}
+                       </span>
+                     ))}
                    </div>
                  </div>
                )}
