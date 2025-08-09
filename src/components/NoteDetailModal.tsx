@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { X, Edit, Trash2, Share, Check, Github, Tag } from 'lucide-react'
+import { X, Edit, Trash2, Share, Check } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -194,17 +194,6 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                       <Edit className="w-5 h-5" />
                     </button>
                     
-                    {/* GitHub链接按钮 */}
-                    <a
-                      href={note.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-                      title="在GitHub查看"
-                    >
-                      <Github className="w-5 h-5" />
-                    </a>
-                    
                     {/* 删除按钮 */}
                     {isConfirming ? (
                       <>
@@ -249,42 +238,22 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                   <X className="w-5 h-5" />
                 </button>
               </div>
-                        </div>
-            
-            {/* 分割线 */}
-            <div className="border-t border-gray-200 dark:border-gray-700"></div>
-            
-                         {/* 卡片内容 - 只显示笔记内容 */}
-             <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-                                 {note.fullContent ? (
-                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
-                     <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />
-                   </div>
-                 ) : note.content ? (
-                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
-                     <MarkdownRenderer content={removeFrontMatter(note.content)} />
-                   </div>
+           </div>
+           
+                       {/* 卡片内容 - 只显示笔记内容 */}
+                         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                               {note.fullContent ? (
+                  <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl">
+                    <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />
+                  </div>
+                ) : note.content ? (
+                  <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl">
+                    <MarkdownRenderer content={removeFrontMatter(note.content)} />
+                  </div>
                ) : (
                  <div className="text-center py-12">
                    <div className="text-gray-500 dark:text-gray-400">
                      无法加载笔记内容
-                   </div>
-                 </div>
-               )}
-               
-               {/* 标签显示 */}
-               {note.tags && note.tags.length > 0 && (
-                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                   <div className="flex flex-wrap gap-2">
-                     {note.tags.map((tag, index) => (
-                       <span
-                         key={index}
-                         className="inline-flex items-center px-3 py-1.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-lg"
-                       >
-                         <Tag className="w-4 h-4 mr-1.5" />
-                         {tag}
-                       </span>
-                     ))}
                    </div>
                  </div>
                )}

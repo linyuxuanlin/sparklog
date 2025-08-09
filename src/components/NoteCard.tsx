@@ -1,47 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag, ChevronDown, ChevronUp } from 'lucide-react'
+import React from 'react'
+import { Globe, Calendar, Edit, Trash2, Github, Check, X, Loader2, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
-
-// 过滤front matter的函数
-const removeFrontMatter = (content: string): string => {
-  // 按行分割内容
-  const lines = content.split('\n')
-  
-  let inFrontmatter = false
-  let frontmatterEndIndex = -1
-  
-  // 查找front matter的结束位置
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (line === '---' && !inFrontmatter) {
-      inFrontmatter = true
-      continue
-    }
-    if (line === '---' && inFrontmatter) {
-      frontmatterEndIndex = i
-      break
-    }
-  }
-  
-  // 如果找到了front matter，从结束位置后开始提取内容
-  if (frontmatterEndIndex >= 0) {
-    const contentLines = lines.slice(frontmatterEndIndex + 1)
-    return contentLines.join('\n').trim()
-  }
-  
-  // 如果没有找到标准front matter，使用原来的过滤方法
-  const filteredLines = lines.filter(line => {
-    const trimmedLine = line.trim()
-    // 跳过空行和包含front matter字段的行
-    return trimmedLine !== '' && 
-           !trimmedLine.includes('created_at:') && 
-           !trimmedLine.includes('updated_at:') && 
-           !trimmedLine.includes('private:')
-  })
-  
-  return filteredLines.join('\n').trim()
-}
 
 interface Note {
   name: string
@@ -72,7 +32,6 @@ interface NoteCardProps {
   onConfirmDelete: (note: Note) => void
   onCancelDelete: () => void
   onOpen: (note: Note) => void
-  onTagClick?: (tag: string) => void
   confirmingDeleteId: string | null
   deletingNoteId: string | null
 }
@@ -110,9 +69,13 @@ const formatTimeDisplay = (dateString: string | undefined): string => {
       } else if (diffDays <= 30) {
         const weeks = Math.floor(diffDays / 7)
         return `${weeks}周前`
-             } else {
-         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
-       }
+      } else {
+        return date.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })
+      }
     }
   } catch {
     return '未知日期'
@@ -189,175 +152,139 @@ const NoteCard: React.FC<NoteCardProps> = ({
   onConfirmDelete,
   onCancelDelete,
   onOpen,
-  onTagClick,
   confirmingDeleteId,
   deletingNoteId
 }) => {
   const { isLoggedIn } = useGitHub()
   const isConfirming = confirmingDeleteId === note.sha
   const isDeletingNote = deletingNoteId === note.sha
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
-  const [showButtonText, setShowButtonText] = useState(true)
-  const buttonRef = React.useRef<HTMLSpanElement>(null)
-  const containerRef = React.useRef<HTMLDivElement>(null)
-
-  // 监听窗口大小变化
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // 检测按钮文字显示空间
-  useEffect(() => {
-    const checkButtonSpace = () => {
-      if (!buttonRef.current || !containerRef.current) return
-      
-      const container = containerRef.current
-      const button = buttonRef.current
-      
-      // 测量按钮的当前宽度（可能包含或不包含文字）
-      const currentButtonWidth = button.offsetWidth
-      
-      // 临时显示文字来测量完整宽度
-      const originalDisplay = button.style.display
-      button.style.display = 'inline-flex'
-      
-      const buttonWithTextWidth = button.offsetWidth
-      const containerWidth = container.offsetWidth
-      
-      // 恢复原始状态
-      button.style.display = originalDisplay
-      
-      // 计算空余空间
-      const availableSpace = containerWidth - currentButtonWidth
-      
-      // 只有当空余空间小于60px时才隐藏文字
-      const minGap = 60 // 最小间隔空白
-      setShowButtonText(availableSpace >= minGap)
-    }
-
-    // 初始检查
-    checkButtonSpace()
-    
-    // 监听容器大小变化
-    const resizeObserver = new ResizeObserver(checkButtonSpace)
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current)
-    }
-
-    return () => {
-      resizeObserver.disconnect()
-    }
-  }, [windowWidth])
 
   return (
     <div 
-      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg"
+      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02] hover:shadow-lg"
       onClick={() => onOpen(note)}
     >
-             <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0 pr-0">
-           {/* 显示内容预览 */}
-           {note.contentPreview && (
-             <div className="text-gray-600 dark:text-gray-300 mb-3">
-                               {isExpanded ? (
-                  <div>
-                    <MarkdownRenderer 
-                      content={removeFrontMatter(note.fullContent || note.content || note.contentPreview)}
-                      preview={false}
-                    />
-                  </div>
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0 pr-4">
+          {/* 显示内容预览 */}
+          {note.contentPreview && (
+            <div className="text-gray-600 dark:text-gray-300 mb-3 line-clamp-3">
+              <MarkdownRenderer 
+                content={note.contentPreview}
+                preview={true}
+              />
+            </div>
+          )}
+          
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            <TimeDisplay note={note} />
+            {isLoggedIn() && (
+              <div className="flex items-center space-x-1">
+                {note.isPrivate ? (
+                  <>
+                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    <span className="text-red-600 dark:text-red-400">私密</span>
+                  </>
                 ) : (
-                  <div>
-                    <div className="line-clamp-3">
-                      <MarkdownRenderer 
-                        content={note.contentPreview}
-                        preview={true}
-                      />
-                    </div>
-                  </div>
+                  <>
+                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-green-600 dark:text-green-400">公开</span>
+                  </>
                 )}
-             </div>
-           )}
-         </div>
-       </div>
-      
-             {/* 底部信息栏：标签、时间、状态 */}
-       <div ref={containerRef} className="flex items-center justify-between gap-4 mt-0">
-         {/* 第一组：标签显示 - 动态宽度，支持横向滚动 */}
-         <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{
-           width: note.tags && note.tags.length > 0 
-             ? Math.min(Math.max(note.tags.length * 60, 60), Math.max(windowWidth * 0.3, 120)) 
-             : 0
-         }}>
-           {note.tags && note.tags.length > 0 && (
-             note.tags.map((tag, index) => (
-               <span
-                 key={index}
-                 onClick={(e) => {
-                   e.stopPropagation()
-                   onTagClick?.(tag)
-                 }}
-                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex-shrink-0"
-               >
-                 <Tag className="w-3 h-3 mr-1 flex-shrink-0" />
-                 <span className="truncate">{tag}</span>
-               </span>
-             ))
-           )}
-         </div>
-         
-         {/* 第二组：全文/收起按钮 - 智能显示文字 */}
-         {note.contentPreview && note.contentPreview.length > 200 && (
-           <div className="flex-shrink-0 min-w-0">
-             <span 
-               ref={buttonRef}
-               onClick={(e) => {
-                 e.stopPropagation()
-                 setIsExpanded(!isExpanded)
-               }}
-               className="inline-flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 min-w-[2.5rem] h-7"
-             >
-               {isExpanded ? (
-                 <>
-                   <ChevronUp className="w-4 h-4" />
-                   {showButtonText && <span>收起</span>}
-                 </>
-               ) : (
-                 <>
-                   <ChevronDown className="w-4 h-4" />
-                   {showButtonText && <span>全文</span>}
-                 </>
-               )}
-             </span>
-           </div>
-         )}
-         
-         {/* 第三组：时间显示和公开状态 - 根据按钮文字显示状态决定堆叠 */}
-         <div className={`flex gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 min-w-0 ${showButtonText ? 'flex-row items-center' : 'flex-col sm:flex-row sm:items-center'}`}>
-           <TimeDisplay note={note} />
-           {isLoggedIn() && (
-             <div className="flex items-center space-x-1">
-               {note.isPrivate ? (
-                 <>
-                   <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                   <span className="text-red-600 dark:text-red-400">私密</span>
-                 </>
-               ) : (
-                 <>
-                   <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                   <span className="text-green-600 dark:text-green-400">公开</span>
-                 </>
-               )}
-             </div>
-           )}
-         </div>
-       </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* 右侧区域：标签和操作按钮 */}
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          {/* 操作按钮 */}
+          <div className="flex items-center space-x-2">
+            {isConfirming ? (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onConfirmDelete(note)
+                  }}
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  title="确认删除"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCancelDelete()
+                  }}
+                  className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  title="取消删除"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                {isLoggedIn() && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        console.log('NoteCard编辑按钮点击:', { noteName: note.name, noteSha: note.sha })
+                        onEdit(note)
+                      }}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                      title="编辑笔记"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDelete(note)
+                      }}
+                      disabled={isDeletingNote}
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="删除笔记"
+                    >
+                      {isDeletingNote ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
+                    <a
+                      href={note.html_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      title="在GitHub查看"
+                    >
+                      <Github className="w-4 h-4" />
+                    </a>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* 标签显示 - 放在最右最底侧 */}
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-end">
+              {note.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                >
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

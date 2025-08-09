@@ -108,13 +108,6 @@ const NotesPage: React.FC = () => {
     navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
-  // 处理标签点击
-  const handleTagClick = (tag: string) => {
-    if (!selectedTags.includes(tag)) {
-      setSelectedTags([...selectedTags, tag])
-    }
-  }
-
   // 删除笔记
   const handleDeleteNote = async (note: Note) => {
     setConfirmingDelete(note.sha)
@@ -381,7 +374,6 @@ const NotesPage: React.FC = () => {
                  onConfirmDelete={confirmDelete}
                  onCancelDelete={() => setConfirmingDelete(null)}
                  onOpen={handleOpenNote}
-                 onTagClick={handleTagClick}
                  confirmingDeleteId={confirmingDelete}
                  deletingNoteId={deletingNote}
                />
