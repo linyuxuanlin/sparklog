@@ -253,29 +253,29 @@ const NoteCard: React.FC<NoteCardProps> = ({
       }
 
       // 检测按钮文字显示空间
-      if (buttonRef.current && containerRef.current) {
+      if (buttonRef.current && containerRef.current && tagScrollRef.current) {
         const container = containerRef.current
-        const button = buttonRef.current
+        const tagContainer = tagScrollRef.current
         
-        // 测量按钮的当前宽度（可能包含或不包含文字）
-        const currentButtonWidth = button.offsetWidth
-        
-        // 临时显示文字来测量完整宽度
-        const originalDisplay = button.style.display
-        button.style.display = 'inline-flex'
-        
-        button.offsetWidth
+        // 获取各个区域的宽度
         const containerWidth = container.offsetWidth
+        const tagAreaWidth = tagContainer.parentElement?.offsetWidth || 0
+        const timeAreaElement = container.children[2] as HTMLElement // 第三个子元素是时间区域
+        const timeAreaWidth = timeAreaElement?.offsetWidth || 0
         
-        // 恢复原始状态
-        button.style.display = originalDisplay
+        // 按钮区域的预估宽度
+        const buttonWithTextWidth = 80 // 约5rem，包含文字时的估算宽度
+        const buttonMargin = 24 // 左右各12px的margin
         
-        // 计算空余空间
-        const availableSpace = containerWidth - currentButtonWidth
+        // 计算总的非按钮占用空间
+        const nonButtonSpace = tagAreaWidth + timeAreaWidth + buttonMargin
         
-        // 只有当空余空间小于60px时才隐藏文字
-        const minGap = 60 // 最小间隔空白
-        setShowButtonText(availableSpace >= minGap)
+        // 计算按钮可用空间
+        const availableForButton = containerWidth - nonButtonSpace
+        
+        // 判断是否应该显示文字：可用空间是否足够容纳带文字的按钮
+        const shouldShowText = availableForButton >= buttonWithTextWidth
+        setShowButtonText(shouldShowText)
       }
     }
 
@@ -376,7 +376,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                  e.stopPropagation()
                  setIsExpanded(!isExpanded)
                }}
-               className="inline-flex items-center justify-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 min-w-[2.5rem] h-7"
+               className={`inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 h-7 ${showButtonText ? 'gap-1.5 min-w-[3.5rem]' : 'min-w-[2.5rem]'}`}
              >
                {isExpanded ? (
                  <>
@@ -393,8 +393,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
            </div>
          )}
          
-         {/* 第三组：时间显示和公开状态 - 根据按钮文字显示状态决定堆叠 */}
-         <div className={`flex gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 min-w-0 ${showButtonText ? 'flex-row items-center' : 'flex-col sm:flex-row sm:items-center'}`}>
+         {/* 第三组：时间显示和公开状态 - 始终保持同一行 */}
+         <div className="flex flex-row items-center gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
            <TimeDisplay note={note} />
            {isLoggedIn() && (
              <div className="flex items-center space-x-1">
