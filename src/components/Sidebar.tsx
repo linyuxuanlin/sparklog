@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   return (
     <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
       {/* 移动端Logo */}
-      <div className="lg:hidden p-4 border-b border-gray-200 dark:border-gray-700 min-h-[7rem]">
+      <div className="lg:hidden p-4 min-h-[7rem]">
         <Link 
           to="/" 
           onClick={onClose}
@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       </div>
       
       {/* 桌面端Logo */}
-      <div className="hidden lg:block p-6 border-b border-gray-200 dark:border-gray-700 min-h-[8rem]">
+      <div className="hidden lg:block p-6 min-h-[8rem]">
         <Link to="/" className="block text-center flex flex-col justify-center h-full px-4">
           <h1 className="logo-title">SparkLog</h1>
           <p className="logo-subtitle"> </p>
