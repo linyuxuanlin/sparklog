@@ -294,7 +294,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
        </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div ref={containerRef} className="flex items-center justify-between gap-4 mt-0">
+       <div ref={containerRef} className="flex items-center justify-between mt-0">
          {/* 第一组：标签显示 - 动态宽度，支持横向滚动 */}
          <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{
            width: note.tags && note.tags.length > 0 
@@ -320,7 +320,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
          
          {/* 第二组：全文/收起按钮 - 智能显示文字 */}
          {note.contentPreview && showExpandButton && (
-           <div className="flex-shrink-0 min-w-0">
+           <div className="flex-shrink-0 min-w-0 mx-3">
              <span 
                ref={buttonRef}
                onClick={(e) => {
