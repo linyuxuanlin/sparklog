@@ -373,18 +373,12 @@ const NotesPage: React.FC = () => {
          <div className="space-y-4">
            <div className="grid gap-4">
              {filteredNotes.map((note, index) => (
-               <NoteCard
-                 key={`${note.sha}-${note.path || index}`}
-                 note={note}
-                 onEdit={handleEditNote}
-                 onDelete={handleDeleteNote}
-                 onConfirmDelete={confirmDelete}
-                 onCancelDelete={() => setConfirmingDelete(null)}
-                 onOpen={handleOpenNote}
-                 onTagClick={handleTagClick}
-                 confirmingDeleteId={confirmingDelete}
-                 deletingNoteId={deletingNote}
-               />
+                             <NoteCard
+                key={`${note.sha}-${note.path || index}`}
+                note={note}
+                onOpen={handleOpenNote}
+                onTagClick={handleTagClick}
+              />
              ))}
            </div>
            
