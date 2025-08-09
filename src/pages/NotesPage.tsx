@@ -30,6 +30,7 @@ const NotesPage: React.FC = () => {
   // 检查是否需要刷新笔记列表
   useEffect(() => {
     if (location.state?.shouldRefresh) {
+      console.log('检测到需要刷新笔记列表')
       loadNotes(true)
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
@@ -103,6 +104,7 @@ const NotesPage: React.FC = () => {
     
     // 然后跳转到编辑页面
     const timestamp = note.name.replace(/\.md$/, '')
+    console.log('编辑笔记:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
     navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
