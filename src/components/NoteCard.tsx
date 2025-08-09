@@ -185,8 +185,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
+  const [showExpandButton, setShowExpandButton] = useState(false)
   const buttonRef = React.useRef<HTMLSpanElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const contentRef = React.useRef<HTMLDivElement>(null)
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -198,48 +200,66 @@ const NoteCard: React.FC<NoteCardProps> = ({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // 检测按钮文字显示空间
+  // 检测内容是否被截断以及按钮文字显示空间
   useEffect(() => {
-    const checkButtonSpace = () => {
-      if (!buttonRef.current || !containerRef.current) return
-      
-      const container = containerRef.current
-      const button = buttonRef.current
-      
-      // 测量按钮的当前宽度（可能包含或不包含文字）
-      const currentButtonWidth = button.offsetWidth
-      
-      // 临时显示文字来测量完整宽度
-      const originalDisplay = button.style.display
-      button.style.display = 'inline-flex'
-      
-      button.offsetWidth
-      const containerWidth = container.offsetWidth
-      
-      // 恢复原始状态
-      button.style.display = originalDisplay
-      
-      // 计算空余空间
-      const availableSpace = containerWidth - currentButtonWidth
-      
-      // 只有当空余空间小于60px时才隐藏文字
-      const minGap = 60 // 最小间隔空白
-      setShowButtonText(availableSpace >= minGap)
+    const checkContentAndButton = () => {
+      // 检测内容是否被截断
+      if (contentRef.current && !isExpanded) {
+        const contentElement = contentRef.current
+        const isContentTruncated = contentElement.scrollHeight > contentElement.clientHeight
+        setShowExpandButton(isContentTruncated)
+      } else if (isExpanded) {
+        // 如果已展开，总是显示收起按钮（只要有内容）
+        setShowExpandButton(Boolean(note.contentPreview))
+      } else {
+        // 如果没有内容引用，回退到长度判断
+        setShowExpandButton(Boolean(note.contentPreview && note.contentPreview.length > 200))
+      }
+
+      // 检测按钮文字显示空间
+      if (buttonRef.current && containerRef.current) {
+        const container = containerRef.current
+        const button = buttonRef.current
+        
+        // 测量按钮的当前宽度（可能包含或不包含文字）
+        const currentButtonWidth = button.offsetWidth
+        
+        // 临时显示文字来测量完整宽度
+        const originalDisplay = button.style.display
+        button.style.display = 'inline-flex'
+        
+        button.offsetWidth
+        const containerWidth = container.offsetWidth
+        
+        // 恢复原始状态
+        button.style.display = originalDisplay
+        
+        // 计算空余空间
+        const availableSpace = containerWidth - currentButtonWidth
+        
+        // 只有当空余空间小于60px时才隐藏文字
+        const minGap = 60 // 最小间隔空白
+        setShowButtonText(availableSpace >= minGap)
+      }
     }
 
-    // 初始检查
-    checkButtonSpace()
+    // 初始检查 (延迟执行确保DOM已渲染)
+    const timeoutId = setTimeout(checkContentAndButton, 100)
     
-    // 监听容器大小变化
-    const resizeObserver = new ResizeObserver(checkButtonSpace)
+    // 监听容器和内容大小变化
+    const resizeObserver = new ResizeObserver(checkContentAndButton)
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current)
     }
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current)
+    }
 
     return () => {
+      clearTimeout(timeoutId)
       resizeObserver.disconnect()
     }
-  }, [windowWidth])
+  }, [windowWidth, isExpanded, note.contentPreview])
 
   return (
     <div 
@@ -260,7 +280,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   </div>
                 ) : (
                   <div>
-                    <div className="line-clamp-3">
+                    <div ref={contentRef} className="line-clamp-3">
                       <MarkdownRenderer 
                         content={note.contentPreview}
                         preview={true}
@@ -299,7 +319,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
          </div>
          
          {/* 第二组：全文/收起按钮 - 智能显示文字 */}
-         {note.contentPreview && note.contentPreview.length > 200 && (
+         {note.contentPreview && showExpandButton && (
            <div className="flex-shrink-0 min-w-0">
              <span 
                ref={buttonRef}
