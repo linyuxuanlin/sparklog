@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, Shuffle, Search, Settings, AlertCircle, Lock, Tag, X, RotateCcw } from 'lucide-react'
+import { Plus, Shuffle, Settings, AlertCircle, Lock, Tag, X, RotateCcw } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
-import TagFilter from '@/components/TagFilter'
 import { Note } from '@/types/Note'
-import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
+import { showMessage, filterNotesByTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const WanderPage: React.FC = () => {
@@ -16,7 +15,6 @@ const WanderPage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
@@ -43,17 +41,16 @@ const WanderPage: React.FC = () => {
 
   // 重新随机排列笔记
   const reshuffleNotes = () => {
-    const filtered = filterNotes(notes, searchQuery)
-    const tagFiltered = filterNotesByTags(filtered, selectedTags)
+    const tagFiltered = filterNotesByTags(notes, selectedTags)
     setShuffledNotes(shuffleArray(tagFiltered))
   }
 
-  // 当笔记、搜索条件或标签筛选发生变化时，重新随机排列
+  // 当笔记或标签筛选发生变化时，重新随机排列
   useEffect(() => {
     if (notes.length > 0) {
       reshuffleNotes()
     }
-  }, [notes, searchQuery, selectedTags])
+  }, [notes, selectedTags])
 
   // 检查是否需要刷新笔记列表
   useEffect(() => {
@@ -301,64 +298,37 @@ const WanderPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 搜索栏和标签筛选 */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="搜索笔记..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm font-medium border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            />
-          </div>
-          
-          {/* 标签筛选按钮 */}
-          <TagFilter
-            availableTags={getAllTags(notes)}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-          />
-        </div>
-        
-        {/* 已选标签显示和筛选结果统计 */}
-        {(selectedTags.length > 0 || searchQuery) && (
-          <div className="space-y-2">
-            {/* 已选标签显示 */}
-            {selectedTags.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">已选标签:</span>
-                {selectedTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
-                  >
-                    <Tag className="w-3 h-3 mr-1" />
-                    {tag}
-                    <button
-                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
-                      className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 focus:outline-none"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-                <button
-                  onClick={() => setSelectedTags([])}
-                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+{/* 已选标签显示 */}
+        {selectedTags.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">已选标签:</span>
+              {selectedTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
                 >
-                  清除所有
-                </button>
-              </div>
-            )}
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                  <button
+                    onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                    className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 focus:outline-none"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                onClick={() => setSelectedTags([])}
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+              >
+                清除所有
+              </button>
+            </div>
             
             {/* 筛选结果统计 */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {searchQuery && `搜索: "${searchQuery}"`}
-              {searchQuery && selectedTags.length > 0 && " · "}
-              {selectedTags.length > 0 && `标签筛选: ${selectedTags.length} 个标签`}
-              {" - 找到 "}{shuffledNotes.length} 个笔记
+            <div className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              标签筛选: {selectedTags.length} 个标签 - 找到 {shuffledNotes.length} 个笔记
             </div>
           </div>
         )}
@@ -399,10 +369,10 @@ const WanderPage: React.FC = () => {
         <div className="text-center py-12">
           <Shuffle className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            {(searchQuery || selectedTags.length > 0) ? '没有找到匹配的笔记' : '还没有笔记'}
+            {selectedTags.length > 0 ? '没有找到匹配的笔记' : '还没有笔记'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {(searchQuery || selectedTags.length > 0) ? '尝试调整搜索关键词或标签筛选' : '创建你的第一篇笔记开始记录想法'}
+            {selectedTags.length > 0 ? '尝试调整标签筛选条件' : '创建你的第一篇笔记开始记录想法'}
           </p>
           <button
             onClick={handleCreateNote}
@@ -422,6 +392,7 @@ const WanderPage: React.FC = () => {
                 onOpen={handleOpenNote}
                 onTagClick={handleTagClick}
                 defaultExpanded={true}
+                hideCollapseButton={true}
               />
             ))}
           </div>

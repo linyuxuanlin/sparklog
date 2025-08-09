@@ -70,6 +70,7 @@ interface NoteCardProps {
   onOpen: (note: Note) => void
   onTagClick?: (tag: string) => void
   defaultExpanded?: boolean
+  hideCollapseButton?: boolean
 }
 
 // 格式化时间显示
@@ -181,7 +182,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onOpen,
   onTagClick,
-  defaultExpanded = false
+  defaultExpanded = false,
+  hideCollapseButton = false
 }) => {
   const { isLoggedIn } = useGitHub()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
@@ -370,7 +372,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
         </div>
          
          {/* 第二组：全文/收起按钮 - 智能显示文字 */}
-         {note.contentPreview && showExpandButton && (
+         {note.contentPreview && showExpandButton && !hideCollapseButton && (
            <div className="flex-shrink-0 min-w-0 mx-3">
              <span 
                ref={buttonRef}
