@@ -398,7 +398,7 @@ const NotesPage: React.FC = () => {
                   ) : (
                     <>
                       <Plus className="w-4 h-4 mr-2" />
-                      加载更多
+                      + 更多想法
                     </>
                   )}
                 </button>

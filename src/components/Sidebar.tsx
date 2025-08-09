@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   })
 
   const menuItems = [
-    { icon: BookOpen, label: '所有笔记', path: '/' },
+    { icon: BookOpen, label: '所有想法', path: '/' },
     { icon: Shuffle, label: '漫游', path: '/wander' },
     { icon: Settings, label: '设置', path: '/settings' },
   ]

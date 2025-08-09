@@ -274,7 +274,7 @@ const WanderPage: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Shuffle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">笔记漫游</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">漫游</h1>
           </div>
           <div className="flex items-center gap-3">
             {/* 重新洗牌按钮 */}
@@ -405,7 +405,7 @@ const WanderPage: React.FC = () => {
                 className="btn-neomorphic inline-flex items-center"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                查看更多随机笔记
+                更多想法
               </button>
             </div>
           )}
