@@ -1,6 +1,2 @@
 name = "sparklog"
-compatibility_date = "2025-08-01"
-pages_build_output_dir = "dist"
-
-[env.production]
-pages_build_output_dir = "dist" 
+compatibility_date = "2025-08-01" 
