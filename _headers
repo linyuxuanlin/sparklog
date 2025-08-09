@@ -1,29 +1,11 @@
-# 静态资源缓存优化
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-# JavaScript 文件
-*.js
-  Cache-Control: public, max-age=31536000, immutable
+/assets/*.js
   Content-Type: application/javascript
 
-# CSS 文件
-*.css
-  Cache-Control: public, max-age=31536000, immutable
+/assets/*.css
   Content-Type: text/css
 
-# SVG 文件
-*.svg
+/assets/*.svg
   Content-Type: image/svg+xml
-  Cache-Control: public, max-age=86400
 
-# HTML 文件
-/
-  Cache-Control: public, max-age=300
-
-# 所有页面的安全头部
 /*
-  X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
-  X-XSS-Protection: 1; mode=block
-  Referrer-Policy: strict-origin-when-cross-origin 
+  X-Frame-Options: DENY 

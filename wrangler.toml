@@ -2,5 +2,33 @@ name = "sparklog"
 compatibility_date = "2025-08-01"
 pages_build_output_dir = "dist"
 
+[build]
+command = "npm run build"
+cwd = "."
+
 [env.production]
-pages_build_output_dir = "dist" 
+pages_build_output_dir = "dist"
+
+# 添加缓存和性能优化
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "*.js"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "*.css"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable" 
