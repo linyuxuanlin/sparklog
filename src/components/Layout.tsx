@@ -27,7 +27,7 @@ const Layout: React.FC = () => {
       {/* 主内容区域 */}
       <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto overflow-x-hidden min-w-0">
+        <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900 overflow-y-auto overflow-x-hidden min-w-0 scrollbar-hide">
           <Outlet />
         </main>
       </div>

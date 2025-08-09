@@ -7,6 +7,13 @@
     font-family: 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Helvetica Neue', Arial, sans-serif;
     height: 100%;
     overflow-x: hidden;
+    /* 全局隐藏滚动条 */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  html::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
   
   body {
@@ -15,6 +22,13 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    /* 全局隐藏滚动条 */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  body::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
   
   #root {
@@ -22,9 +36,15 @@
     overflow-x: hidden;
   }
   
-  /* 确保当页面出现滚动条时，布局元素能够正确适应 */
+  /* 全局隐藏所有元素的滚动条 */
   * {
     box-sizing: border-box;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  *::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 }
 

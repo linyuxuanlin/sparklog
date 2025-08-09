@@ -62,14 +62,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
               )
             }
             return (
-              <code className="block bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm font-mono text-gray-800 dark:text-gray-200 overflow-x-auto">
+              <code className="block bg-gray-100 dark:bg-gray-700 p-2 rounded text-sm font-mono text-gray-800 dark:text-gray-200 overflow-x-auto scrollbar-hide">
                 {children}
               </code>
             )
           },
           // 代码块处理
           pre: ({ children }) => (
-            <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded text-sm font-mono text-gray-800 dark:text-gray-200 overflow-x-auto mb-2">
+            <pre className="bg-gray-100 dark:bg-gray-700 p-3 rounded text-sm font-mono text-gray-800 dark:text-gray-200 overflow-x-auto scrollbar-hide mb-2">
               {children}
             </pre>
           ),
@@ -112,7 +112,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
           // 表格处理
           table: ({ children }) => (
-            <div className="overflow-x-auto mb-2">
+            <div className="overflow-x-auto scrollbar-hide mb-2">
               <table className="min-w-full border border-gray-300 dark:border-gray-600">
                 {children}
               </table>

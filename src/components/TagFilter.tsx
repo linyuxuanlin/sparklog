@@ -62,7 +62,7 @@ const TagFilter: React.FC<TagFilterProps> = ({
 
         {/* 下拉菜单 */}
         {isOpen && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+          <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto scrollbar-hide">
             <div className="p-2">
               <div className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-semibold mb-2 px-2">
                 选择标签 ({availableTags.length})

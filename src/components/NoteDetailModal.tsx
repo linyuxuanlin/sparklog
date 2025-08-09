@@ -255,7 +255,7 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
             <div className="border-t border-gray-200 dark:border-gray-700"></div>
             
                          {/* 卡片内容 - 只显示笔记内容 */}
-             <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+             <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)] scrollbar-hide">
                                  {note.fullContent ? (
                    <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
                      <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />

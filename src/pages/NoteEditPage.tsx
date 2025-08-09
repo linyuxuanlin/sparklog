@@ -565,7 +565,7 @@ const NoteEditPage: React.FC = () => {
                     onChange={handleContentChange}
                     placeholder="开始编写你的笔记..."
                     rows={1}
-                    className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full"
+                    className="py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 font-sans text-base bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 min-h-[300px] max-h-[60vh] resize-none overflow-hidden break-words w-full scrollbar-hide"
                     style={{ 
                       boxSizing: 'border-box', 
                       wordWrap: 'break-word', 
