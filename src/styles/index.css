@@ -46,7 +46,12 @@
   }
   
   .logo-title {
-    @apply text-3xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+    @apply text-2xl font-black tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-normal;
+    min-height: 2.5rem;
+    display: block;
+    padding: 0.5rem 0;
+    overflow: visible;
+    line-height: 1.4;
   }
   
   .logo-subtitle {
