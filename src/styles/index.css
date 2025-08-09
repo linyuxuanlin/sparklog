@@ -75,6 +75,23 @@
     font-family: 'Impact', 'Arial Black', 'Helvetica Neue', Arial, sans-serif;
     transform: skew(-8deg, 0deg);
     letter-spacing: 0.08em;
+    /* 浮雕凸起效果 */
+    text-shadow: 
+      1px 1px 0px rgba(255, 255, 255, 0.8),
+      2px 2px 0px rgba(59, 130, 246, 0.3),
+      3px 3px 2px rgba(0, 0, 0, 0.1),
+      4px 4px 4px rgba(0, 0, 0, 0.05);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  }
+  
+  /* 深色模式下的浮雕效果 */
+  .dark .logo-title {
+    text-shadow: 
+      1px 1px 0px rgba(0, 0, 0, 0.3),
+      2px 2px 0px rgba(96, 165, 250, 0.2),
+      3px 3px 2px rgba(255, 255, 255, 0.05),
+      4px 4px 4px rgba(255, 255, 255, 0.02);
+    filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.05));
   }
   
   .logo-subtitle {
