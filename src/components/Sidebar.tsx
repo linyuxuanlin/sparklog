@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   to={item.path}
                   className={`flex items-center px-4 py-3 rounded-lg transition-colors font-semibold ${
                     isActive
-                      ? 'bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border-r-2 border-blue-700 dark:border-blue-400'
+                      ? 'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                   onClick={onClose}
