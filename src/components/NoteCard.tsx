@@ -186,9 +186,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
   const [showExpandButton, setShowExpandButton] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
   const buttonRef = React.useRef<HTMLSpanElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   const contentRef = React.useRef<HTMLDivElement>(null)
+  const tagScrollRef = React.useRef<HTMLDivElement>(null)
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -199,6 +202,39 @@ const NoteCard: React.FC<NoteCardProps> = ({
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // 检测标签滚动状态
+  useEffect(() => {
+    const checkScrollState = () => {
+      if (tagScrollRef.current) {
+        const element = tagScrollRef.current
+        const scrollLeft = element.scrollLeft
+        const scrollWidth = element.scrollWidth
+        const clientWidth = element.clientWidth
+        
+        setCanScrollLeft(scrollLeft > 0)
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1) // -1 for rounding errors
+      }
+    }
+
+    const tagScrollElement = tagScrollRef.current
+    if (tagScrollElement) {
+      // 初始检测
+      checkScrollState()
+      
+      // 监听滚动事件
+      tagScrollElement.addEventListener('scroll', checkScrollState)
+      
+      // 监听内容变化
+      const resizeObserver = new ResizeObserver(checkScrollState)
+      resizeObserver.observe(tagScrollElement)
+      
+      return () => {
+        tagScrollElement.removeEventListener('scroll', checkScrollState)
+        resizeObserver.disconnect()
+      }
+    }
+  }, [note.tags, windowWidth])
 
   // 检测内容是否被截断以及按钮文字显示空间
   useEffect(() => {
@@ -295,12 +331,16 @@ const NoteCard: React.FC<NoteCardProps> = ({
       
              {/* 底部信息栏：标签、时间、状态 */}
        <div ref={containerRef} className="flex items-center justify-between mt-0">
-         {/* 第一组：标签显示 - 动态宽度，支持横向滚动 */}
-         <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{
-           width: note.tags && note.tags.length > 0 
-             ? Math.min(Math.max(note.tags.length * 60, 60), Math.max(windowWidth * 0.3, 120)) 
-             : 0
-         }}>
+                 {/* 第一组：标签显示 - 动态宽度，支持横向滚动，带渐隐效果 */}
+        <div 
+          className="relative"
+          style={{
+            width: note.tags && note.tags.length > 0 
+              ? Math.min(Math.max(note.tags.length * 60, 60), Math.max(windowWidth * 0.3, 120)) 
+              : 0
+          }}
+        >
+          <div ref={tagScrollRef} className="flex gap-1 overflow-x-auto scrollbar-hide relative" style={{ width: '100%' }}>
            {note.tags && note.tags.length > 0 && (
              note.tags.map((tag, index) => (
                <span
@@ -316,7 +356,16 @@ const NoteCard: React.FC<NoteCardProps> = ({
                </span>
              ))
            )}
-         </div>
+          </div>
+          {/* 左渐隐遮罩 */}
+          {canScrollLeft && (
+            <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white dark:from-gray-800 to-transparent pointer-events-none z-10" />
+          )}
+          {/* 右渐隐遮罩 */}
+          {canScrollRight && (
+            <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white dark:from-gray-800 to-transparent pointer-events-none z-10" />
+          )}
+        </div>
          
          {/* 第二组：全文/收起按钮 - 智能显示文字 */}
          {note.contentPreview && showExpandButton && (
