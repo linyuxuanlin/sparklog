@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Settings, BookOpen } from 'lucide-react'
+import { Settings, BookOpen, Shuffle } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 
 interface SidebarProps {
@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
   const menuItems = [
     { icon: BookOpen, label: '所有笔记', path: '/' },
+    { icon: Shuffle, label: '漫游', path: '/wander' },
     { icon: Settings, label: '设置', path: '/settings' },
   ]
 
@@ -48,7 +49,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         <ul className="space-y-3">
           {menuItems.map((item) => {
             const Icon = item.icon
-            const isActive = location.pathname === item.path
+            const isActive = item.path === '/' 
+              ? location.pathname === '/' || location.pathname === '/notes'
+              : location.pathname.startsWith(item.path)
             
             return (
               <li key={item.path}>

@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Layout from '@/components/Layout'
 import NotesPage from '@/pages/NotesPage'
+import WanderPage from '@/pages/WanderPage'
 import NoteEditPage from '@/pages/NoteEditPage'
 import SettingsPage from '@/pages/SettingsPage'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -27,6 +28,8 @@ function App() {
           {/* 首页直接显示所有笔记页面 */}
           <Route index element={<NotesPage />} />
           <Route path="notes" element={<NotesPage />} />
+          <Route path="wander" element={<WanderPage />} />
+          <Route path="wander/:noteId" element={<WanderPage />} />
           <Route path="note/new" element={<NoteEditPage />} />
           <Route path="note/edit/:title" element={<NoteEditPage />} />
           <Route path="note/:noteId" element={<NotesPage />} />

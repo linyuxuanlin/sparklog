@@ -69,6 +69,7 @@ interface NoteCardProps {
   note: Note
   onOpen: (note: Note) => void
   onTagClick?: (tag: string) => void
+  defaultExpanded?: boolean
 }
 
 // 格式化时间显示
@@ -179,10 +180,11 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
 const NoteCard: React.FC<NoteCardProps> = ({
   note,
   onOpen,
-  onTagClick
+  onTagClick,
+  defaultExpanded = false
 }) => {
   const { isLoggedIn } = useGitHub()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
   const [showExpandButton, setShowExpandButton] = useState(false)
