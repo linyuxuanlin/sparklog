@@ -371,51 +371,50 @@ const NoteCard: React.FC<NoteCardProps> = ({
           )}
         </div>
          
-         {/* 第二组：全文/收起按钮 - 智能显示文字 */}
-         {note.contentPreview && showExpandButton && !hideCollapseButton && (
-           <div className="flex-shrink-0 min-w-0 mx-3">
-             <span 
-               ref={buttonRef}
-               onClick={(e) => {
-                 e.stopPropagation()
-                 setIsExpanded(!isExpanded)
-               }}
-               className={`inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 h-7 ${showButtonText ? 'gap-1.5 min-w-[3.5rem]' : 'min-w-[2.5rem]'}`}
-             >
-               {isExpanded ? (
-                 <>
-                   <ChevronUp className="w-4 h-4" />
-                   {showButtonText && <span>收起</span>}
-                 </>
-               ) : (
-                 <>
-                   <ChevronDown className="w-4 h-4" />
-                   {showButtonText && <span>全文</span>}
-                 </>
-               )}
-             </span>
-           </div>
-         )}
-         
-         {/* 第三组：时间显示和公开状态 - 始终保持同一行 */}
+         {/* 第二组：时间显示、公开状态和全文/收起按钮 - 在右侧，按钮紧贴时间 */}
          <div className="flex flex-row items-center gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
-           <TimeDisplay note={note} />
-           {isLoggedIn() && (
-             <div className="flex items-center space-x-1">
-               {note.isPrivate ? (
-                 <>
-                   <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                   <span className="text-red-600 dark:text-red-400">私密</span>
-                 </>
-               ) : (
-                 <>
-                   <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                   <span className="text-green-600 dark:text-green-400">公开</span>
-                 </>
-               )}
-             </div>
-           )}
-         </div>
+            {/* 全文/收起按钮 - 放在时间显示的左侧 */}
+            {note.contentPreview && showExpandButton && !hideCollapseButton && (
+              <div className="flex-shrink-0 min-w-0 mr-2">
+                <span 
+                  ref={buttonRef}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setIsExpanded(!isExpanded)
+                  }}
+                  className={`inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 h-7 ${showButtonText ? 'gap-1.5 min-w-[3.5rem]' : 'min-w-[2.5rem]'}`}
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      {showButtonText && <span>收起</span>}
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      {showButtonText && <span>全文</span>}
+                    </>
+                  )}
+                </span>
+              </div>
+            )}
+            <TimeDisplay note={note} />
+            {isLoggedIn() && (
+              <div className="flex items-center space-x-1">
+                {note.isPrivate ? (
+                  <>
+                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    <span className="text-red-600 dark:text-red-400">私密</span>
+                  </>
+                ) : (
+                  <>
+                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-green-600 dark:text-green-400">公开</span>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
        </div>
     </div>
   )
