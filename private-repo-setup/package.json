@@ -1,0 +1,21 @@
+{
+  "name": "sparklog-notes",
+  "version": "1.0.0",
+  "description": "SparkLog 私密笔记仓库 - 存储笔记文件并生成静态内容",
+  "type": "module",
+  "scripts": {
+    "build:static": "node scripts/build-static-content.js"
+  },
+  "keywords": [
+    "sparklog",
+    "notes",
+    "static-site",
+    "markdown"
+  ],
+  "author": "SparkLog User",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

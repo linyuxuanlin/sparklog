@@ -46,10 +46,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
       
-      - name: 安装依赖
-        run: npm ci
+      - name: 跳过依赖安装
+        run: echo "✅ 无需安装依赖，构建脚本使用 Node.js 内置模块"
       
       - name: 检查 notes 目录
         id: check-notes

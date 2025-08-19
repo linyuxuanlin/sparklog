@@ -21,29 +21,28 @@ cp build-static-content.yml .github/workflows/
 
 ### 2. 构建脚本
 
-将 `scripts/build-static-content.js` 从这个公开仓库复制到您的私有仓库：
+将 `build-static-content.js` 复制到您的私有仓库的 `scripts/` 目录：
 
 ```bash
 # 在您的私有笔记仓库中
 mkdir -p scripts
-# 复制 build-static-content.js 文件
+cp build-static-content.js scripts/
 ```
 
 ### 3. package.json 配置
 
-在您的私有仓库根目录创建 `package.json`：
+将 `package.json` 复制到您的私有仓库根目录：
 
-```json
-{
-  "name": "sparklog-notes",
-  "version": "1.0.0",
-  "description": "SparkLog 私有笔记仓库",
-  "scripts": {
-    "build:static": "node scripts/build-static-content.js"
-  },
-  "dependencies": {}
-}
+```bash
+# 在您的私有笔记仓库根目录
+cp package.json ./
 ```
+
+这个 package.json 文件包含：
+- 项目基本信息
+- 构建脚本配置
+- Node.js 版本要求
+- 无外部依赖（使用 Node.js 内置模块）
 
 ## 🚀 工作流程
 
