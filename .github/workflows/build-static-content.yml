@@ -1,0 +1,193 @@
+name: 构建静态内容
+
+on:
+  # 当 notes 目录下的文件发生变化时触发
+  push:
+    paths:
+      - 'notes/**'
+      - 'scripts/build-static-content.js'
+    branches:
+      - main
+  
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: '强制重新构建所有内容'
+        required: false
+        default: 'false'
+        type: boolean
+
+# 设置权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 并发控制，确保同时只有一个构建在运行
+concurrency:
+  group: "build-static-content"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: 构建静态内容
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          # 获取完整历史记录，用于检测文件变更
+          fetch-depth: 0
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 检查 notes 目录
+        id: check-notes
+        run: |
+          if [ -d "notes" ] && [ "$(ls -A notes)" ]; then
+            echo "notes_exist=true" >> $GITHUB_OUTPUT
+            echo "notes_count=$(find notes -name "*.md" | wc -l)" >> $GITHUB_OUTPUT
+          else
+            echo "notes_exist=false" >> $GITHUB_OUTPUT
+            echo "notes_count=0" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 创建示例内容（如果需要）
+        if: steps.check-notes.outputs.notes_exist == 'false'
+        run: |
+          echo "📝 notes 目录为空，构建脚本将创建示例内容"
+      
+      - name: 构建静态内容
+        run: |
+          echo "🚀 开始构建静态内容..."
+          echo "📊 发现 ${{ steps.check-notes.outputs.notes_count }} 个笔记文件"
+          node scripts/build-static-content.js
+      
+      - name: 验证构建输出
+        run: |
+          echo "🔍 验证构建输出..."
+          ls -la public/
+          
+          if [ -f "public/public-notes.json" ]; then
+            echo "✅ public-notes.json 生成成功"
+            echo "📄 公开笔记文件大小: $(du -h public/public-notes.json | cut -f1)"
+          else
+            echo "❌ public-notes.json 未生成"
+            exit 1
+          fi
+          
+          if [ -f "public/all-notes.json" ]; then
+            echo "✅ all-notes.json 生成成功"
+            echo "📄 完整笔记文件大小: $(du -h public/all-notes.json | cut -f1)"
+          else
+            echo "❌ all-notes.json 未生成"
+            exit 1
+          fi
+          
+          if [ -f "public/build-info.json" ]; then
+            echo "✅ build-info.json 生成成功"
+            echo "📋 构建信息:"
+            cat public/build-info.json | jq '.'
+          else
+            echo "❌ build-info.json 未生成"
+            exit 1
+          fi
+      
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-content
+          path: |
+            public/public-notes.json
+            public/all-notes.json
+            public/build-info.json
+          retention-days: 30
+      
+      - name: 提交构建结果
+        run: |
+          # 配置 git
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # 检查是否有变更
+          if git diff --quiet HEAD -- public/; then
+            echo "📝 没有检测到构建输出的变更"
+          else
+            echo "📝 检测到构建输出变更，提交更新"
+            git add public/public-notes.json public/all-notes.json public/build-info.json
+            git commit -m "🤖 自动更新静态内容 [skip ci]
+            
+            📊 构建统计:
+            - 构建时间: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            - 笔记数量: ${{ steps.check-notes.outputs.notes_count }}
+            - 触发方式: ${{ github.event_name }}
+            
+            🔗 相关提交: ${{ github.sha }}"
+            
+            git push
+            echo "✅ 静态内容更新完成"
+          fi
+      
+      - name: 构建状态通知
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🎉 静态内容构建成功完成！"
+            echo "📊 处理了 ${{ steps.check-notes.outputs.notes_count }} 个笔记文件"
+          else
+            echo "❌ 静态内容构建失败"
+          fi
+
+  # 如果启用了 GitHub Pages，可以自动部署
+  deploy-pages:
+    name: 部署到 GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 安装依赖
+        run: npm ci
+      
+      - name: 构建前端应用
+        run: npm run build
+      
+      - name: 下载静态内容
+        uses: actions/download-artifact@v4
+        with:
+          name: static-content
+          path: dist/
+      
+      - name: 设置 Pages
+        uses: actions/configure-pages@v4
+      
+      - name: 上传到 Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+      
+      - name: 部署到 GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

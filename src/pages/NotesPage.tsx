@@ -2,17 +2,30 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import { useNotes } from '@/hooks/useNotes'
+import { useStaticNotes } from '@/hooks/useStaticNotes'
+import { NoteOperationsService } from '@/services/noteOperationsService'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import TagFilter from '@/components/TagFilter'
+import BuildStatusIndicator from '@/components/BuildStatusIndicator'
 import { Note } from '@/types/Note'
-import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
+import { showMessage } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
-  const { isLoading, isConnected, isLoggedIn } = useGitHub()
-  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
+  const { isLoading, isConnected, isLoggedIn, getGitHubToken } = useGitHub()
+  const { 
+    notes, 
+    isLoading: isLoadingNotes, 
+    error, 
+    buildInfo, 
+    buildStatus, 
+    refreshNotes, 
+    searchNotes, 
+    filterNotesByTags,
+    getAllTags 
+  } = useStaticNotes()
+  const noteOperationsService = NoteOperationsService.getInstance()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
@@ -31,11 +44,11 @@ const NotesPage: React.FC = () => {
   useEffect(() => {
     if (location.state?.shouldRefresh) {
       console.log('检测到需要刷新笔记列表')
-      loadNotes(true)
+      refreshNotes()
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }
-  }, [location.state, loadNotes, navigate, location.pathname])
+  }, [location.state, refreshNotes, navigate, location.pathname])
 
   // 处理URL参数，如果有noteId参数则打开对应的笔记
   useEffect(() => {
@@ -115,7 +128,7 @@ const NotesPage: React.FC = () => {
     }
   }
 
-  // 删除笔记
+  // 删除笔记 - 新架构中暂时禁用直接删除
   const handleDeleteNote = async (note: Note) => {
     setConfirmingDelete(note.sha)
   }
@@ -125,14 +138,25 @@ const NotesPage: React.FC = () => {
     setDeletingNote(note.sha)
     
     try {
-      await deleteNote(note)
-      handleShowMessage('笔记删除成功！', 'success')
+      const adminToken = getGitHubToken()
+      const result = await noteOperationsService.deleteNote(note.path, note.sha, adminToken || undefined)
       
-      // 如果当前有模态框打开，关闭它并跳转到首页
-      if (isModalOpen) {
-        setIsModalOpen(false)
-        setSelectedNote(null)
-        navigate('/')
+      if (result.success) {
+        handleShowMessage(result.message, 'success')
+        
+        // 如果当前有模态框打开，关闭它
+        if (isModalOpen) {
+          setIsModalOpen(false)
+          setSelectedNote(null)
+          navigate('/')
+        }
+        
+        // 延迟刷新，给GitHub Actions一些时间
+        setTimeout(() => {
+          refreshNotes()
+        }, 2000)
+      } else {
+        handleShowMessage(result.message, 'error')
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '请重试'
@@ -143,7 +167,7 @@ const NotesPage: React.FC = () => {
   }
 
   // 过滤笔记
-  let filteredNotes = filterNotes(notes, searchQuery)
+  let filteredNotes = searchNotes(searchQuery)
   filteredNotes = filterNotesByTags(filteredNotes, selectedTags)
 
   if (isLoading) {
@@ -242,6 +266,15 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
+      {/* 构建状态指示器 */}
+      <div className="mb-4 flex justify-center">
+        <BuildStatusIndicator
+          buildStatus={buildStatus}
+          buildInfo={buildInfo}
+          onRefresh={refreshNotes}
+        />
+      </div>
+
       {/* 搜索栏、标签筛选和按钮区域 */}
       <div className="mb-6 space-y-4">
         {/* 搜索栏和标签筛选 */}
@@ -260,7 +293,7 @@ const NotesPage: React.FC = () => {
             
             {/* 标签筛选按钮 */}
             <TagFilter
-              availableTags={getAllTags(notes)}
+              availableTags={getAllTags()}
               selectedTags={selectedTags}
               onTagsChange={setSelectedTags}
             />
@@ -324,15 +357,14 @@ const NotesPage: React.FC = () => {
         <div className="text-center py-12">
           <AlertCircle className="w-16 h-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            {isRateLimited ? 'GitHub API 访问限制' : '加载出错'}
+            加载出错
           </h2>
           <div className="max-w-md mx-auto text-gray-600 dark:text-gray-400 mb-6">
             <p className="mb-4">{error}</p>
-            {isRateLimited}
           </div>
           <div className="space-x-3">
             <button
-              onClick={() => loadNotes(true)}
+              onClick={refreshNotes}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               重试
@@ -371,54 +403,16 @@ const NotesPage: React.FC = () => {
         </div>
              ) : (
          <div className="space-y-4">
-           <div className="grid gap-4">
-             {filteredNotes.map((note, index) => (
-                             <NoteCard
+                     <div className="grid gap-4">
+            {filteredNotes.map((note, index) => (
+              <NoteCard
                 key={`${note.sha}-${note.path || index}`}
                 note={note}
                 onOpen={handleOpenNote}
                 onTagClick={handleTagClick}
               />
-             ))}
-           </div>
-           
-                       {/* 加载更多按钮 - 只在没有筛选条件时显示 */}
-            {hasMoreNotes && selectedTags.length === 0 && !searchQuery && (
-              <div className="text-center pt-6">
-                <button
-                  onClick={loadMoreNotes}
-                  disabled={isLoadingNotes}
-                  className="btn-neomorphic inline-flex items-center"
-                >
-                  {isLoadingNotes ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      加载中...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      更多想法
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-           
-           {/* 加载进度显示 */}
-           {isLoadingNotes && loadingProgress.total > 0 && (
-             <div className="text-center py-4">
-               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
-                 <div 
-                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                   style={{ width: `${(loadingProgress.current / loadingProgress.total) * 100}%` }}
-                 ></div>
-               </div>
-               <p className="text-sm text-gray-600 dark:text-gray-400">
-                 正在加载笔记... {loadingProgress.current}/{loadingProgress.total}
-               </p>
-             </div>
-           )}
+            ))}
+          </div>
          </div>
        )}
       
