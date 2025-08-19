@@ -28,6 +28,9 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
     if (!timeString) return ''
     try {
       const date = new Date(timeString)
+      if (isNaN(date.getTime())) {
+        return timeString // 如果解析失败，返回原始字符串
+      }
       return date.toLocaleString('zh-CN', {
         month: '2-digit',
         day: '2-digit',
@@ -43,14 +46,22 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
   const getContentFreshness = () => {
     if (!buildInfo?.buildTime) return 'unknown'
     
-    const buildTime = new Date(buildInfo.buildTime)
-    const now = new Date()
-    const diffMinutes = Math.floor((now.getTime() - buildTime.getTime()) / (1000 * 60))
-    
-    if (diffMinutes < 5) return 'fresh'
-    if (diffMinutes < 30) return 'recent'
-    if (diffMinutes < 120) return 'moderate'
-    return 'stale'
+    try {
+      const buildTime = new Date(buildInfo.buildTime)
+      if (isNaN(buildTime.getTime())) {
+        return 'unknown'
+      }
+      
+      const now = new Date()
+      const diffMinutes = Math.floor((now.getTime() - buildTime.getTime()) / (1000 * 60))
+      
+      if (diffMinutes < 5) return 'fresh'
+      if (diffMinutes < 30) return 'recent'
+      if (diffMinutes < 120) return 'moderate'
+      return 'stale'
+    } catch {
+      return 'unknown'
+    }
   }
 
   const freshness = getContentFreshness()
@@ -58,7 +69,11 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
   // 如果正在构建
   if (buildStatus.isBuilding) {
     return (
-      <div className={`inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-700 ${className}`}>
+      <div 
+        role="status"
+        aria-live="polite"
+        className={`inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-700 ${className}`}
+      >
         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
         <span className="text-sm font-medium">内容编译中...</span>
       </div>
@@ -68,7 +83,11 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
   // 如果有错误
   if (buildStatus.error) {
     return (
-      <div className={`inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-700 ${className}`}>
+      <div 
+        role="status"
+        aria-live="polite"
+        className={`inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-700 ${className}`}
+      >
         <AlertCircle className="w-4 h-4 mr-2" />
         <span className="text-sm font-medium">构建失败</span>
         {onRefresh && (
@@ -109,6 +128,8 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
     if (!buildInfo) return '内容状态未知'
     
     const timeText = formatTime(buildInfo.buildTime)
+    if (!timeText) return '内容状态未知'
+    
     switch (freshness) {
       case 'fresh': return `内容最新 (${timeText})`
       case 'recent': return `内容较新 (${timeText})`
@@ -119,7 +140,11 @@ const BuildStatusIndicator: React.FC<BuildStatusIndicatorProps> = ({
   }
 
   return (
-    <div className={`inline-flex items-center px-3 py-1.5 rounded-lg border ${getStatusColor()} ${className}`}>
+    <div 
+      role="status"
+      aria-live="polite"
+      className={`inline-flex items-center px-3 py-1.5 rounded-lg border ${getStatusColor()} ${className}`}
+    >
       {getStatusIcon()}
       <span className="text-sm font-medium">{getStatusText()}</span>
       

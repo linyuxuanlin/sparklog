@@ -11,7 +11,11 @@ vi.mock('@/hooks/useGitHub', () => ({
   }))
 }))
 
-vi.mock('@/services/staticContentService')
+vi.mock('@/services/staticContentService', () => ({
+  StaticContentService: {
+    getInstance: vi.fn()
+  }
+}))
 
 describe('useStaticNotes', () => {
   let mockStaticService: any

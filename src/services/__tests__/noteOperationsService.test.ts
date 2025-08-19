@@ -15,6 +15,36 @@ vi.mock('@/utils/noteUtils', () => ({
   formatTagsForFrontMatter: vi.fn((tags) => tags.length === 0 ? '[]' : tags.join(', '))
 }))
 
+// Mock R2 相关服务
+vi.mock('@/services/r2StorageService', () => ({
+  R2StorageService: {
+    getInstance: vi.fn(() => ({
+      initialize: vi.fn().mockResolvedValue(true),
+      uploadNote: vi.fn().mockResolvedValue(true),
+      deleteNote: vi.fn().mockResolvedValue(true)
+    }))
+  }
+}))
+
+vi.mock('@/services/encryptionService', () => ({
+  EncryptionService: {
+    getInstance: vi.fn(() => ({
+      encrypt: vi.fn().mockResolvedValue({ success: true, data: 'encrypted-content' }),
+      decrypt: vi.fn().mockResolvedValue({ success: true, data: 'decrypted-content' })
+    }))
+  }
+}))
+
+vi.mock('@/services/noteCacheService', () => ({
+  NoteCacheService: {
+    getInstance: vi.fn(() => ({
+      cacheNote: vi.fn(),
+      getCachedNote: vi.fn(),
+      removeCachedNoteByNote: vi.fn()
+    }))
+  }
+}))
+
 describe('NoteOperationsService', () => {
   let service: NoteOperationsService
   let fetchMock: any

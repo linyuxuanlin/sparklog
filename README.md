@@ -33,13 +33,11 @@
 
 请首先配置以下服务：
 
-1. [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于存放静态编译后的内容。
-
-2. [**配置 Cloudflare R2 存储**](https://dash.cloudflare.com/?to=/:account/r2) 用于存放笔记源文件：
+1. [**配置 Cloudflare R2 存储**](https://dash.cloudflare.com/?to=/:account/r2) 用于存放笔记源文件：
    - 创建一个 R2 存储桶（例如：`sparklog-notes`）
    - 获取 Account ID、Access Key ID 和 Secret Access Key
 
-3. [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
+2. [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
    获取的令牌格式例如：`ghp_xxxxxxxx`。
 
 > **新架构安全说明**: 
@@ -61,7 +59,7 @@ npm install
 # 创建环境变量文件
 cp .env.example .env  # 复制环境变量模板
 
-# 编辑 .env 文件，配置 GitHub 仓库信息
+# 编辑 .env 文件，配置 GitHub 和 R2 存储信息
 
 # 检查配置（推荐先运行）
 npm run check-config
@@ -101,7 +99,7 @@ npm run dev
 | 变量名                      | 说明                         | 示例                          |
 | --------------------------- | ---------------------------- | ----------------------------- |
 | `VITE_REPO_OWNER`           | GitHub 用户名或组织名        | `linyuxuanlin`                |
-| `VITE_REPO_NAME`            | 笔记仓库名称                 | `sparklog-notes`              |
+| `VITE_REPO_NAME`            | 当前仓库名称                 | `sparklog`                    |
 | `VITE_GITHUB_TOKEN`         | GitHub 个人访问令牌          | `ghp_xxxxxxxx`                |
 | `VITE_ADMIN_PASSWORD`       | 管理员密码                   | `your-secure-password`        |
 | `VITE_R2_ACCOUNT_ID`        | Cloudflare R2 Account ID     | `1234567890abcdef`            |

@@ -2,6 +2,16 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { StaticContentService } from '../staticContentService'
 import { mockPublicNotesData, mockAllNotesData, mockBuildInfo } from '../../test/utils'
 
+// Mock 配置模块
+vi.mock('@/config/env', () => ({
+  getStaticContentConfigFromEnv: () => ({
+    staticBranch: 'static-content',
+    fallbackBranch: 'main',
+    cacheDuration: 300000,
+    retryAttempts: 3
+  })
+}))
+
 describe('StaticContentService', () => {
   let service: StaticContentService
   let fetchMock: any
@@ -45,6 +55,14 @@ describe('StaticContentService', () => {
     })
 
     it('应该在请求失败时抛出错误', async () => {
+      // 模拟第一次请求失败（静态分支）
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found'
+      })
+      
+      // 模拟第二次请求也失败（主分支）
       fetchMock.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -55,6 +73,7 @@ describe('StaticContentService', () => {
     })
 
     it('应该验证数据格式', async () => {
+      // 模拟第一次请求返回无效数据（静态分支）
       fetchMock.mockResolvedValueOnce({
         ok: true,
         json: vi.fn().mockResolvedValue({ invalid: 'data' })
@@ -140,6 +159,13 @@ describe('StaticContentService', () => {
     })
 
     it('应该在文件不存在时返回null', async () => {
+      // 模拟第一次请求失败（静态分支）
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 404
+      })
+      
+      // 模拟第二次请求也失败（主分支）
       fetchMock.mockResolvedValueOnce({
         ok: false,
         status: 404
@@ -168,12 +194,24 @@ describe('StaticContentService', () => {
     })
 
     it('应该在获取构建信息失败时返回错误状态', async () => {
-      fetchMock.mockRejectedValueOnce(new Error('Network error'))
+      // 模拟第一次请求失败（静态分支）
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error'
+      })
+      
+      // 模拟第二次请求也失败（主分支）
+      fetchMock.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error'
+      })
 
       const result = await service.getBuildStatus()
 
       expect(result.isBuilding).toBe(false)
-      expect(result.error).toBe('Network error')
+      expect(result.error).toBe('Internal Server Error')
     })
   })
 
@@ -285,12 +323,13 @@ describe('StaticContentService', () => {
     it('应该过滤掉没有标签的笔记', () => {
       const notesWithoutTags = [
         ...mockAllNotesData.notes,
-        { ...mockAllNotesData.notes[0], tags: [] }
+        { ...mockAllNotesData.notes[0], tags: [], name: 'no-tags-note.md' }
       ]
       const result = service.filterNotesByTags(notesWithoutTags, ['测试'])
 
       expect(result).toHaveLength(1)
       expect(result[0].tags).toContain('测试')
+      expect(result[0].name).not.toBe('no-tags-note.md')
     })
   })
 

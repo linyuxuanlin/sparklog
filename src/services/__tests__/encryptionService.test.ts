@@ -2,7 +2,7 @@
  * 加密服务单元测试
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { EncryptionService } from '../encryptionService'
 
 // Mock Web Crypto API for testing
@@ -29,13 +29,13 @@ global.TextEncoder = class TextEncoder {
   encode(input: string): Uint8Array {
     return new Uint8Array(Array.from(input).map(char => char.charCodeAt(0)))
   }
-}
+} as any
 
 global.TextDecoder = class TextDecoder {
   decode(input: Uint8Array): string {
     return String.fromCharCode(...Array.from(input))
   }
-}
+} as any
 
 // Mock btoa/atob
 global.btoa = (str: string) => Buffer.from(str, 'binary').toString('base64')
@@ -59,8 +59,8 @@ describe('EncryptionService', () => {
     const encryptedContent = '---ENCRYPTED---\nencrypteddata123\n---END-ENCRYPTED---'
     const plainContent = 'This is plain text'
 
-    expect(encryptionService.hasEncryptionMarker(encryptedContent)).toBe(true)
-    expect(encryptionService.hasEncryptionMarker(plainContent)).toBe(false)
+    expect(encryptionService.isEncrypted(encryptedContent)).toBe(true)
+    expect(encryptionService.isEncrypted(plainContent)).toBe(false)
   })
 
   it('应该能提取加密内容', () => {
@@ -79,8 +79,8 @@ describe('EncryptionService', () => {
   })
 
   it('应该能检测内容是否可能已加密', () => {
-    // Base64 格式的内容
-    const possibleEncrypted = 'YWJjZGVmZ2hpamtsbW5vcA=='
+    // 使用更长的 Base64 字符串来模拟加密内容
+    const possibleEncrypted = 'YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo='
     const plainText = 'This is plain text with special chars: 中文'
 
     expect(encryptionService.isEncrypted(possibleEncrypted)).toBe(true)

@@ -274,6 +274,11 @@ export class EncryptionService {
    */
   isEncrypted(content: string): boolean {
     try {
+      // 首先检查是否包含加密标记
+      if (content.includes('---ENCRYPTED---') && content.includes('---END-ENCRYPTED---')) {
+        return true
+      }
+      
       // 尝试解析为 Base64，如果成功且长度合理，可能是加密内容
       const decoded = atob(content)
       

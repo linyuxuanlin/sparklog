@@ -3,7 +3,7 @@ import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useStaticNotes } from '@/hooks/useStaticNotes'
 import { StaticContentService } from '@/services/staticContentService'
-import { NoteCacheService, CachedNote } from '@/services/noteCacheService'
+import { NoteCacheService } from '@/services/noteCacheService'
 import { NoteOperationsService } from '@/services/noteOperationsService'
 import { EncryptionService } from '@/services/encryptionService'
 import { getR2ConfigFromEnv } from '@/config/env'
@@ -44,7 +44,7 @@ interface UseR2NotesReturn {
 }
 
 export const useR2Notes = (): UseR2NotesReturn => {
-  const { isLoggedIn, isLoading: isGitHubLoading, getGitHubToken } = useGitHub()
+  const { isLoading: isGitHubLoading, getGitHubToken } = useGitHub()
   const staticNotesHook = useStaticNotes()
   
   const [mergedNotes, setMergedNotes] = useState<Note[]>([])
@@ -123,7 +123,7 @@ export const useR2Notes = (): UseR2NotesReturn => {
     }
 
     try {
-      const adminToken = getGitHubToken()
+      const adminToken = getGitHubToken() || undefined
       const result = await noteOpsService.createNote(noteData, adminToken, adminPassword)
       
       if (result.success) {
