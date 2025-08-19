@@ -221,7 +221,7 @@ cp .env.example .env
 | 变量名                      | 说明                         | 示例                          |
 | --------------------------- | ---------------------------- | ----------------------------- |
 | `VITE_GITHUB_TOKEN`        | GitHub 个人访问令牌          | `ghp_xxxxxxxxxxxxxxxxxxxx`    |
-| `VITE_ADMIN_PASSWORD`      | 管理员密码（至少12位）       | `your-secure-password`        |
+| `VITE_ADMIN_PASSWORD`      | 管理员密码                   | `your-secure-password`        |
 | `VITE_R2_ACCOUNT_ID`       | Cloudflare R2 Account ID     | `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6` |
 | `VITE_R2_ACCESS_KEY_ID`    | R2 Access Key ID             | `AKIAIOSFODNN7EXAMPLE`        |
 | `VITE_R2_SECRET_ACCESS_KEY`| R2 Secret Access Key         | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
