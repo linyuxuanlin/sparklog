@@ -72,22 +72,17 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从静态文件加载公开笔记数据')
-      // 首先尝试从本地路径加载（用于本地开发和Cloudflare Pages部署）
-      let response = await fetch('/public-notes.json?' + Date.now())
+      console.log('从私密仓库加载公开笔记数据')
+      const repoOwner = import.meta.env.VITE_REPO_OWNER
+      const repoName = import.meta.env.VITE_REPO_NAME
       
-      // 如果本地文件不存在，尝试从GitHub仓库获取
-      if (!response.ok && response.status === 404) {
-        console.log('本地静态文件不存在，尝试从GitHub仓库获取')
-        const repoOwner = import.meta.env.VITE_REPO_OWNER
-        const repoName = import.meta.env.VITE_REPO_NAME
-        
-        if (repoOwner && repoName) {
-          const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/public-notes.json?${Date.now()}`
-          console.log('从GitHub获取静态文件:', githubUrl)
-          response = await fetch(githubUrl)
-        }
+      if (!repoOwner || !repoName) {
+        throw new Error('未配置仓库信息 (VITE_REPO_OWNER, VITE_REPO_NAME)')
       }
+      
+      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/public-notes.json?${Date.now()}`
+      console.log('从私密仓库获取公开笔记:', githubUrl)
+      const response = await fetch(githubUrl)
       
       if (!response.ok) {
         throw new Error(`加载公开笔记失败: ${response.status} ${response.statusText}`)
@@ -134,22 +129,17 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从静态文件加载完整笔记数据')
-      // 首先尝试从本地路径加载（用于本地开发和Cloudflare Pages部署）
-      let response = await fetch('/all-notes.json?' + Date.now())
+      console.log('从私密仓库加载完整笔记数据')
+      const repoOwner = import.meta.env.VITE_REPO_OWNER
+      const repoName = import.meta.env.VITE_REPO_NAME
       
-      // 如果本地文件不存在，尝试从GitHub仓库获取
-      if (!response.ok && response.status === 404) {
-        console.log('本地完整笔记文件不存在，尝试从GitHub仓库获取')
-        const repoOwner = import.meta.env.VITE_REPO_OWNER
-        const repoName = import.meta.env.VITE_REPO_NAME
-        
-        if (repoOwner && repoName) {
-          const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/all-notes.json?${Date.now()}`
-          console.log('从GitHub获取完整笔记文件:', githubUrl)
-          response = await fetch(githubUrl)
-        }
+      if (!repoOwner || !repoName) {
+        throw new Error('未配置仓库信息 (VITE_REPO_OWNER, VITE_REPO_NAME)')
       }
+      
+      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/all-notes.json?${Date.now()}`
+      console.log('从私密仓库获取完整笔记:', githubUrl)
+      const response = await fetch(githubUrl)
       
       if (!response.ok) {
         // 如果完整笔记文件不存在，降级到公开笔记
@@ -196,22 +186,18 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从静态文件加载构建信息')
-      // 首先尝试从本地路径加载（用于本地开发和Cloudflare Pages部署）
-      let response = await fetch('/build-info.json?' + Date.now())
+      console.log('从私密仓库加载构建信息')
+      const repoOwner = import.meta.env.VITE_REPO_OWNER
+      const repoName = import.meta.env.VITE_REPO_NAME
       
-      // 如果本地文件不存在，尝试从GitHub仓库获取
-      if (!response.ok && response.status === 404) {
-        console.log('本地构建信息文件不存在，尝试从GitHub仓库获取')
-        const repoOwner = import.meta.env.VITE_REPO_OWNER
-        const repoName = import.meta.env.VITE_REPO_NAME
-        
-        if (repoOwner && repoName) {
-          const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/build-info.json?${Date.now()}`
-          console.log('从GitHub获取构建信息文件:', githubUrl)
-          response = await fetch(githubUrl)
-        }
+      if (!repoOwner || !repoName) {
+        console.warn('未配置仓库信息，无法获取构建信息')
+        return null
       }
+      
+      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/build-info.json?${Date.now()}`
+      console.log('从私密仓库获取构建信息:', githubUrl)
+      const response = await fetch(githubUrl)
       
       if (!response.ok) {
         if (response.status === 404) {
