@@ -21,6 +21,10 @@ interface ImportMetaEnv {
   readonly VITE_APP_DESCRIPTION?: string
   readonly VITE_DEFAULT_THEME?: string
   
+  // CORS 代理配置
+  readonly VITE_ENABLE_CORS_PROXY?: string
+  readonly VITE_CORS_PROXY_URL?: string
+  
   // 系统环境变量
   readonly DEV?: boolean
   readonly MODE?: string

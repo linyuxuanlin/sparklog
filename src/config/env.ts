@@ -111,4 +111,14 @@ export const isDevelopment = (): boolean => {
 // 获取当前域名
 export const getCurrentDomain = (): string => {
   return window.location.hostname
+}
+
+// 检查 CORS 代理是否启用
+export const isCorsProxyEnabled = (): boolean => {
+  return import.meta.env.VITE_ENABLE_CORS_PROXY === 'true'
+}
+
+// 获取 CORS 代理 URL
+export const getCorsProxyUrl = (): string | null => {
+  return import.meta.env.VITE_CORS_PROXY_URL || null
 } 
