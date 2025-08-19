@@ -1,7 +1,7 @@
 {
   "name": "sparklog",
   "version": "0.1.0",
-  "description": "一个基于GitHub仓库的静态笔记应用",
+  "description": "一个基于 Cloudflare R2 存储的优雅免维护想法记录应用",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,12 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-config": "node -e \"console.log('环境变量检查:'); console.log('R2 配置:', process.env.VITE_R2_ACCOUNT_ID ? '已配置' : '未配置'); console.log('GitHub Token:', process.env.VITE_GITHUB_TOKEN ? '已配置' : '未配置'); console.log('管理员密码:', process.env.VITE_ADMIN_PASSWORD ? '已配置' : '未配置');\"",
+    "build:static": "echo '静态内容构建功能已移至 GitHub Actions，请确保配置了正确的环境变量'",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.9",
@@ -28,13 +33,17 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
+    "@vitest/coverage-v8": "^1.6.1",
+    "@vitest/ui": "^1.6.1",
     "autoprefixer": "^10.4.14",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
+    "jsdom": "^26.1.0",
     "postcss": "^8.4.27",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vitest": "^1.6.1"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -43,10 +52,11 @@
   "keywords": [
     "notes",
     "markdown",
-    "github",
+    "cloudflare-r2",
     "static",
     "react",
-    "typescript"
+    "typescript",
+    "sparklog"
   ],
   "author": "Your Name",
   "license": "MIT",
