@@ -1,0 +1,9 @@
+{
+  "buildTime": "2025-08-19T16:19:33.609Z",
+  "totalNotes": 0,
+  "publicNotes": 0,
+  "privateNotes": 0,
+  "source": "Cloudflare Pages",
+  "environment": "Local",
+  "message": "这是 Cloudflare Pages 构建生成的静态内容文件。实际笔记内容需要通过 R2 存储获取。"
+}
