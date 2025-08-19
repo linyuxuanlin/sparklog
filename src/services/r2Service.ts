@@ -86,6 +86,26 @@ export class R2Service {
       return this.cache.get(cacheKey)!.data
     }
 
+    // 优先使用公共 R2 URL（如果配置了）
+    if (this.config.publicUrl) {
+      try {
+        console.log('尝试使用公共 R2 URL...')
+        const publicUrl = `${this.config.publicUrl}?list-type=2&prefix=${encodeURIComponent(prefix)}`
+        const response = await fetch(publicUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        
+        if (response.ok) {
+          console.log('公共 R2 URL 请求成功')
+          return await this.parseListResponse(response, cacheKey)
+        }
+      } catch (error) {
+        console.log('公共 R2 URL 请求失败:', error)
+      }
+    }
+
     const endpoint = this.getEndpoint()
     const url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
     
@@ -138,28 +158,7 @@ export class R2Service {
     }
 
     try {
-      // 策略 3: 使用公共 R2 URL（如果配置了）
-      if (this.config.publicUrl) {
-        console.log('尝试使用公共 R2 URL...')
-        const publicUrl = `${this.config.publicUrl}?list-type=2&prefix=${encodeURIComponent(prefix)}`
-        response = await fetch(publicUrl, {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit'
-        })
-        
-        if (response.ok) {
-          console.log('公共 R2 URL 请求成功')
-          return await this.parseListResponse(response, cacheKey)
-        }
-      }
-    } catch (error) {
-      console.log('公共 R2 URL 请求失败:', error)
-      lastError = error as Error
-    }
-
-    try {
-      // 策略 4: CORS 代理（最后手段）
+      // 策略 3: CORS 代理（最后手段）
       if (isCorsProxyEnabled()) {
         const proxyUrl = getCorsProxyUrl()
         if (proxyUrl) {
@@ -244,6 +243,28 @@ export class R2Service {
       return this.cache.get(cacheKey)!.data
     }
 
+    // 优先使用公共 R2 URL（如果配置了）
+    if (this.config.publicUrl) {
+      try {
+        console.log('尝试使用公共 R2 URL 获取文件内容...')
+        const publicUrl = `${this.config.publicUrl}/${encodeURIComponent(path)}`
+        const response = await fetch(publicUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        
+        if (response.ok) {
+          console.log('公共 R2 URL 获取文件内容成功')
+          const content = await response.text()
+          this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
+          return content
+        }
+      } catch (error) {
+        console.log('公共 R2 URL 获取文件内容失败:', error)
+      }
+    }
+
     const endpoint = this.getEndpoint()
     const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
     
@@ -277,30 +298,7 @@ export class R2Service {
     }
 
     try {
-      // 策略 2: 使用公共 R2 URL（如果配置了）
-      if (this.config.publicUrl) {
-        console.log('尝试使用公共 R2 URL 获取文件内容...')
-        const publicUrl = `${this.config.publicUrl}/${encodeURIComponent(path)}`
-        response = await fetch(publicUrl, {
-          method: 'GET',
-          mode: 'cors',
-          credentials: 'omit'
-        })
-        
-        if (response.ok) {
-          console.log('公共 R2 URL 获取文件内容成功')
-          const content = await response.text()
-          this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
-          return content
-        }
-      }
-    } catch (error) {
-      console.log('公共 R2 URL 获取文件内容失败:', error)
-      lastError = error as Error
-    }
-
-    try {
-      // 策略 3: CORS 代理（最后手段）
+      // 策略 2: CORS 代理（最后手段）
       if (isCorsProxyEnabled()) {
         const proxyUrl = getCorsProxyUrl()
         if (proxyUrl) {

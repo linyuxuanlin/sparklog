@@ -21,6 +21,11 @@ const R2_BUCKET_NAME = process.env.VITE_R2_BUCKET_NAME
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
   console.error('❌ R2 环境变量未配置')
+  console.error('请确保以下环境变量已设置:')
+  console.error('  - VITE_R2_ACCOUNT_ID')
+  console.error('  - VITE_R2_ACCESS_KEY_ID')
+  console.error('  - VITE_R2_SECRET_ACCESS_KEY')
+  console.error('  - VITE_R2_BUCKET_NAME')
   process.exit(1)
 }
 
@@ -40,6 +45,8 @@ const s3Client = new S3Client({
 async function listNotes() {
   try {
     console.log('📋 正在从 R2 获取笔记列表...')
+    console.log(`🔗 连接端点: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`)
+    console.log(`📦 存储桶: ${R2_BUCKET_NAME}`)
     
     const command = new ListObjectsV2Command({
       Bucket: R2_BUCKET_NAME,
@@ -158,6 +165,24 @@ async function generateStaticContent() {
     
     if (files.length === 0) {
       console.log('⚠️ 没有找到笔记文件')
+      // 创建空的静态内容文件
+      const emptyNotes = []
+      const outputDir = path.join(__dirname, '..', 'dist')
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true })
+      }
+      
+      fs.writeFileSync(
+        path.join(outputDir, 'public-notes.json'),
+        JSON.stringify(emptyNotes, null, 2)
+      )
+      
+      fs.writeFileSync(
+        path.join(outputDir, 'all-notes.json'),
+        JSON.stringify(emptyNotes, null, 2)
+      )
+      
+      console.log('📝 已创建空的静态内容文件')
       return
     }
     
@@ -227,6 +252,8 @@ async function generateStaticContent() {
       publicNotes: publicNotes.length,
       privateNotes: allNotes.length - publicNotes.length,
       source: 'R2 Storage',
+      environment: process.env.NODE_ENV || 'production',
+      buildVersion: process.env.BUILD_VERSION || '1.0.0',
     }
     
     fs.writeFileSync(
@@ -239,6 +266,10 @@ async function generateStaticContent() {
     console.log('  - public-notes.json')
     console.log('  - all-notes.json')
     console.log('  - build-info.json')
+    console.log(`📊 构建统计:`)
+    console.log(`  - 总笔记数: ${allNotes.length}`)
+    console.log(`  - 公开笔记: ${publicNotes.length}`)
+    console.log(`  - 私密笔记: ${allNotes.length - publicNotes.length}`)
     
   } catch (error) {
     console.error('❌ 生成静态内容失败:', error)
@@ -253,6 +284,8 @@ async function main() {
   try {
     console.log('🌐 Cloudflare Pages 构建开始...')
     console.log(`📦 目标存储桶: ${R2_BUCKET_NAME}`)
+    console.log(`🔧 环境: ${process.env.NODE_ENV || 'production'}`)
+    console.log(`📅 构建时间: ${new Date().toISOString()}`)
     
     await generateStaticContent()
     

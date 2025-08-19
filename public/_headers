@@ -57,3 +57,48 @@ build-info.json:
   Cache-Control: no-cache, no-store, must-revalidate
   Pragma: no-cache
   Expires: 0
+
+# 静态内容文件
+/public-notes.json
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Cache-Control, Pragma
+  Cache-Control: public, max-age=300, s-maxage=600
+  Content-Type: application/json
+
+/all-notes.json
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Cache-Control, Pragma
+  Cache-Control: public, max-age=300, s-maxage=600
+  Content-Type: application/json
+
+/build-info.json
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Cache-Control, Pragma
+  Cache-Control: public, max-age=300, s-maxage=600
+  Content-Type: application/json
+
+# 主应用文件
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# 图标和静态资源
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable
+
+# 预检请求处理
+/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Content-Type, Authorization, Cache-Control, Pragma

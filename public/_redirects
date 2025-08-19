@@ -1,14 +1,9 @@
-# 健康检查端点（放在最前面以提高性能）
-/health    /health.json   200
-/status    /build-info.json   200
+# Cloudflare Pages 重定向配置
 
-# 静态资源重定向
-/assets/*    /assets/:splat    200
-
-# SPA 路由重定向 - 所有未匹配的路由都重定向到 index.html
-# 注意：避免与具体路径冲突，使用更精确的匹配
-/notes/:slug    /index.html   200
-/admin/:path    /index.html   200
-
-# 通用 SPA 回退（放在最后）
+# SPA 路由支持 - 所有非静态文件的请求都重定向到 index.html
 /*    /index.html   200
+
+# 静态内容文件直接访问
+/public-notes.json    /public-notes.json   200
+/all-notes.json       /all-notes.json      200
+/build-info.json      /build-info.json     200

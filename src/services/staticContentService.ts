@@ -34,8 +34,8 @@ export class StaticContentService {
   }
 
   // 获取静态分支的 URL
-    private getStaticBranchUrl(): string {
-    // 现在使用 Cloudflare Pages，直接从当前域名获取静态内容
+  private getStaticBranchUrl(): string {
+    // 在 Cloudflare Pages 环境下，静态内容文件应该在同一域名下
     const currentOrigin = window.location.origin
     return `${currentOrigin}`
   }

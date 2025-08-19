@@ -197,6 +197,74 @@ SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
 - **编译完成**: 自动用最新静态内容替换缓存
 - **私密笔记**: 前端使用管理员密码实时解密显示
 
+## 🚨 常见问题解决
+
+### CORS 错误问题
+
+如果你在 Cloudflare Pages 部署后遇到以下错误：
+
+```
+Access to fetch at '...' has been blocked by CORS policy
+Failed to load resource: net::ERR_FAILED
+```
+
+**解决方案**：
+
+1. **确保构建命令正确**：
+   - 在 Cloudflare Pages 中设置构建命令为：`npm run build:pages`
+   - 不是 `npm run build`，这很重要！
+
+2. **检查环境变量**：
+   - 确保所有 R2 环境变量都已正确设置
+   - 特别是 `VITE_R2_PUBLIC_URL` 如果配置了的话
+
+3. **验证静态内容生成**：
+   - 构建完成后，检查 `dist` 目录是否包含：
+     - `public-notes.json`
+     - `all-notes.json` 
+     - `build-info.json`
+
+4. **清除浏览器缓存**：
+   - 强制刷新页面或清除浏览器缓存
+   - 检查浏览器开发者工具的网络面板
+
+5. **检查 Cloudflare Pages 设置**：
+   - 确保 `_headers` 和 `_redirects` 文件正确配置
+   - 这些文件控制 CORS 策略和路由重定向
+
+### 笔记无法加载
+
+如果网站显示但没有笔记内容：
+
+1. **检查 R2 存储桶**：
+   - 确认存储桶中有 `notes/` 目录
+   - 确认目录中有 `.md` 文件
+
+2. **检查构建日志**：
+   - 在 Cloudflare Pages 控制台查看构建日志
+   - 确认 `build-pages.js` 脚本执行成功
+
+3. **手动触发构建**：
+   - 在 Cloudflare Pages 中手动触发重新构建
+   - 或者推送一个小的代码变更到 GitHub
+
+### 部署验证
+
+部署完成后，可以使用验证脚本检查是否成功：
+
+```bash
+# 验证部署（替换为你的实际 URL）
+npm run verify-deployment https://your-domain.pages.dev
+
+# 或者直接运行
+node scripts/verify-deployment.js https://your-domain.pages.dev
+```
+
+验证脚本会检查：
+- 静态内容文件是否可访问
+- CORS 配置是否正确
+- 缓存策略是否生效
+
 ## ⚙️ 环境变量配置
 
 ### 环境变量模板
