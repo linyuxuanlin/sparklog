@@ -5,6 +5,7 @@
  */
 
 import { Note } from '@/types/Note'
+import { getStaticContentConfigFromEnv } from '@/config/env'
 
 interface BuildInfo {
   buildTime: string
@@ -72,7 +73,7 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从私密仓库加载公开笔记数据')
+      console.log('从静态内容分支加载公开笔记数据')
       const repoOwner = import.meta.env.VITE_REPO_OWNER
       const repoName = import.meta.env.VITE_REPO_NAME
       
@@ -80,9 +81,19 @@ export class StaticContentService {
         throw new Error('未配置仓库信息 (VITE_REPO_OWNER, VITE_REPO_NAME)')
       }
       
-      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/public-notes.json?${Date.now()}`
-      console.log('从私密仓库获取公开笔记:', githubUrl)
-      const response = await fetch(githubUrl)
+      // 首先尝试从静态内容分支获取，如果失败则从主分支获取
+      const staticConfig = getStaticContentConfigFromEnv()
+      let githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${staticConfig.staticBranch}/public/public-notes.json?${Date.now()}`
+      console.log('从静态内容分支获取公开笔记:', githubUrl)
+      
+      let response = await fetch(githubUrl)
+      
+      // 如果静态内容分支不存在，回退到主分支
+      if (!response.ok && response.status === 404) {
+        console.log('静态内容分支不存在，从主分支获取')
+        githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/public-notes.json?${Date.now()}`
+        response = await fetch(githubUrl)
+      }
       
       if (!response.ok) {
         throw new Error(`加载公开笔记失败: ${response.status} ${response.statusText}`)
@@ -129,7 +140,7 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从私密仓库加载完整笔记数据')
+      console.log('从静态内容分支加载完整笔记数据')
       const repoOwner = import.meta.env.VITE_REPO_OWNER
       const repoName = import.meta.env.VITE_REPO_NAME
       
@@ -137,9 +148,19 @@ export class StaticContentService {
         throw new Error('未配置仓库信息 (VITE_REPO_OWNER, VITE_REPO_NAME)')
       }
       
-      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/all-notes.json?${Date.now()}`
-      console.log('从私密仓库获取完整笔记:', githubUrl)
-      const response = await fetch(githubUrl)
+      // 首先尝试从静态内容分支获取，如果失败则从主分支获取
+      const staticConfig = getStaticContentConfigFromEnv()
+      let githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${staticConfig.staticBranch}/public/all-notes.json?${Date.now()}`
+      console.log('从静态内容分支获取完整笔记:', githubUrl)
+      
+      let response = await fetch(githubUrl)
+      
+      // 如果静态内容分支不存在，回退到主分支
+      if (!response.ok && response.status === 404) {
+        console.log('静态内容分支不存在，从主分支获取')
+        githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/all-notes.json?${Date.now()}`
+        response = await fetch(githubUrl)
+      }
       
       if (!response.ok) {
         // 如果完整笔记文件不存在，降级到公开笔记
@@ -186,7 +207,7 @@ export class StaticContentService {
     }
 
     try {
-      console.log('从私密仓库加载构建信息')
+      console.log('从静态内容分支加载构建信息')
       const repoOwner = import.meta.env.VITE_REPO_OWNER
       const repoName = import.meta.env.VITE_REPO_NAME
       
@@ -195,9 +216,19 @@ export class StaticContentService {
         return null
       }
       
-      const githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/build-info.json?${Date.now()}`
-      console.log('从私密仓库获取构建信息:', githubUrl)
-      const response = await fetch(githubUrl)
+      // 首先尝试从静态内容分支获取，如果失败则从主分支获取
+      const staticConfig = getStaticContentConfigFromEnv()
+      let githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${staticConfig.staticBranch}/public/build-info.json?${Date.now()}`
+      console.log('从静态内容分支获取构建信息:', githubUrl)
+      
+      let response = await fetch(githubUrl)
+      
+      // 如果静态内容分支不存在，回退到主分支
+      if (!response.ok && response.status === 404) {
+        console.log('静态内容分支不存在，从主分支获取')
+        githubUrl = `https://raw.githubusercontent.com/${repoOwner}/${repoName}/main/public/build-info.json?${Date.now()}`
+        response = await fetch(githubUrl)
+      }
       
       if (!response.ok) {
         if (response.status === 404) {

@@ -78,18 +78,38 @@ async function processNoteFile(filePath, fileName) {
     // 从文件名提取时间戳
     const timestamp = fileName.replace(/\.md$/, '');
     
+    // 检查是否为私密笔记
+    const isPrivate = frontmatter.private || false;
+    
+    // 对于私密笔记，保持加密内容，不显示明文
+    let processedContent = bodyContent;
+    let processedContentPreview = contentPreview;
+    
+    if (isPrivate) {
+      // 检查是否有加密标记
+      if (content.includes('---ENCRYPTED---') && content.includes('---END-ENCRYPTED---')) {
+        // 私密笔记保持加密状态，只显示加密标记
+        processedContent = '🔒 这是私密笔记，需要管理员密码才能查看内容';
+        processedContentPreview = '🔒 私密笔记';
+      } else {
+        // 私密笔记但没有加密标记，显示提示
+        processedContent = '⚠️ 私密笔记未加密，请使用管理员密码加密';
+        processedContentPreview = '⚠️ 未加密的私密笔记';
+      }
+    }
+    
     return {
       name: fileName,
       path: `notes/${fileName}`,
       title: timestamp, // 使用时间戳作为标题
-      content: bodyContent,
-      contentPreview,
-      fullContent: content,
+      content: processedContent,
+      contentPreview: processedContentPreview,
+      fullContent: content, // 保持原始内容（包括加密内容）
       created_at: frontmatter.created_at || new Date().toISOString(),
       updated_at: frontmatter.updated_at || new Date().toISOString(),
       createdDate: frontmatter.created_at,
       updatedDate: frontmatter.updated_at,
-      isPrivate: frontmatter.private || false,
+      isPrivate: isPrivate,
       tags: frontmatter.tags || [],
       // 生成一个简单的 ID（实际项目中可能需要更复杂的逻辑）
       sha: Buffer.from(filePath + content).toString('base64').substring(0, 40),

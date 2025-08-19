@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X, Activity } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import { useStaticNotes } from '@/hooks/useStaticNotes'
-import { NoteOperationsService } from '@/services/noteOperationsService'
+import { useR2Notes } from '@/hooks/useR2Notes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import TagFilter from '@/components/TagFilter'
 import BuildStatusIndicator from '@/components/BuildStatusIndicator'
 import { Note } from '@/types/Note'
 import { showMessage } from '@/utils/noteUtils'
-import { checkEnvVarsConfigured } from '@/config/env'
+import { checkEnvVarsConfigured, checkR2ConfigComplete } from '@/config/env'
 
 const NotesPage: React.FC = () => {
-  const { isLoading, isConnected, isLoggedIn, getGitHubToken } = useGitHub()
+  const { isLoading, isConnected, isLoggedIn } = useGitHub()
   const { 
     notes, 
     isLoading: isLoadingNotes, 
     error, 
     buildInfo, 
-    buildStatus, 
+    buildStatus,
+    cacheStats,
     refreshNotes, 
     searchNotes, 
     filterNotesByTags,
-    getAllTags 
-  } = useStaticNotes()
-  const noteOperationsService = NoteOperationsService.getInstance()
+    getAllTags,
+    deleteNote,
+    isR2Enabled
+  } = useR2Notes()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
@@ -88,6 +89,16 @@ const NotesPage: React.FC = () => {
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
+    // 如果启用了 R2 存储，检查 R2 配置
+    if (isR2Enabled) {
+      const r2ConfigComplete = checkR2ConfigComplete()
+      if (!r2ConfigComplete) {
+        setConfigModalType('env')
+        setShowConfigModal(true)
+        return
+      }
+    }
+    
     // 检查 GitHub 连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
       // 检查环境变量是否已配置
@@ -128,7 +139,7 @@ const NotesPage: React.FC = () => {
     }
   }
 
-  // 删除笔记 - 新架构中暂时禁用直接删除
+  // 删除笔记 - 使用 R2 存储的新架构
   const handleDeleteNote = async (note: Note) => {
     setConfirmingDelete(note.sha)
   }
@@ -138,11 +149,10 @@ const NotesPage: React.FC = () => {
     setDeletingNote(note.sha)
     
     try {
-      const adminToken = getGitHubToken()
-      const result = await noteOperationsService.deleteNote(note.path, note.sha, adminToken || undefined)
+      const success = await deleteNote(note)
       
-      if (result.success) {
-        handleShowMessage(result.message, 'success')
+      if (success) {
+        handleShowMessage('笔记删除成功！内容已从 R2 存储删除，正在更新静态内容...', 'success')
         
         // 如果当前有模态框打开，关闭它
         if (isModalOpen) {
@@ -151,12 +161,12 @@ const NotesPage: React.FC = () => {
           navigate('/')
         }
         
-        // 延迟刷新，给 GitHub Actions 一些时间
+        // 延迟刷新，给构建一些时间
         setTimeout(() => {
           refreshNotes()
         }, 2000)
       } else {
-        handleShowMessage(result.message, 'error')
+        handleShowMessage('删除笔记失败，请重试', 'error')
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '请重试'
@@ -266,13 +276,33 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* 构建状态指示器 */}
-      <div className="mb-4 flex justify-center">
+      {/* 构建状态和缓存状态指示器 */}
+      <div className="mb-4 flex justify-center items-center space-x-4">
         <BuildStatusIndicator
           buildStatus={buildStatus}
           buildInfo={buildInfo}
           onRefresh={refreshNotes}
         />
+        
+        {/* R2 存储和缓存状态指示器 */}
+        {isR2Enabled && (
+          <div className="inline-flex items-center px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-700">
+            <Activity className="w-4 h-4 mr-2" />
+            <span className="text-sm font-medium">R2 存储已启用</span>
+          </div>
+        )}
+        
+        {/* 缓存统计 */}
+        {cacheStats.totalCached > 0 && (
+          <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center space-x-2 text-xs">
+              <span>缓存: {cacheStats.totalCached}</span>
+              {cacheStats.building > 0 && (
+                <span className="text-orange-600 dark:text-orange-300">构建中: {cacheStats.building}</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 搜索栏、标签筛选和按钮区域 */}

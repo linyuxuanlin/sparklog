@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Save, Loader2, AlertCircle, Settings } from 'lucide-react'
+import { Save, Loader2, AlertCircle, Settings, Lock } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { decodeBase64Content } from '@/utils/noteUtils'
-import { checkEnvVarsConfigured } from '@/config/env'
+import { checkEnvVarsConfigured, checkR2ConfigComplete } from '@/config/env'
 import TagManager from '@/components/TagManager'
-import { useStaticNotes } from '@/hooks/useStaticNotes'
-import { NoteOperationsService } from '@/services/noteOperationsService'
+import { useR2Notes } from '@/hooks/useR2Notes'
+import { Note } from '@/types/Note'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
-  const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
-  const { getAllTags: getAvailableTags } = useStaticNotes()
-  const noteOperationsService = NoteOperationsService.getInstance()
+  const { isConnected, isLoading: isGitHubLoading, isLoggedIn } = useGitHub()
+  const { 
+    notes, 
+    getAllTags: getAvailableTags, 
+    createNote, 
+    updateNote,
+    decryptNote,
+    isR2Enabled 
+  } = useR2Notes()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
@@ -25,8 +29,10 @@ const NoteEditPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
-  const [originalFile, setOriginalFile] = useState<{ path: string; sha: string } | null>(null)
-  const [originalCreatedAt, setOriginalCreatedAt] = useState<string>('')
+  const [originalNote, setOriginalNote] = useState<Note | null>(null)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [showPasswordInput, setShowPasswordInput] = useState(false)
+  const [needsDecryption, setNeedsDecryption] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 直接使用isLoggedIn，现在它已经是稳定的了
