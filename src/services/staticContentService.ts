@@ -34,22 +34,10 @@ export class StaticContentService {
   }
 
   // 获取静态分支的 URL
-  private getStaticBranchUrl(): string {
+    private getStaticBranchUrl(): string {
+    // 现在使用 Cloudflare Pages，直接从当前域名获取静态内容
     const currentOrigin = window.location.origin
-    const staticBranch = getStaticBranch()
-    
-    // 如果是 GitHub Pages，使用特定的 URL 格式
-    if (currentOrigin.includes('github.io')) {
-      const repoName = currentOrigin.split('/').pop()
-      return `https://raw.githubusercontent.com/${repoName}/${staticBranch}`
-    }
-    
-    // 对于自定义域名，使用环境变量中的仓库信息
-    // 如果没有配置，则使用默认的 linyuxuanlin/sparklog 仓库
-    const repoOwner = import.meta.env.VITE_REPO_OWNER || 'linyuxuanlin'
-    const repoName = import.meta.env.VITE_REPO_NAME || 'sparklog'
-    
-    return `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${staticBranch}`
+    return `${currentOrigin}`
   }
 
   // 获取公开笔记的静态内容

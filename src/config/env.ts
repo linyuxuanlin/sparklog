@@ -1,11 +1,7 @@
 // 环境变量配置
 // 支持本地开发(.env文件)和Cloudflare Pages环境变量
 
-export interface RepoConfig {
-  owner: string
-  repo: string
-  description: string
-}
+
 
 export interface R2Config {
   accountId: string
@@ -25,29 +21,7 @@ export const checkEnvVarsConfigured = (): boolean => {
   return !!(r2Config && adminPassword)
 }
 
-// 从环境变量获取仓库配置
-export const getRepoConfigFromEnv = (): RepoConfig | null => {
-  // 支持多种环境变量格式
-  const owner = import.meta.env.VITE_REPO_OWNER || 
-                import.meta.env.VITE_GITHUB_OWNER ||
-                import.meta.env.REPO_OWNER ||
-                import.meta.env.GITHUB_OWNER
 
-  const repo = import.meta.env.VITE_REPO_NAME || 
-               import.meta.env.VITE_GITHUB_REPO ||
-               import.meta.env.REPO_NAME ||
-               import.meta.env.GITHUB_REPO
-
-  if (owner && repo) {
-    return {
-      owner,
-      repo,
-      description: 'SparkLog公开笔记仓库'
-    }
-  }
-
-  return null
-}
 
 
 
@@ -77,10 +51,7 @@ export const getR2Config = (): R2Config | null => {
   return null
 }
 
-// 获取静态内容分支名称
-export const getStaticBranch = (): string => {
-  return import.meta.env.VITE_STATIC_BRANCH || 'static-content'
-}
+
 
 // 获取应用标题
 export const getAppTitle = (): string => {

@@ -12,7 +12,6 @@ interface ImportMetaEnv {
   readonly VITE_R2_PUBLIC_URL?: string
   
   // 应用配置
-  readonly VITE_STATIC_BRANCH?: string
   readonly VITE_APP_TITLE?: string
   readonly VITE_APP_DESCRIPTION?: string
   readonly VITE_DEFAULT_THEME?: string

@@ -266,42 +266,9 @@ describe('StaticContentService', () => {
     })
   })
 
-  describe('getStaticBranchUrl', () => {
-    it('should generate correct URL for GitHub Pages', async () => {
-      // Mock GitHub Pages URL
-      Object.defineProperty(global, 'window', {
-        value: {
-          location: {
-            origin: 'https://username.github.io'
-          }
-        },
-        writable: true
-      })
-
-      const mockNotes = [{ id: 'note-1', title: 'Test Note' }]
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockNotes),
-        headers: {
-          get: vi.fn((key) => {
-            if (key === 'content-type') return 'application/json'
-            return null
-          })
-        }
-      })
-
-      await staticContentService.getPublicNotes()
-      
-      // Check if the fetch was called with the correct GitHub Pages URL format
-      expect(mockFetch).toHaveBeenCalledWith(
-        'https://raw.githubusercontent.com/username.github.io/static-content/public-notes.json',
-        expect.any(Object)
-      )
-    })
-
-    it('should generate correct URL for other platforms', async () => {
-      // Mock other platform URL
+    describe('getStaticBranchUrl', () => {
+    it('should generate correct URL for current domain', async () => {
+      // Mock current domain
       Object.defineProperty(global, 'window', {
         value: {
           location: {
@@ -327,9 +294,8 @@ describe('StaticContentService', () => {
       await staticContentService.getPublicNotes()
       
       // Check if the fetch was called with the correct URL format
-      // 对于自定义域名，我们使用默认的 GitHub 仓库
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://raw.githubusercontent.com/linyuxuanlin/sparklog/static-content/public-notes.json',
+        'https://example.com/public-notes.json',
         expect.any(Object)
       )
     })

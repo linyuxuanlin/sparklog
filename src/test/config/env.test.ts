@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   checkEnvVarsConfigured,
-  getRepoConfigFromEnv,
   getAdminPassword,
   getR2Config,
-  getStaticBranch,
   getAppTitle,
   getAppDescription,
   getDefaultTheme,
@@ -65,40 +63,7 @@ describe('Environment Configuration', () => {
 
   })
 
-  describe('getRepoConfigFromEnv', () => {
-    it('should return repo config when env vars are set', () => {
-      ;(import.meta.env as any).VITE_REPO_OWNER = 'test-owner'
-      ;(import.meta.env as any).VITE_REPO_NAME = 'test-repo'
 
-      const result = getRepoConfigFromEnv()
-      
-      expect(result).toEqual({
-        owner: 'test-owner',
-        repo: 'test-repo',
-        description: 'SparkLog公开笔记仓库'
-      })
-    })
-
-    it('should support alternative env var names', () => {
-      ;(import.meta.env as any).VITE_GITHUB_OWNER = 'test-owner'
-      ;(import.meta.env as any).VITE_GITHUB_REPO = 'test-repo'
-
-      const result = getRepoConfigFromEnv()
-      
-      expect(result).toEqual({
-        owner: 'test-owner',
-        repo: 'test-repo',
-        description: 'SparkLog公开笔记仓库'
-      })
-    })
-
-    it('should return null when env vars are missing', () => {
-      // 不设置任何环境变量
-
-      const result = getRepoConfigFromEnv()
-      expect(result).toBeNull()
-    })
-  })
 
 
 
@@ -168,21 +133,7 @@ describe('Environment Configuration', () => {
     })
   })
 
-  describe('getStaticBranch', () => {
-    it('should return static branch from env', () => {
-      ;(import.meta.env as any).VITE_STATIC_BRANCH = 'custom-branch'
 
-      const result = getStaticBranch()
-      expect(result).toBe('custom-branch')
-    })
-
-    it('should return default value when env var is missing', () => {
-      // 不设置任何环境变量
-
-      const result = getStaticBranch()
-      expect(result).toBe('static-content')
-    })
-  })
 
   describe('getAppTitle', () => {
     it('should return app title from env', () => {
