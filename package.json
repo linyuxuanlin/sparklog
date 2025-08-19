@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit",
     "check-config": "node scripts/check-env.js",
     "verify-deployment": "node scripts/verify-deployment.js",
-    "build:pages": "npm run pre-build && npm run build && npm run post-build",
+    "build:pages": "npm run build && npm run pre-build && npm run post-build",
     "pre-build": "node scripts/build-pages.js",
     "post-build": "echo 'Cloudflare Pages 构建完成！'",
     "deploy:pages": "node scripts/deploy-pages.js deploy",

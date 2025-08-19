@@ -103,6 +103,8 @@ async function getFileContent(key) {
   }
 }
 
+
+
 /**
  * 解析笔记内容
  */
@@ -311,23 +313,11 @@ async function main() {
 }
 
 // 如果直接运行此脚本
-console.log('🔍 检查脚本执行模式...')
-console.log('  import.meta.url:', import.meta.url)
-console.log('  process.argv[1]:', process.argv[1])
-
 // 修复路径比较逻辑，支持 Windows 和 Unix 路径
 const scriptUrl = new URL(import.meta.url)
 const scriptPath = scriptUrl.pathname.replace(/^\//, '') // 移除开头的斜杠
 const argvPath = process.argv[1].replace(/\\/g, '/') // 将反斜杠转换为正斜杠
 
-console.log('  标准化路径:')
-console.log('    scriptPath:', scriptPath)
-console.log('    argvPath:', argvPath)
-console.log('  比较结果:', scriptPath === argvPath)
-
 if (scriptPath === argvPath) {
-  console.log('🚀 直接运行模式，调用主函数...')
   main()
-} else {
-  console.log('�� 模块导入模式，不调用主函数')
 }
