@@ -9,7 +9,9 @@ vi.mock('@/config/env', () => ({
     secretAccessKey: 'test-secret-access-key',
     bucketName: 'test-bucket',
     publicUrl: 'https://test.example.com'
-  }))
+  })),
+  isCorsProxyEnabled: vi.fn(() => false),
+  getCorsProxyUrl: vi.fn(() => null)
 }))
 
 describe('R2Service', () => {
@@ -95,13 +97,22 @@ describe('R2Service', () => {
     })
 
     it('should handle API errors', async () => {
+      // 新的 CORS 策略会尝试多种方法，所以需要 mock 所有尝试
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error'
+      })
+      mockFetch.mockResolvedValueOnce({
+        type: 'opaque' // no-cors 模式返回 opaque 响应
+      })
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error'
       })
 
-      await expect(r2Service.listFiles()).rejects.toThrow('R2 API 错误: 500 - Internal Server Error')
+      await expect(r2Service.listFiles()).rejects.toThrow('无法获取 R2 文件列表，所有 CORS 策略都失败')
     })
 
     it('should use cache for subsequent calls', async () => {
@@ -387,9 +398,13 @@ describe('R2Service', () => {
 
   describe('error handling', () => {
     it('should handle network errors gracefully', async () => {
+      // 新的 CORS 策略会尝试多种方法，所以需要 mock 所有尝试都失败
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      await expect(r2Service.listFiles()).rejects.toThrow('Network error')
+      await expect(r2Service.listFiles()).rejects.toThrow('无法获取 R2 文件列表，所有 CORS 策略都失败')
     })
 
     it('should handle malformed XML responses', async () => {

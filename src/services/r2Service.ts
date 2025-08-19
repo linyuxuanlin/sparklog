@@ -1,4 +1,4 @@
-import { getR2Config } from '@/config/env'
+import { getR2Config, isCorsProxyEnabled, getCorsProxyUrl } from '@/config/env'
 
 interface R2File {
   name: string
@@ -47,11 +47,19 @@ export class R2Service {
   }
 
   private getHeaders(additionalHeaders: Record<string, string> = {}): Record<string, string> {
-    return {
-      'Authorization': `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`,
-      'Content-Type': 'application/json',
-      ...additionalHeaders
+    const baseHeaders: Record<string, string> = {}
+    
+    // 只在需要时添加 Authorization 头，减少预检请求
+    if (this.config?.accessKeyId) {
+      baseHeaders['Authorization'] = `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`
     }
+    
+    // 只在明确指定时添加 Content-Type，避免不必要的预检请求
+    if (additionalHeaders['Content-Type']) {
+      baseHeaders['Content-Type'] = additionalHeaders['Content-Type']
+    }
+    
+    return { ...baseHeaders, ...additionalHeaders }
   }
 
   private isValidCache(cacheKey: string): boolean {
@@ -78,62 +86,146 @@ export class R2Service {
       return this.cache.get(cacheKey)!.data
     }
 
+    const endpoint = this.getEndpoint()
+    const url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
+    
+    // 智能 CORS 绕过策略
+    let response: Response | null = null
+    let lastError: Error | null = null
+
     try {
-      const endpoint = this.getEndpoint()
-      const url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
-      
-      const response = await fetch(url, {
+      // 策略 1: 标准 CORS 请求（最安全）
+      console.log('尝试标准 CORS 请求...')
+      response = await fetch(url, {
         method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
         headers: this.getHeaders()
       })
-
-      if (!response.ok) {
-        throw new Error(`R2 API 错误: ${response.status} - ${response.statusText}`)
-      }
-
-      const data = await response.text()
-      const parser = new DOMParser()
-      const xmlDoc = parser.parseFromString(data, 'text/xml')
       
-      const contents = xmlDoc.getElementsByTagName('Contents')
-      const files: R2File[] = []
+      if (response.ok) {
+        console.log('标准 CORS 请求成功')
+        return await this.parseListResponse(response, cacheKey)
+      }
+    } catch (error) {
+      console.log('标准 CORS 请求失败:', error)
+      lastError = error as Error
+    }
 
-      for (let i = 0; i < contents.length; i++) {
-        const content = contents[i]
-        const key = content.getElementsByTagName('Key')[0]?.textContent
-        const size = content.getElementsByTagName('Size')[0]?.textContent
-        const lastModified = content.getElementsByTagName('LastModified')[0]?.textContent
-        const etag = content.getElementsByTagName('ETag')[0]?.textContent
+    try {
+      // 策略 2: 无 CORS 请求（可能绕过某些限制）
+      console.log('尝试无 CORS 请求...')
+      response = await fetch(url, {
+        method: 'GET',
+        mode: 'no-cors',
+        credentials: 'omit',
+        headers: this.getHeaders()
+      })
+      
+      if (response.type === 'opaque') {
+        console.log('无 CORS 请求成功（响应类型: opaque）')
+        // 注意：opaque 响应无法读取内容，但可以确认请求成功
+        // 这里我们可以尝试其他策略或返回缓存数据
+        throw new Error('无 CORS 模式返回不透明响应，无法读取内容')
+      }
+    } catch (error) {
+      console.log('无 CORS 请求失败:', error)
+      lastError = error as Error
+    }
 
-        if (key && key.endsWith('.md')) {
-          files.push({
-            name: key.split('/').pop() || key,
-            path: key,
-            size: parseInt(size || '0'),
-            uploaded: lastModified || '',
-            etag: etag?.replace(/"/g, '') || ''
-          })
+    try {
+      // 策略 3: 使用公共 R2 URL（如果配置了）
+      if (this.config.publicUrl) {
+        console.log('尝试使用公共 R2 URL...')
+        const publicUrl = `${this.config.publicUrl}?list-type=2&prefix=${encodeURIComponent(prefix)}`
+        response = await fetch(publicUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        
+        if (response.ok) {
+          console.log('公共 R2 URL 请求成功')
+          return await this.parseListResponse(response, cacheKey)
         }
       }
-
-      // 按文件名中的时间戳排序（新到旧）
-      const sortedFiles = files.sort((a, b) => {
-        const timeA = a.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
-        const timeB = b.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
-        return timeB.localeCompare(timeA)
-      })
-
-      // 缓存结果
-      this.cache.set(cacheKey, {
-        data: sortedFiles,
-        timestamp: Date.now()
-      })
-
-      return sortedFiles
     } catch (error) {
-      console.error('获取 R2 文件列表失败:', error)
-      throw error
+      console.log('公共 R2 URL 请求失败:', error)
+      lastError = error as Error
     }
+
+    try {
+      // 策略 4: CORS 代理（最后手段）
+      if (isCorsProxyEnabled()) {
+        const proxyUrl = getCorsProxyUrl()
+        if (proxyUrl) {
+          console.log('使用 CORS 代理...')
+          const proxyFullUrl = `${proxyUrl}${encodeURIComponent(url)}`
+          response = await fetch(proxyFullUrl, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit'
+          })
+          
+          if (response.ok) {
+            console.log('CORS 代理请求成功')
+            return await this.parseListResponse(response, cacheKey)
+          }
+        } else {
+          throw new Error('CORS 代理模式已启用但未配置代理 URL')
+        }
+      }
+    } catch (error) {
+      console.log('CORS 代理请求失败:', error)
+      lastError = error as Error
+    }
+
+    // 所有策略都失败了
+    console.error('所有 CORS 绕过策略都失败了')
+    throw new Error(`无法获取 R2 文件列表，所有 CORS 策略都失败: ${lastError?.message || '未知错误'}`)
+  }
+
+  // 解析列表响应
+  private async parseListResponse(response: Response, cacheKey: string): Promise<R2File[]> {
+    const data = await response.text()
+    const parser = new DOMParser()
+    const xmlDoc = parser.parseFromString(data, 'text/xml')
+    
+    const contents = xmlDoc.getElementsByTagName('Contents')
+    const files: R2File[] = []
+
+    for (let i = 0; i < contents.length; i++) {
+      const content = contents[i]
+      const key = content.getElementsByTagName('Key')[0]?.textContent
+      const size = content.getElementsByTagName('Size')[0]?.textContent
+      const lastModified = content.getElementsByTagName('LastModified')[0]?.textContent
+      const etag = content.getElementsByTagName('ETag')[0]?.textContent
+
+      if (key && key.endsWith('.md')) {
+        files.push({
+          name: key.split('/').pop() || key,
+          path: key,
+          size: parseInt(size || '0'),
+          uploaded: lastModified || '',
+          etag: etag?.replace(/"/g, '') || ''
+        })
+      }
+    }
+
+    // 按文件名中的时间戳排序（新到旧）
+    const sortedFiles = files.sort((a, b) => {
+      const timeA = a.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
+      const timeB = b.name.replace(/\.md$/, '').split('-').slice(0, 6).join('-')
+      return timeB.localeCompare(timeA)
+    })
+
+    // 缓存结果
+    this.cache.set(cacheKey, {
+      data: sortedFiles,
+      timestamp: Date.now()
+    })
+
+    return sortedFiles
   }
 
   // 获取文件内容
@@ -148,35 +240,92 @@ export class R2Service {
       return this.cache.get(cacheKey)!.data
     }
 
+    const endpoint = this.getEndpoint()
+    const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
+    
+    // 智能 CORS 绕过策略
+    let response: Response | null = null
+    let lastError: Error | null = null
+
     try {
-      const endpoint = this.getEndpoint()
-      const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
-      
-      const response = await fetch(url, {
+      // 策略 1: 标准 CORS 请求（最安全）
+      console.log('尝试标准 CORS 请求获取文件内容...')
+      response = await fetch(url, {
         method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
         headers: this.getHeaders()
       })
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          return null
-        }
-        throw new Error(`R2 API 错误: ${response.status} - ${response.statusText}`)
-      }
-
-      const content = await response.text()
       
-      // 缓存结果
-      this.cache.set(cacheKey, {
-        data: content,
-        timestamp: Date.now()
-      })
-
-      return content
+      if (response.ok) {
+        console.log('标准 CORS 请求获取文件内容成功')
+        const content = await response.text()
+        this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
+        return content
+      }
+      
+      if (response.status === 404) {
+        return null
+      }
     } catch (error) {
-      console.error('获取 R2 文件内容失败:', error)
-      throw error
+      console.log('标准 CORS 请求获取文件内容失败:', error)
+      lastError = error as Error
     }
+
+    try {
+      // 策略 2: 使用公共 R2 URL（如果配置了）
+      if (this.config.publicUrl) {
+        console.log('尝试使用公共 R2 URL 获取文件内容...')
+        const publicUrl = `${this.config.publicUrl}/${encodeURIComponent(path)}`
+        response = await fetch(publicUrl, {
+          method: 'GET',
+          mode: 'cors',
+          credentials: 'omit'
+        })
+        
+        if (response.ok) {
+          console.log('公共 R2 URL 获取文件内容成功')
+          const content = await response.text()
+          this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
+          return content
+        }
+      }
+    } catch (error) {
+      console.log('公共 R2 URL 获取文件内容失败:', error)
+      lastError = error as Error
+    }
+
+    try {
+      // 策略 3: CORS 代理（最后手段）
+      if (isCorsProxyEnabled()) {
+        const proxyUrl = getCorsProxyUrl()
+        if (proxyUrl) {
+          console.log('使用 CORS 代理获取文件内容...')
+          const proxyFullUrl = `${proxyUrl}${encodeURIComponent(url)}`
+          response = await fetch(proxyFullUrl, {
+            method: 'GET',
+            mode: 'cors',
+            credentials: 'omit'
+          })
+          
+          if (response.ok) {
+            console.log('CORS 代理获取文件内容成功')
+            const content = await response.text()
+            this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
+            return content
+          }
+        } else {
+          throw new Error('CORS 代理模式已启用但未配置代理 URL')
+        }
+      }
+    } catch (error) {
+      console.log('CORS 代理获取文件内容失败:', error)
+      lastError = error as Error
+    }
+
+    // 所有策略都失败了
+    console.error('所有 CORS 绕过策略都失败了，无法获取文件内容')
+    throw new Error(`无法获取 R2 文件内容，所有 CORS 策略都失败: ${lastError?.message || '未知错误'}`)
   }
 
   // 上传文件
@@ -195,8 +344,11 @@ export class R2Service {
         finalContent = await this.encryptContent(content)
       }
 
+      // 使用 CORS 友好的请求配置
       const response = await fetch(url, {
         method: 'PUT',
+        mode: 'cors',
+        credentials: 'omit',
         headers: this.getHeaders({
           'Content-Length': finalContent.length.toString()
         }),
@@ -238,6 +390,8 @@ export class R2Service {
       
       const response = await fetch(url, {
         method: 'DELETE',
+        mode: 'cors',
+        credentials: 'omit',
         headers: this.getHeaders()
       })
 
