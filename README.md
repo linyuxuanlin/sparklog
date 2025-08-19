@@ -63,6 +63,9 @@ cp .env.example .env  # 复制环境变量模板
 
 # 编辑 .env 文件，配置 GitHub 仓库信息
 
+# 检查配置（推荐先运行）
+npm run check-config
+
 # 生成静态内容（首次运行必需）
 npm run build:static
 
@@ -232,6 +235,7 @@ SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
 - **[部署指南](./docs/DEPLOYMENT.md)** - 详细的部署说明和故障排除
 - **[架构原理](./docs/ARCHITECTURE.md)** - 技术架构和设计原理
 - **[开发指南](./docs/DEVELOPMENT.md)** - 开发环境搭建和贡献指南
+- **[配置指南](./docs/CONFIGURATION.md)** - 环境变量和服务配置详解
 
 ## 📄 许可证
 

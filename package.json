@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-config": "node scripts/check-config.js"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.9",
