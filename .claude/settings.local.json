@@ -12,7 +12,8 @@
       "Bash(npm test)",
       "Bash(rm:*)",
       "Bash(cp:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(touch:*)"
     ],
     "deny": []
   }
