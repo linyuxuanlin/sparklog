@@ -7,6 +7,7 @@
 
 import { fileURLToPath } from 'url'
 import path from 'path'
+import fs from 'fs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -62,7 +63,7 @@ function checkEnvironmentVariables() {
   console.log('\n📁 构建脚本检查:')
   const buildScriptPath = path.join(__dirname, '..', 'package.json')
   try {
-    const packageJson = JSON.parse(require('fs').readFileSync(buildScriptPath, 'utf8'))
+    const packageJson = JSON.parse(fs.readFileSync(buildScriptPath, 'utf8'))
     const scripts = packageJson.scripts || {}
     
     if (scripts['build:pages']) {
@@ -92,7 +93,7 @@ function checkEnvironmentVariables() {
   configFiles.forEach(file => {
     const filePath = path.join(__dirname, '..', file)
     try {
-      require('fs').accessSync(filePath)
+      fs.accessSync(filePath)
       console.log(`  ✅ ${file} 存在`)
     } catch (error) {
       console.log(`  ❌ ${file} 不存在`)

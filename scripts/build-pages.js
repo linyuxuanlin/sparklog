@@ -5,6 +5,9 @@
  * 从 R2 获取笔记并生成静态内容
  */
 
+// 加载环境变量
+import 'dotenv/config'
+
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3'
 import fs from 'fs'
 import path from 'path'
@@ -19,6 +22,14 @@ const R2_ACCESS_KEY_ID = process.env.VITE_R2_ACCESS_KEY_ID
 const R2_SECRET_ACCESS_KEY = process.env.VITE_R2_SECRET_ACCESS_KEY
 const R2_BUCKET_NAME = process.env.VITE_R2_BUCKET_NAME
 
+// 调试信息
+console.log('🔍 环境变量检查:')
+console.log('  VITE_R2_ACCOUNT_ID:', R2_ACCOUNT_ID ? '已设置' : '未设置')
+console.log('  VITE_R2_ACCESS_KEY_ID:', R2_ACCESS_KEY_ID ? '已设置' : '未设置')
+console.log('  VITE_R2_SECRET_ACCESS_KEY:', R2_SECRET_ACCESS_KEY ? '已设置' : '未设置')
+console.log('  VITE_R2_BUCKET_NAME:', R2_BUCKET_NAME ? '已设置' : '未设置')
+console.log('')
+
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
   console.error('❌ R2 环境变量未配置')
   console.error('请确保以下环境变量已设置:')
@@ -30,6 +41,7 @@ if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_N
 }
 
 // 初始化 S3 客户端（R2 兼容）
+console.log('🚀 初始化 S3 客户端...')
 const s3Client = new S3Client({
   region: 'auto',
   endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -38,6 +50,7 @@ const s3Client = new S3Client({
     secretAccessKey: R2_SECRET_ACCESS_KEY,
   },
 })
+console.log('✅ S3 客户端初始化完成')
 
 /**
  * 从 R2 获取所有笔记文件
@@ -54,6 +67,7 @@ async function listNotes() {
       MaxKeys: 1000,
     })
     
+    console.log('📡 发送 R2 请求...')
     const response = await s3Client.send(command)
     const files = response.Contents || []
     
@@ -297,6 +311,23 @@ async function main() {
 }
 
 // 如果直接运行此脚本
-if (import.meta.url === `file://${process.argv[1]}`) {
+console.log('🔍 检查脚本执行模式...')
+console.log('  import.meta.url:', import.meta.url)
+console.log('  process.argv[1]:', process.argv[1])
+
+// 修复路径比较逻辑，支持 Windows 和 Unix 路径
+const scriptUrl = new URL(import.meta.url)
+const scriptPath = scriptUrl.pathname.replace(/^\//, '') // 移除开头的斜杠
+const argvPath = process.argv[1].replace(/\\/g, '/') // 将反斜杠转换为正斜杠
+
+console.log('  标准化路径:')
+console.log('    scriptPath:', scriptPath)
+console.log('    argvPath:', argvPath)
+console.log('  比较结果:', scriptPath === argvPath)
+
+if (scriptPath === argvPath) {
+  console.log('🚀 直接运行模式，调用主函数...')
   main()
+} else {
+  console.log('�� 模块导入模式，不调用主函数')
 }

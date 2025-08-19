@@ -5,8 +5,6 @@
  * 验证 Cloudflare Pages 部署是否成功
  */
 
-import fetch from 'node-fetch'
-
 // 验证静态内容文件
 async function verifyStaticContent(baseUrl) {
   console.log(`🔍 验证静态内容文件: ${baseUrl}\n`)
