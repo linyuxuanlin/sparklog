@@ -1,6 +1,6 @@
 /**
  * 静态内容服务
- * 负责从预编译的静态JSON文件加载笔记数据
+ * 负责从预编译的静态 JSON 文件加载笔记数据
  * 支持公开内容和私密内容的分离加载
  */
 
@@ -29,7 +29,7 @@ interface BuildStatus {
 export class StaticContentService {
   private static instance: StaticContentService
   private cache: Map<string, { data: any, timestamp: number }> = new Map()
-  private readonly CACHE_DURATION = 5 * 60 * 1000 // 5分钟缓存
+  private readonly CACHE_DURATION = 5 * 60 * 1000 // 5 分钟缓存
   private buildStatusCache: { status: BuildStatus, timestamp: number } | null = null
 
   private constructor() {}
@@ -195,16 +195,16 @@ export class StaticContentService {
 
   /**
    * 检查构建状态
-   * 通过GitHub API检查是否有正在进行的构建
+   * 通过 GitHub API 检查是否有正在进行的构建
    */
   async getBuildStatus(): Promise<BuildStatus> {
     // 检查缓存（构建状态缓存时间较短）
-    if (this.buildStatusCache && Date.now() - this.buildStatusCache.timestamp < 30000) { // 30秒缓存
+    if (this.buildStatusCache && Date.now() - this.buildStatusCache.timestamp < 30000) { // 30 秒缓存
       return this.buildStatusCache.status
     }
 
     try {
-      // 这里可以通过GitHub API检查工作流状态
+      // 这里可以通过 GitHub API 检查工作流状态
       // 为了简化，我们先返回基本状态
       const buildInfo = await this.getBuildInfo()
       

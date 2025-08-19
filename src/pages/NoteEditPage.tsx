@@ -182,12 +182,12 @@ const NoteEditPage: React.FC = () => {
         selectedRepo
       })
       
-      // 如果是管理员且已登录，使用GitHub Token
+      // 如果是管理员且已登录，使用 GitHub Token
       if (isLoggedInStable()) {
         const adminToken = getGitHubToken()
         if (adminToken) {
           authData.accessToken = adminToken
-          console.log('管理员模式，使用GitHub Token加载笔记')
+          console.log('管理员模式，使用 GitHub Token 加载笔记')
         }
       }
       
@@ -416,7 +416,7 @@ const NoteEditPage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">检查GitHub连接状态...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">检查 GitHub 连接状态...</p>
         </div>
       </div>
     )

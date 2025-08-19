@@ -1,7 +1,7 @@
 /**
  * 笔记操作服务
  * 负责笔记的创建、编辑、删除操作
- * 在新架构中，这些操作会触发GitHub Actions来重新编译静态内容
+ * 在新架构中，这些操作会触发 GitHub Actions 来重新编译静态内容
  */
 
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'

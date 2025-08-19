@@ -88,7 +88,7 @@ const NotesPage: React.FC = () => {
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
-    // 检查GitHub连接状态和登录状态
+    // 检查 GitHub 连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
       // 检查环境变量是否已配置
       const envConfigured = checkEnvVarsConfigured()
@@ -151,7 +151,7 @@ const NotesPage: React.FC = () => {
           navigate('/')
         }
         
-        // 延迟刷新，给GitHub Actions一些时间
+        // 延迟刷新，给 GitHub Actions 一些时间
         setTimeout(() => {
           refreshNotes()
         }, 2000)
@@ -175,7 +175,7 @@ const NotesPage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">检查GitHub连接状态...</p>
+          <p className="mt-4 text-gray-600">检查 GitHub 连接状态...</p>
         </div>
       </div>
     )

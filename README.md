@@ -33,7 +33,7 @@
 
 请首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于笔记文件的存放。
 
-然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），  
+然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
 获取的令牌格式例如：`ghp_xxxxxxxx`。
 
 ### 一. 本地开发
@@ -49,7 +49,7 @@ npm install
 # 创建环境变量文件
 cp .env.example .env  # 复制环境变量模板
 
-# 编辑.env文件，配置 GitHub 仓库信息
+# 编辑 .env 文件，配置 GitHub 仓库信息
 
 # 生成静态内容（首次运行必需）
 npm run build:static
@@ -58,7 +58,7 @@ npm run build:static
 npm run dev
 ```
 
-> **注意**: 本地开发时需要先运行 `npm run build:static` 生成静态JSON文件，否则网站无法正常显示笔记内容。
+> **注意**: 本地开发时需要先运行 `npm run build:static` 生成静态 JSON 文件，否则网站无法正常显示笔记内容。
 
 ### 二、部署到 Cloudflare Pages
 
@@ -90,11 +90,11 @@ npm run dev
 | `VITE_GITHUB_TOKEN`   | GitHub 个人访问令牌   | `ghp_xxxxxxxx`         |
 | `VITE_ADMIN_PASSWORD` | 管理员密码            | `your-secure-password` |
 
-5. **配置GitHub Actions权限**
+5. **配置 GitHub Actions 权限**
    
    **重要**: 为了让自动编译功能正常工作，需要配置仓库权限：
    
-   - 进入你Fork的仓库设置页面: `https://github.com/你的用户名/sparklog/settings`
+   - 进入你 Fork 的仓库设置页面: `https://github.com/你的用户名/sparklog/settings`
    - 点击左侧菜单 `Actions` → `General`
    - 在 "Workflow permissions" 部分选择:
      ```
@@ -119,11 +119,11 @@ npm run dev
 - **📱 响应式设计**: 完美适配桌面和移动设备
 
 ### 静态架构优势
-- **⚡ 极速加载**: 静态JSON文件提供毫秒级加载速度
-- **🤖 自动编译**: 笔记变更时GitHub Actions自动重新编译
+- **⚡ 极速加载**: 静态 JSON 文件提供毫秒级加载速度
+- **🤖 自动编译**: 笔记变更时 GitHub Actions 自动重新编译
 - **📊 构建状态**: 实时显示内容编译状态和进度
 - **🛡️ 安全隔离**: 公开/私密内容物理分离，确保数据安全
-- **📈 零API限制**: 完全避免GitHub API调用限制问题
+- **📈 零 API 限制**: 完全避免 GitHub API 调用限制问题
 
 ### 使用指南
 
@@ -144,16 +144,16 @@ npm run dev
 SparkLog 采用了创新的静态内容架构：
 
 1. **编辑笔记**: 在网站上编辑并保存笔记
-2. **API调用**: 网站调用GitHub API将笔记保存到仓库
-3. **自动触发**: GitHub检测到`notes/`文件夹变化，自动触发GitHub Actions
-4. **内容编译**: 构建脚本将所有Markdown文件编译为静态JSON文件
-5. **文件分离**: 生成`public-notes.json`(公开)和`all-notes.json`(完整)
+2. **API 调用**: 网站调用 GitHub API 将笔记保存到仓库
+3. **自动触发**: GitHub 检测到 `notes/` 文件夹变化，自动触发 GitHub Actions
+4. **内容编译**: 构建脚本将所有 Markdown 文件编译为静态 JSON 文件
+5. **文件分离**: 生成 `public-notes.json`(公开)和 `all-notes.json`(完整)
 6. **自动部署**: 编译后的内容自动部署到网站
-7. **即时访问**: 用户访问时直接加载静态JSON，实现极速加载
+7. **即时访问**: 用户访问时直接加载静态 JSON，实现极速加载
 
 ## 🔧 故障排除
 
-### GitHub Actions权限错误
+### GitHub Actions 权限错误
 
 如果遇到 `Permission denied` 或 `403` 错误：
 
@@ -162,15 +162,15 @@ SparkLog 采用了创新的静态内容架构：
    - 选择 "Read and write permissions"
    - 勾选 "Allow GitHub Actions to create and approve pull requests"
 
-2. 确认GitHub Actions已启用：
+2. 确认 GitHub Actions 已启用：
    - 检查 `.github/workflows/` 文件夹是否存在
-   - 确认workflow文件语法正确
+   - 确认 workflow 文件语法正确
 
 ### 本地开发问题
 
 - **笔记不显示**: 确保运行了 `npm run build:static`
-- **构建失败**: 检查 `notes/` 文件夹是否存在，Markdown文件格式是否正确
-- **权限错误**: 检查 `.env` 文件中的GitHub token是否有效
+- **构建失败**: 检查 `notes/` 文件夹是否存在，Markdown 文件格式是否正确
+- **权限错误**: 检查 `.env` 文件中的 GitHub token 是否有效
 
 ## 📚 详细文档
 
