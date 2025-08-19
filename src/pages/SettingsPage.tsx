@@ -1,7 +1,15 @@
 import React, { useState } from 'react'
-import { Lock, Settings, ExternalLink, LogOut, LogIn } from 'lucide-react'
+import { Lock, Settings, ExternalLink, LogOut, LogIn, Database, Server, Shield } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import { getDefaultRepoConfig } from '@/config/defaultRepo'
+import { 
+  getR2Config, 
+  getAdminPassword, 
+  getGitHubToken, 
+  getStaticBranch, 
+  getAppTitle, 
+  getAppDescription, 
+  getDefaultTheme 
+} from '@/config/env'
 import SparkLogLogo from '@/components/SparkLogLogo'
 
 const SettingsPage: React.FC = () => {
@@ -42,24 +50,35 @@ const SettingsPage: React.FC = () => {
     }
   }
 
-  const defaultConfig = getDefaultRepoConfig()
+  // 获取配置状态
+  const r2Config = getR2Config()
+  const adminPassword = getAdminPassword()
+  const githubToken = getGitHubToken()
+  const staticBranch = getStaticBranch()
+  const appTitle = getAppTitle()
+  const appDescription = getAppDescription()
+  const defaultTheme = getDefaultTheme()
 
   // 环境变量检查
   const envVars = {
-    VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
-    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
-    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
-    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
+    // R2 存储配置
+    r2: {
+      accountId: !!r2Config?.accountId,
+      accessKeyId: !!r2Config?.accessKeyId,
+      secretAccessKey: !!r2Config?.secretAccessKey,
+      bucketName: !!r2Config?.bucketName,
+      publicUrl: !!r2Config?.publicUrl,
+      configured: !!r2Config
+    },
+    // 管理员配置
+    adminPassword: !!adminPassword,
+    githubToken: !!githubToken,
+    // 应用配置
+    staticBranch: staticBranch !== 'static-content', // 如果不是默认值说明已配置
+    appTitle: appTitle !== 'SparkLog', // 如果不是默认值说明已配置
+    appDescription: appDescription !== '优雅免维护的想法记录应用', // 如果不是默认值说明已配置
+    defaultTheme: defaultTheme !== 'auto' // 如果不是默认值说明已配置
   }
-
-  // 调试信息
-  console.log('环境变量调试信息:', {
-    VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
-    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
-    VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
-    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置',
-    defaultConfig: getDefaultRepoConfig()
-  })
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -88,40 +107,107 @@ const SettingsPage: React.FC = () => {
           
           <div className="space-y-4 text-gray-600 dark:text-gray-300">
             <p>
-              SparkLog 是一个基于GitHub仓库的静态笔记应用，支持公开笔记分享和私密笔记保护。
+              SparkLog 是一个基于 Cloudflare R2 存储的静态笔记应用，支持公开笔记分享和私密笔记保护。
             </p>
             
+            {/* R2 存储配置状态 */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前环境变量：</h3>
+              <div className="flex items-center mb-3">
+                <Database className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100">R2 存储配置</h3>
+                <span className={`ml-auto px-2 py-1 rounded-full text-xs font-medium ${
+                  envVars.r2.configured 
+                    ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                    : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                }`}>
+                  {envVars.r2.configured ? '已配置' : '未配置'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Account ID</span>
+                  <span className={envVars.r2.accountId ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.r2.accountId ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Access Key ID</span>
+                  <span className={envVars.r2.accessKeyId ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.r2.accessKeyId ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Secret Access Key</span>
+                  <span className={envVars.r2.secretAccessKey ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.r2.secretAccessKey ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Bucket Name</span>
+                  <span className={envVars.r2.bucketName ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.r2.bucketName ? '✓' : '✗'}
+                  </span>
+                </div>
+                <div className="flex justify-between col-span-2">
+                  <span>Public URL (可选)</span>
+                  <span className={envVars.r2.publicUrl ? 'text-green-600' : 'text-gray-500'}>
+                    {envVars.r2.publicUrl ? '✓' : '未设置'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 管理员配置状态 */}
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" />
+                <h3 className="font-semibold text-amber-900 dark:text-amber-100">管理员配置</h3>
+              </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>GitHub 仓库</span>
-                  <span className="font-mono text-blue-800 dark:text-blue-200">
-                    {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : '未配置'}
+                  <span>管理员密码</span>
+                  <span className={envVars.adminPassword ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.adminPassword ? '已设置' : '未设置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VITE_REPO_OWNER</span>
-                  <span className={envVars.VITE_REPO_OWNER ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_REPO_OWNER ? '已配置' : '未配置'}
+                  <span>GitHub Token</span>
+                  <span className={envVars.githubToken ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.githubToken ? '已设置' : '未设置'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 应用配置状态 */}
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+              <div className="flex items-center mb-3">
+                <Server className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" />
+                <h3 className="font-semibold text-green-900 dark:text-green-100">应用配置</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex justify-between">
+                  <span>应用标题</span>
+                  <span className="font-mono text-green-800 dark:text-green-200">
+                    {appTitle}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VITE_REPO_NAME</span>
-                  <span className={envVars.VITE_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_REPO_NAME ? '已配置' : '未配置'}
+                  <span>静态分支</span>
+                  <span className="font-mono text-green-800 dark:text-green-200">
+                    {staticBranch}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VITE_GITHUB_TOKEN</span>
-                  <span className={envVars.VITE_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_GITHUB_TOKEN}
+                  <span>默认主题</span>
+                  <span className="font-mono text-green-800 dark:text-green-200">
+                    {defaultTheme}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VITE_ADMIN_PASSWORD</span>
-                  <span className={envVars.VITE_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_ADMIN_PASSWORD}
+                  <span>自定义描述</span>
+                  <span className={envVars.appDescription ? 'text-green-600' : 'text-gray-500'}>
+                    {envVars.appDescription ? '已设置' : '使用默认'}
                   </span>
                 </div>
               </div>
@@ -236,6 +322,7 @@ const SettingsPage: React.FC = () => {
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">私密笔记</h3>
               <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                 <li>• 只有管理员可访问</li>
+                <li>• AES-GCM 加密存储</li>
                 <li>• 适合个人日记和私密内容</li>
                 <li>• 需要管理员密码登录</li>
               </ul>

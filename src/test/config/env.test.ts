@@ -31,10 +31,12 @@ describe('Environment Configuration', () => {
   })
 
   describe('checkEnvVarsConfigured', () => {
-    it('should return true when all required env vars are set', () => {
-      // 设置必要的环境变量
-      ;(import.meta.env as any).VITE_REPO_OWNER = 'test-owner'
-      ;(import.meta.env as any).VITE_REPO_NAME = 'test-repo'
+    it('should return true when all required env vars are set for R2 architecture', () => {
+      // 设置 R2 架构的必要环境变量
+      ;(import.meta.env as any).VITE_R2_ACCOUNT_ID = 'test-account-id'
+      ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
+      ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
+      ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
       ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
       ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
 
@@ -42,10 +44,21 @@ describe('Environment Configuration', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when any required env var is missing', () => {
-      // 只设置部分环境变量
-      ;(import.meta.env as any).VITE_REPO_OWNER = 'test-owner'
-      ;(import.meta.env as any).VITE_REPO_NAME = 'test-repo'
+    it('should return false when R2 config is missing', () => {
+      // 只设置部分环境变量，缺少 R2 配置
+      ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
+      ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
+
+      const result = checkEnvVarsConfigured()
+      expect(result).toBe(false)
+    })
+
+    it('should return false when admin password is missing', () => {
+      // 设置 R2 配置但缺少管理员密码
+      ;(import.meta.env as any).VITE_R2_ACCOUNT_ID = 'test-account-id'
+      ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
+      ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
+      ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
       ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
       // 缺少 VITE_ADMIN_PASSWORD
 
@@ -53,15 +66,17 @@ describe('Environment Configuration', () => {
       expect(result).toBe(false)
     })
 
-    it('should support alternative env var names', () => {
-      // 使用替代的环境变量名称
-      ;(import.meta.env as any).VITE_GITHUB_OWNER = 'test-owner'
-      ;(import.meta.env as any).VITE_GITHUB_REPO = 'test-repo'
-      ;(import.meta.env as any).GITHUB_TOKEN = 'test-token'
+    it('should return false when GitHub token is missing', () => {
+      // 设置 R2 配置和管理员密码但缺少 GitHub Token
+      ;(import.meta.env as any).VITE_R2_ACCOUNT_ID = 'test-account-id'
+      ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
+      ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
+      ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
       ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
+      // 缺少 VITE_GITHUB_TOKEN
 
       const result = checkEnvVarsConfigured()
-      expect(result).toBe(true)
+      expect(result).toBe(false)
     })
   })
 

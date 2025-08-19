@@ -15,25 +15,15 @@ export interface R2Config {
   publicUrl?: string
 }
 
-// 检测环境变量是否已配置
+// 检测环境变量是否已配置（R2 架构）
 export const checkEnvVarsConfigured = (): boolean => {
-  const owner = import.meta.env.VITE_REPO_OWNER || 
-                import.meta.env.VITE_GITHUB_OWNER ||
-                import.meta.env.REPO_OWNER ||
-                import.meta.env.GITHUB_OWNER
-
-  const repo = import.meta.env.VITE_REPO_NAME || 
-               import.meta.env.VITE_GITHUB_REPO ||
-               import.meta.env.REPO_NAME ||
-               import.meta.env.GITHUB_REPO
-
-  const token = import.meta.env.VITE_GITHUB_TOKEN || 
-                import.meta.env.GITHUB_TOKEN
-
-  const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
+  const r2Config = getR2Config()
+  const adminPassword = getAdminPassword()
+  const githubToken = getGitHubToken()
 
   // 检查必要的环境变量是否都已配置
-  return !!(owner && repo && token && adminPassword)
+  // R2 配置是必须的，管理员密码是必须的，GitHub Token 用于静态内容分支管理
+  return !!(r2Config && adminPassword && githubToken)
 }
 
 // 从环境变量获取仓库配置
