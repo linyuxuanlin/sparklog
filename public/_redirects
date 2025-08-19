@@ -1,0 +1,16 @@
+# SPA 路由重定向 - 所有未匹配的路由都重定向到 index.html
+/*    /index.html   200
+
+# API 路由重定向（如果需要）
+/api/notes/*    https://api.example.com/notes/:splat    200
+
+# 旧版本兼容重定向
+/notes/*    /index.html   200
+/admin/*    /index.html   200
+
+# 静态资源重定向
+/assets/*    /assets/:splat    200
+
+# 健康检查端点
+/health    /health.json   200
+/status    /build-info.json   200

@@ -95,7 +95,7 @@ export class R2Service {
 
     try {
       // 策略 1: 标准 CORS 请求（最安全）
-      console.log('尝试标准 CORS 请求...')
+      console.log('尝试标准 CORS 请求...', url)
       response = await fetch(url, {
         method: 'GET',
         mode: 'cors',
@@ -106,15 +106,17 @@ export class R2Service {
       if (response.ok) {
         console.log('标准 CORS 请求成功')
         return await this.parseListResponse(response, cacheKey)
+      } else {
+        console.log('标准 CORS 请求失败，状态码:', response.status, response.statusText)
       }
     } catch (error) {
-      console.log('标准 CORS 请求失败:', error)
+      console.log('标准 CORS 请求异常:', error)
       lastError = error as Error
     }
 
     try {
       // 策略 2: 无 CORS 请求（可能绕过某些限制）
-      console.log('尝试无 CORS 请求...')
+      console.log('尝试无 CORS 请求...', url)
       response = await fetch(url, {
         method: 'GET',
         mode: 'no-cors',
@@ -127,9 +129,11 @@ export class R2Service {
         // 注意：opaque 响应无法读取内容，但可以确认请求成功
         // 这里我们可以尝试其他策略或返回缓存数据
         throw new Error('无 CORS 模式返回不透明响应，无法读取内容')
+      } else {
+        console.log('无 CORS 请求响应类型:', response.type, '状态:', response.status)
       }
     } catch (error) {
-      console.log('无 CORS 请求失败:', error)
+      console.log('无 CORS 请求异常:', error)
       lastError = error as Error
     }
 
