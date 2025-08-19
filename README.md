@@ -53,10 +53,10 @@ npm install
 cp .env.example .env.local
 
 # 编辑 .env.local 文件，配置以下环境变量：
-SPARKLOG_REPO_OWNER=你的GitHub用户名
-SPARKLOG_REPO_NAME=笔记仓库名
-SPARKLOG_GITHUB_TOKEN=你的GitHub令牌
-SPARKLOG_ADMIN_PASSWORD=管理员密码
+NEXT_PUBLIC_REPO_OWNER=你的GitHub用户名
+NEXT_PUBLIC_REPO_NAME=笔记仓库名
+NEXT_PUBLIC_GITHUB_TOKEN=你的GitHub令牌
+NEXT_PUBLIC_ADMIN_PASSWORD=管理员密码
 
 # 启动开发服务器
 npm run dev
@@ -74,10 +74,10 @@ npm run dev
    
    | 变量名 | 说明 | 示例 |
    | --- | --- | --- |
-   | `SPARKLOG_REPO_OWNER` | GitHub 用户名 | `linyuxuanlin` |
-   | `SPARKLOG_REPO_NAME` | 笔记仓库名 | `sparklog-notes` |
-   | `SPARKLOG_GITHUB_TOKEN` | GitHub 令牌 | `ghp_xxxxxxxx` |
-   | `SPARKLOG_ADMIN_PASSWORD` | 管理员密码 | `your-password` |
+   | `NEXT_PUBLIC_REPO_OWNER` | GitHub 用户名 | `linyuxuanlin` |
+   | `NEXT_PUBLIC_REPO_NAME` | 笔记仓库名 | `sparklog-notes` |
+   | `NEXT_PUBLIC_GITHUB_TOKEN` | GitHub 令牌 | `ghp_xxxxxxxx` |
+   | `NEXT_PUBLIC_ADMIN_PASSWORD` | 管理员密码 | `your-password` |
 
 3. **部署**
    - 点击 "Deploy"
