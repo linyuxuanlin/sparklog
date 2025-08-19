@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
-import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
-import { GitHubService } from '@/services/githubService'
+import { parseNoteContent } from '@/utils/noteUtils'
 import { R2Service } from '@/services/r2Service'
 import { StaticContentService } from '@/services/staticContentService'
 

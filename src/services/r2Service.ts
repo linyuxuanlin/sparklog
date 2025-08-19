@@ -337,10 +337,10 @@ export class R2Service {
       const exportedKey = await crypto.subtle.exportKey('raw', key)
       
       // 组合 IV、密钥和加密数据
-      const combined = new Uint8Array(iv.length + exportedKey.length + encryptedData.byteLength)
+      const combined = new Uint8Array(iv.length + exportedKey.byteLength + encryptedData.byteLength)
       combined.set(iv, 0)
       combined.set(new Uint8Array(exportedKey), iv.length)
-      combined.set(new Uint8Array(encryptedData), iv.length + exportedKey.length)
+      combined.set(new Uint8Array(encryptedData), iv.length + exportedKey.byteLength)
       
       // 转换为 base64
       return btoa(String.fromCharCode(...combined))
