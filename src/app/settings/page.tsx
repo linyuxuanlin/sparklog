@@ -1,21 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Lock, Settings, ExternalLink, LogOut, LogIn } from 'lucide-react'
 import { useAuthStore } from '@/lib/store'
+import { getDefaultRepoConfig, getAdminPassword } from '@/lib/config'
 import SparkLogLogo from '@/components/ui/SparkLogLogo'
-
-interface ConfigStatus {
-  repoConfig: { owner: string; repo: string } | null
-  hasToken: boolean
-  hasPassword: boolean
-  envStatus: {
-    SPARKLOG_REPO_OWNER: boolean
-    SPARKLOG_REPO_NAME: boolean
-    SPARKLOG_GITHUB_TOKEN: boolean
-    SPARKLOG_ADMIN_PASSWORD: boolean
-  }
-}
 
 export default function SettingsPage() {
   const { isLoggedIn, setAuth, logout } = useAuthStore()
@@ -23,27 +12,6 @@ export default function SettingsPage() {
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
   const [password, setPassword] = useState('')
   const [showLoginForm, setShowLoginForm] = useState(false)
-  const [configStatus, setConfigStatus] = useState<ConfigStatus | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  // 获取配置状态
-  useEffect(() => {
-    const fetchConfigStatus = async () => {
-      try {
-        const response = await fetch('/api/config')
-        if (response.ok) {
-          const status = await response.json()
-          setConfigStatus(status)
-        }
-      } catch (error) {
-        console.error('获取配置状态失败:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchConfigStatus()
-  }, [])
 
   // 显示消息提示
   const showMessage = (text: string, type: 'success' | 'error') => {
@@ -60,52 +28,32 @@ export default function SettingsPage() {
     showMessage('已退出管理员模式', 'success')
   }
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!password.trim()) {
       showMessage('请输入管理员密码', 'error')
       return
     }
 
-    try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password })
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        if (result.valid) {
-          setAuth('authenticated')
-          showMessage('登录成功！您现在拥有管理员权限', 'success')
-          setPassword('')
-          setShowLoginForm(false)
-        } else {
-          showMessage('密码错误，请重试', 'error')
-          setPassword('')
-        }
-      } else {
-        showMessage('验证失败，请重试', 'error')
-        setPassword('')
-      }
-    } catch (error) {
-      console.error('登录失败:', error)
-      showMessage('登录失败，请重试', 'error')
+    const adminPassword = getAdminPassword()
+    if (password === adminPassword) {
+      setAuth('authenticated')
+      showMessage('登录成功！您现在拥有管理员权限', 'success')
+      setPassword('')
+      setShowLoginForm(false)
+    } else {
+      showMessage('密码错误，请重试', 'error')
       setPassword('')
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">加载配置中...</p>
-        </div>
-      </div>
-    )
+  const defaultConfig = getDefaultRepoConfig()
+
+  // 环境变量检查
+  const envVars = {
+    SPARKLOG_REPO_OWNER: process.env.SPARKLOG_REPO_OWNER || '未设置',
+    SPARKLOG_REPO_NAME: process.env.SPARKLOG_REPO_NAME || '未设置',
+    SPARKLOG_GITHUB_TOKEN: process.env.SPARKLOG_GITHUB_TOKEN ? '已设置' : '未设置',
+    SPARKLOG_ADMIN_PASSWORD: process.env.SPARKLOG_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
 
   return (
@@ -144,31 +92,31 @@ export default function SettingsPage() {
                 <div className="flex justify-between">
                   <span>GitHub 仓库</span>
                   <span className="font-mono text-blue-800 dark:text-blue-200">
-                    {configStatus?.repoConfig ? `${configStatus.repoConfig.owner}/${configStatus.repoConfig.repo}` : '未配置'}
+                    {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>SPARKLOG_REPO_OWNER</span>
-                  <span className={configStatus?.envStatus.SPARKLOG_REPO_OWNER ? 'text-green-600' : 'text-red-600'}>
-                    {configStatus?.envStatus.SPARKLOG_REPO_OWNER ? '已配置' : '未配置'}
+                  <span className={envVars.SPARKLOG_REPO_OWNER !== '未设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_REPO_OWNER !== '未设置' ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>SPARKLOG_REPO_NAME</span>
-                  <span className={configStatus?.envStatus.SPARKLOG_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
-                    {configStatus?.envStatus.SPARKLOG_REPO_NAME ? '已配置' : '未配置'}
+                  <span className={envVars.SPARKLOG_REPO_NAME !== '未设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_REPO_NAME !== '未设置' ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>SPARKLOG_GITHUB_TOKEN</span>
-                  <span className={configStatus?.envStatus.SPARKLOG_GITHUB_TOKEN ? 'text-green-600' : 'text-red-600'}>
-                    {configStatus?.envStatus.SPARKLOG_GITHUB_TOKEN ? '已配置' : '未配置'}
+                  <span className={envVars.SPARKLOG_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_GITHUB_TOKEN}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>SPARKLOG_ADMIN_PASSWORD</span>
-                  <span className={configStatus?.envStatus.SPARKLOG_ADMIN_PASSWORD ? 'text-green-600' : 'text-red-600'}>
-                    {configStatus?.envStatus.SPARKLOG_ADMIN_PASSWORD ? '已配置' : '未配置'}
+                  <span className={envVars.SPARKLOG_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_ADMIN_PASSWORD}
                   </span>
                 </div>
               </div>
