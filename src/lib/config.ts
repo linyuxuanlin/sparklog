@@ -1,6 +1,6 @@
 export const getDefaultRepoConfig = () => {
-  const owner = process.env.NEXT_PUBLIC_REPO_OWNER || process.env.VITE_REPO_OWNER
-  const repo = process.env.NEXT_PUBLIC_REPO_NAME || process.env.VITE_REPO_NAME
+  const owner = process.env.SPARKLOG_REPO_OWNER
+  const repo = process.env.SPARKLOG_REPO_NAME
   
   if (!owner || !repo) {
     return null
@@ -10,11 +10,11 @@ export const getDefaultRepoConfig = () => {
 }
 
 export const getDefaultGitHubToken = () => {
-  return process.env.NEXT_PUBLIC_GITHUB_TOKEN || process.env.VITE_GITHUB_TOKEN || ''
+  return process.env.SPARKLOG_GITHUB_TOKEN || ''
 }
 
 export const getAdminPassword = () => {
-  return process.env.NEXT_PUBLIC_ADMIN_PASSWORD || process.env.VITE_ADMIN_PASSWORD || ''
+  return process.env.SPARKLOG_ADMIN_PASSWORD || ''
 }
 
 export const checkEnvVarsConfigured = (): boolean => {

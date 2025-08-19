@@ -50,10 +50,10 @@ export default function SettingsPage() {
 
   // 环境变量检查
   const envVars = {
-    NEXT_PUBLIC_REPO_OWNER: process.env.NEXT_PUBLIC_REPO_OWNER || '未设置',
-    NEXT_PUBLIC_REPO_NAME: process.env.NEXT_PUBLIC_REPO_NAME || '未设置',
-    NEXT_PUBLIC_GITHUB_TOKEN: process.env.NEXT_PUBLIC_GITHUB_TOKEN ? '已设置' : '未设置',
-    NEXT_PUBLIC_ADMIN_PASSWORD: process.env.NEXT_PUBLIC_ADMIN_PASSWORD ? '已设置' : '未设置'
+    SPARKLOG_REPO_OWNER: process.env.SPARKLOG_REPO_OWNER || '未设置',
+    SPARKLOG_REPO_NAME: process.env.SPARKLOG_REPO_NAME || '未设置',
+    SPARKLOG_GITHUB_TOKEN: process.env.SPARKLOG_GITHUB_TOKEN ? '已设置' : '未设置',
+    SPARKLOG_ADMIN_PASSWORD: process.env.SPARKLOG_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
 
   return (
@@ -96,27 +96,27 @@ export default function SettingsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>NEXT_PUBLIC_REPO_OWNER</span>
-                  <span className={envVars.NEXT_PUBLIC_REPO_OWNER !== '未设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.NEXT_PUBLIC_REPO_OWNER !== '未设置' ? '已配置' : '未配置'}
+                  <span>SPARKLOG_REPO_OWNER</span>
+                  <span className={envVars.SPARKLOG_REPO_OWNER !== '未设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_REPO_OWNER !== '未设置' ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>NEXT_PUBLIC_REPO_NAME</span>
-                  <span className={envVars.NEXT_PUBLIC_REPO_NAME !== '未设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.NEXT_PUBLIC_REPO_NAME !== '未设置' ? '已配置' : '未配置'}
+                  <span>SPARKLOG_REPO_NAME</span>
+                  <span className={envVars.SPARKLOG_REPO_NAME !== '未设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_REPO_NAME !== '未设置' ? '已配置' : '未配置'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>NEXT_PUBLIC_GITHUB_TOKEN</span>
-                  <span className={envVars.NEXT_PUBLIC_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.NEXT_PUBLIC_GITHUB_TOKEN}
+                  <span>SPARKLOG_GITHUB_TOKEN</span>
+                  <span className={envVars.SPARKLOG_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_GITHUB_TOKEN}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>NEXT_PUBLIC_ADMIN_PASSWORD</span>
-                  <span className={envVars.NEXT_PUBLIC_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.NEXT_PUBLIC_ADMIN_PASSWORD}
+                  <span>SPARKLOG_ADMIN_PASSWORD</span>
+                  <span className={envVars.SPARKLOG_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                    {envVars.SPARKLOG_ADMIN_PASSWORD}
                   </span>
                 </div>
               </div>

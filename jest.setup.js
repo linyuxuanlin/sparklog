@@ -15,7 +15,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock environment variables
-process.env.NEXT_PUBLIC_REPO_OWNER = 'test-owner'
-process.env.NEXT_PUBLIC_REPO_NAME = 'test-repo'
-process.env.NEXT_PUBLIC_GITHUB_TOKEN = 'test-token'
-process.env.NEXT_PUBLIC_ADMIN_PASSWORD = 'test-password'
+process.env.SPARKLOG_REPO_OWNER = 'test-owner'
+process.env.SPARKLOG_REPO_NAME = 'test-repo'
+process.env.SPARKLOG_GITHUB_TOKEN = 'test-token'
+process.env.SPARKLOG_ADMIN_PASSWORD = 'test-password'
