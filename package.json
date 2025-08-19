@@ -1,41 +1,61 @@
 {
-  "name": "sparklog-nextjs",
+  "name": "sparklog",
   "version": "0.1.0",
-  "private": true,
+  "description": "一个基于GitHub仓库的静态笔记应用",
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --ext ts,tsx --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "lucide-react": "^0.540.0",
-    "next": "15.4.7",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "@tailwindcss/typography": "^0.5.9",
+    "lucide-react": "^0.263.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.8.1",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "swr": "^2.3.6",
-    "zustand": "^5.0.7"
+    "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
-    "@testing-library/jest-dom": "^6.7.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "15.4.7",
-    "jest": "^30.0.5",
-    "jest-environment-jsdom": "^30.0.5",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "autoprefixer": "^10.4.14",
+    "eslint": "^8.45.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "^8.4.27",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "notes",
+    "markdown",
+    "github",
+    "static",
+    "react",
+    "typescript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/linyuxuanlin/sparklog.git"
+  },
+  "bugs": {
+    "url": "https://github.com/linyuxuanlin/sparklog/issues"
+  },
+  "homepage": "https://github.com/linyuxuanlin/sparklog#readme"
 }

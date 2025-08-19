@@ -1,0 +1,40 @@
+import React from 'react'
+
+interface SparkLogLogoProps {
+  className?: string
+  size?: number
+}
+
+const SparkLogLogo: React.FC<SparkLogLogoProps> = ({ className = '', size = 24 }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* 背景圆形 */}
+      <circle cx="12" cy="12" r="11" fill="url(#gradient)" stroke="currentColor" strokeWidth="1" />
+      
+      {/* 闪电形状 */}
+      <path
+        d="M12 4L8 12H11L9 20L16 12H13L15 4H12Z"
+        fill="white"
+        stroke="white"
+        strokeWidth="0.5"
+      />
+      
+      {/* 渐变定义 */}
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="100%" stopColor="#1D4ED8" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
+
+export default SparkLogLogo 
