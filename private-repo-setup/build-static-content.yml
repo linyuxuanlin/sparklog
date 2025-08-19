@@ -39,7 +39,7 @@ jobs:
         with:
           # 获取完整历史记录，用于检测文件变更
           fetch-depth: 0
-          # 使用GitHub token进行身份验证
+          # 使用 GitHub token 进行身份验证
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 设置 Node.js
@@ -147,5 +147,3 @@ jobs:
           else
             echo "❌ 静态内容构建失败"
           fi
-
-

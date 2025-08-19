@@ -33,6 +33,11 @@
 
 请首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于笔记文件的存放。
 
+> **重要安全提醒**: 
+> - 笔记文件（包括私密笔记）存储在您的**私有仓库**中，不会暴露给公众
+> - GitHub Actions 构建脚本应该部署在您的**私有笔记仓库**中，不是这个公开的 SparkLog 仓库
+> - 只有生成的静态 JSON 文件会被部署到公开的网站
+
 然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
 获取的令牌格式例如：`ghp_xxxxxxxx`。
 
