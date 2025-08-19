@@ -44,8 +44,12 @@ export class StaticContentService {
       return `https://raw.githubusercontent.com/${repoName}/${staticBranch}`
     }
     
-    // 如果是其他部署平台，尝试使用分支路径
-    return `${currentOrigin}/${staticBranch}`
+    // 对于自定义域名，使用环境变量中的仓库信息
+    // 如果没有配置，则使用默认的 linyuxuanlin/sparklog 仓库
+    const repoOwner = import.meta.env.VITE_REPO_OWNER || 'linyuxuanlin'
+    const repoName = import.meta.env.VITE_REPO_NAME || 'sparklog'
+    
+    return `https://raw.githubusercontent.com/${repoOwner}/${repoName}/${staticBranch}`
   }
 
   // 获取公开笔记的静态内容
@@ -87,6 +91,16 @@ export class StaticContentService {
         throw new Error(`获取静态内容失败: ${response.status} - ${response.statusText}`)
       }
 
+      // 检查响应内容类型
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('响应不是 JSON 格式:', contentType, 'URL:', url)
+        return {
+          success: false,
+          error: '响应格式错误，不是有效的 JSON 文件'
+        }
+      }
+
       const data = await response.json()
       const etag = response.headers.get('ETag')
       const lastModified = response.headers.get('Last-Modified')
@@ -105,6 +119,15 @@ export class StaticContentService {
       }
     } catch (error) {
       console.error('获取公开笔记失败:', error)
+      
+      // 如果是 JSON 解析错误，提供更明确的错误信息
+      if (error instanceof SyntaxError) {
+        return {
+          success: false,
+          error: '静态内容文件格式错误，可能不是有效的 JSON 文件'
+        }
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : '未知错误'
@@ -151,6 +174,16 @@ export class StaticContentService {
         throw new Error(`获取所有笔记静态内容失败: ${response.status} - ${response.statusText}`)
       }
 
+      // 检查响应内容类型
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn('响应不是 JSON 格式:', contentType, 'URL:', url)
+        return {
+          success: false,
+          error: '响应格式错误，不是有效的 JSON 文件'
+        }
+      }
+
       const data = await response.json()
       const etag = response.headers.get('ETag')
       const lastModified = response.headers.get('Last-Modified')
@@ -169,6 +202,15 @@ export class StaticContentService {
       }
     } catch (error) {
       console.error('获取所有笔记失败:', error)
+      
+      // 如果是 JSON 解析错误，提供更明确的错误信息
+      if (error instanceof SyntaxError) {
+        return {
+          success: false,
+          error: '静态内容文件格式错误，可能不是有效的 JSON 文件'
+        }
+      }
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : '未知错误'

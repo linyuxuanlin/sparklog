@@ -62,6 +62,7 @@ describe('StaticContentService', () => {
           get: vi.fn((key) => {
             if (key === 'ETag') return '"etag-123"'
             if (key === 'Last-Modified') return 'Wed, 01 Jan 2024 00:00:00 GMT'
+            if (key === 'content-type') return 'application/json'
             return null
           })
         }
@@ -106,7 +107,10 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
 
@@ -155,6 +159,7 @@ describe('StaticContentService', () => {
           get: vi.fn((key) => {
             if (key === 'ETag') return '"etag-456"'
             if (key === 'Last-Modified') return 'Thu, 02 Jan 2024 00:00:00 GMT'
+            if (key === 'content-type') return 'application/json'
             return null
           })
         }
@@ -188,7 +193,10 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
 
@@ -227,7 +235,10 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
 
@@ -242,7 +253,10 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
       
@@ -270,7 +284,10 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
 
@@ -300,15 +317,19 @@ describe('StaticContentService', () => {
         ok: true,
         json: () => Promise.resolve(mockNotes),
         headers: {
-          get: vi.fn(() => null)
+          get: vi.fn((key) => {
+            if (key === 'content-type') return 'application/json'
+            return null
+          })
         }
       })
 
       await staticContentService.getPublicNotes()
       
       // Check if the fetch was called with the correct URL format
+      // 对于自定义域名，我们使用默认的 GitHub 仓库
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://example.com/static-content/public-notes.json',
+        'https://raw.githubusercontent.com/linyuxuanlin/sparklog/static-content/public-notes.json',
         expect.any(Object)
       )
     })
