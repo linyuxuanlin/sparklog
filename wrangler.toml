@@ -6,7 +6,8 @@ compatibility_date = "2024-01-01"
 command = "npm run build:pages"
 cwd = "."
 
-# 构建输出目录配置
+# 构建输出目录配置（Cloudflare Pages 专用）
+[pages]
 pages_build_output_dir = "dist"
 
 # 环境配置
