@@ -41,8 +41,7 @@
    
    **步骤 1: 获取 Account ID**
    - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-   - 在右侧边栏找到你的 Account ID（32 位十六进制字符串）
-   - 或者进入 "R2" → "Manage R2 API tokens" → 查看 Account ID
+   - 在右侧边栏找到你的 Account ID（32 位字符）
    
    **步骤 2: 创建 R2 存储桶**
    - 进入 "R2" → "Object Storage"
@@ -53,8 +52,7 @@
    
    **步骤 3: 创建 API Token**
    - 进入 "R2" → "Manage R2 API tokens"
-   - 点击 "Create API token"
-   - 选择 "Custom token" 模板
+   - 点击 "Create User API token"
    - 配置权限：
      - **Permissions**: Object Read & Write
      - **Resources**: 选择你刚创建的存储桶
