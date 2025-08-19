@@ -1,4 +1,4 @@
-import { getR2Config, isCorsProxyEnabled, getCorsProxyUrl } from '@/config/env'
+import { getR2Config } from '@/config/env'
 
 interface R2File {
   name: string
@@ -46,41 +46,10 @@ export class R2Service {
     return `https://${this.config.accountId}.r2.cloudflarestorage.com`
   }
 
-  // 获取 CORS 代理 URL
-  private getCorsProxyUrl(): string | null {
-    // 优先使用环境变量配置的代理
-    const envProxy = getCorsProxyUrl()
-    if (envProxy) {
-      return envProxy
-    }
-    
-    // 备选公共 CORS 代理服务
-    const corsProxies = [
-      'https://cors-anywhere.herokuapp.com/',
-      'https://api.allorigins.win/raw?url=',
-      'https://corsproxy.io/?'
-    ]
-    
-    // 返回第一个可用的代理
-    return corsProxies[0] || null
-  }
-
   private getHeaders(additionalHeaders: Record<string, string> = {}): Record<string, string> {
-    // 简化请求头以避免 CORS 预检请求
-    const baseHeaders: Record<string, string> = {}
-    
-    // 只在需要时添加 Authorization 头
-    if (this.config?.accessKeyId) {
-      baseHeaders['Authorization'] = `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`
-    }
-    
-    // 只在需要时添加 Content-Type
-    if (additionalHeaders['Content-Type']) {
-      baseHeaders['Content-Type'] = additionalHeaders['Content-Type']
-    }
-    
     return {
-      ...baseHeaders,
+      'Authorization': `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`,
+      'Content-Type': 'application/json',
       ...additionalHeaders
     }
   }
@@ -113,75 +82,10 @@ export class R2Service {
       const endpoint = this.getEndpoint()
       const url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
       
-      // CORS 绕过策略
-      let response: Response
-      
-      // 如果启用了 CORS 代理模式，直接使用代理
-      if (isCorsProxyEnabled()) {
-        const proxyUrl = this.getCorsProxyUrl()
-        if (proxyUrl) {
-          console.log('CORS 代理模式已启用，使用代理服务:', proxyUrl)
-          const proxyFullUrl = `${proxyUrl}${encodeURIComponent(url)}`
-          response = await fetch(proxyFullUrl, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit'
-          })
-        } else {
-          throw new Error('CORS 代理模式已启用但未配置代理 URL')
-        }
-      } else {
-        // 尝试多种 CORS 绕过策略
-        try {
-          // 策略 1: 标准 CORS 请求
-          response = await fetch(url, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit',
-            headers: this.getHeaders(),
-            cache: 'default'
-          })
-        } catch (corsError) {
-          console.warn('CORS 请求失败，尝试无模式请求:', corsError)
-          
-          // 策略 2: 无模式请求（可能绕过某些 CORS 限制）
-          try {
-            response = await fetch(url, {
-              method: 'GET',
-              mode: 'no-cors',
-              credentials: 'omit',
-              headers: this.getHeaders(),
-              cache: 'default'
-            })
-          } catch (noCorsError) {
-            console.warn('无模式请求也失败，尝试代理方式:', noCorsError)
-            
-            // 策略 3: 使用公共 R2 访问点（如果配置了）
-            if (this.config.publicUrl) {
-              const publicUrl = `${this.config.publicUrl}/list?prefix=${encodeURIComponent(prefix)}`
-              response = await fetch(publicUrl, {
-                method: 'GET',
-                mode: 'cors',
-                credentials: 'omit'
-              })
-            } else {
-              // 策略 4: 使用 CORS 代理服务作为最后的备选方案
-              const proxyUrl = this.getCorsProxyUrl()
-              if (proxyUrl) {
-                console.log('使用 CORS 代理服务:', proxyUrl)
-                const proxyFullUrl = `${proxyUrl}${encodeURIComponent(url)}`
-                response = await fetch(proxyFullUrl, {
-                  method: 'GET',
-                  mode: 'cors',
-                  credentials: 'omit'
-                })
-              } else {
-                throw new Error('所有 CORS 绕过策略都失败了，请配置 R2 存储桶的 CORS 策略、设置 publicUrl 或使用 CORS 代理服务')
-              }
-            }
-          }
-        }
-      }
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: this.getHeaders()
+      })
 
       if (!response.ok) {
         throw new Error(`R2 API 错误: ${response.status} - ${response.statusText}`)
@@ -250,11 +154,7 @@ export class R2Service {
       
       const response = await fetch(url, {
         method: 'GET',
-        mode: 'cors',
-        credentials: 'omit',
-        headers: this.getHeaders(),
-        // 添加 CORS 友好的配置
-        cache: 'default'
+        headers: this.getHeaders()
       })
 
       if (!response.ok) {
@@ -297,8 +197,6 @@ export class R2Service {
 
       const response = await fetch(url, {
         method: 'PUT',
-        mode: 'cors',
-        credentials: 'omit',
         headers: this.getHeaders({
           'Content-Length': finalContent.length.toString()
         }),
@@ -340,8 +238,6 @@ export class R2Service {
       
       const response = await fetch(url, {
         method: 'DELETE',
-        mode: 'cors',
-        credentials: 'omit',
         headers: this.getHeaders()
       })
 

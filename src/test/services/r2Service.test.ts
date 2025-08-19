@@ -9,9 +9,7 @@ vi.mock('@/config/env', () => ({
     secretAccessKey: 'test-secret-access-key',
     bucketName: 'test-bucket',
     publicUrl: 'https://test.example.com'
-  })),
-  isCorsProxyEnabled: vi.fn(() => false),
-  getCorsProxyUrl: vi.fn(() => null)
+  }))
 }))
 
 describe('R2Service', () => {
@@ -389,23 +387,9 @@ describe('R2Service', () => {
 
   describe('error handling', () => {
     it('should handle network errors gracefully', async () => {
-      // 模拟所有 CORS 策略都失败的情况
-      mockFetch
-        .mockRejectedValueOnce(new Error('Network error')) // 第一次尝试
-        .mockRejectedValueOnce(new Error('Network error')) // 第二次尝试
-        .mockRejectedValueOnce(new Error('Network error')) // 第三次尝试
-        .mockRejectedValueOnce(new Error('Network error')) // 第四次尝试（代理也失败）
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
-      try {
-        await r2Service.listFiles()
-        expect.fail('应该抛出错误')
-      } catch (error) {
-        console.log('实际错误信息:', error)
-        expect(error).toBeInstanceOf(Error)
-        if (error instanceof Error) {
-          expect(error.message).toContain('Network error')
-        }
-      }
+      await expect(r2Service.listFiles()).rejects.toThrow('Network error')
     })
 
     it('should handle malformed XML responses', async () => {

@@ -8,9 +8,7 @@ import {
   getStaticBranch, 
   getAppTitle, 
   getAppDescription, 
-  getDefaultTheme,
-  isCorsProxyEnabled,
-  getCorsProxyUrl
+  getDefaultTheme 
 } from '@/config/env'
 import SparkLogLogo from '@/components/SparkLogLogo'
 
@@ -60,8 +58,6 @@ const SettingsPage: React.FC = () => {
   const appTitle = getAppTitle()
   const appDescription = getAppDescription()
   const defaultTheme = getDefaultTheme()
-  const corsProxyEnabled = isCorsProxyEnabled()
-  const corsProxyUrl = getCorsProxyUrl()
 
   // 环境变量检查
   const envVars = {
@@ -81,10 +77,7 @@ const SettingsPage: React.FC = () => {
     staticBranch: staticBranch !== 'static-content', // 如果不是默认值说明已配置
     appTitle: appTitle !== 'SparkLog', // 如果不是默认值说明已配置
     appDescription: appDescription !== '优雅免维护的想法记录应用', // 如果不是默认值说明已配置
-    defaultTheme: defaultTheme !== 'auto', // 如果不是默认值说明已配置
-    // CORS 代理配置
-    corsProxy: corsProxyEnabled,
-    corsProxyUrl: !!corsProxyUrl
+    defaultTheme: defaultTheme !== 'auto' // 如果不是默认值说明已配置
   }
 
   return (
@@ -215,18 +208,6 @@ const SettingsPage: React.FC = () => {
                   <span>自定义描述</span>
                   <span className={envVars.appDescription ? 'text-green-600' : 'text-gray-500'}>
                     {envVars.appDescription ? '已设置' : '使用默认'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>CORS 代理模式</span>
-                  <span className={envVars.corsProxy ? 'text-green-600' : 'text-gray-500'}>
-                    {envVars.corsProxy ? '已启用' : '未启用'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>代理服务 URL</span>
-                  <span className={envVars.corsProxyUrl ? 'text-green-600' : 'text-gray-500'}>
-                    {envVars.corsProxyUrl ? '已配置' : '未配置'}
                   </span>
                 </div>
               </div>
