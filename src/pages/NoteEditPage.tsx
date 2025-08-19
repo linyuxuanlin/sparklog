@@ -8,7 +8,7 @@ import { useR2Notes } from '@/hooks/useR2Notes'
 
 
 const NoteEditPage: React.FC = () => {
-  const { id, title } = useParams()
+  const { id } = useParams()
   const navigate = useNavigate()
   const { isConnected, isLoading: isGitHubLoading, isLoggedIn } = useGitHub()
   const { 
