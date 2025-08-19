@@ -8,8 +8,8 @@
  * - all-notes.json: 包含所有笔记（需要登录验证）
  */
 
-const fs = require('fs').promises;
-const path = require('path');
+import fs from 'fs/promises'
+import path from 'path'
 
 // 解析 Markdown 文件的 frontmatter
 function parseFrontmatter(content) {
@@ -229,8 +229,8 @@ tags: [示例, 欢迎]
 }
 
 // 如果直接运行此脚本
-if (require.main === module) {
-  buildStaticContent();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  buildStaticContent()
 }
 
-module.exports = { buildStaticContent };
+export { buildStaticContent };

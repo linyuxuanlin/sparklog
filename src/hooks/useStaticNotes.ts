@@ -21,7 +21,7 @@ interface UseStaticNotesReturn {
   }
   refreshNotes: () => Promise<void>
   searchNotes: (query: string) => Note[]
-  filterNotesByTags: (selectedTags: string[]) => Note[]
+  filterNotesByTags: (notesToFilter: Note[], selectedTags: string[]) => Note[]
   getAllTags: () => string[]
 }
 
@@ -31,10 +31,14 @@ export const useStaticNotes = (): UseStaticNotesReturn => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [buildInfo, setBuildInfo] = useState<any>(null)
-  const [buildStatus, setBuildStatus] = useState({
+  const [buildStatus, setBuildStatus] = useState<{
+    isBuilding: boolean
+    lastBuildTime?: string
+    error?: string
+  }>({
     isBuilding: false,
-    lastBuildTime: undefined as string | undefined,
-    error: undefined as string | undefined
+    lastBuildTime: undefined,
+    error: undefined
   })
   
   // 使用 ref 避免重复加载

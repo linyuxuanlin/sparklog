@@ -272,7 +272,7 @@ export class StaticContentService {
     return notes.filter(note => {
       const content = (note.contentPreview || note.content || '').toLowerCase()
       const tags = (note.tags || []).join(' ').toLowerCase()
-      const title = (note.title || note.name || '').toLowerCase()
+      const title = (note.name || '').toLowerCase()
       
       return content.includes(searchLower) || 
              tags.includes(searchLower) || 
