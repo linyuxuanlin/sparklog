@@ -22,6 +22,27 @@
       "type": "file"
     },
     {
+      "name": "2024-08-19-github-actions-debug.md",
+      "path": "notes/2024-08-19-github-actions-debug.md",
+      "title": "2024-08-19-github-actions-debug",
+      "content": "# GitHub Actions 调试测试\n\n这是一个调试测试笔记，用于验证 GitHub Actions 是否正常工作。\n\n## 期望的工作流程\n\n1. ✅ 这个笔记被提交到 `notes/` 文件夹\n2. ⏳ GitHub Actions 应该自动触发\n3. ⏳ 构建脚本生成静态 JSON 文件\n4. ⏳ 静态文件被提交到仓库\n5. ⏳ Cloudflare Pages 检测到变化并重新部署\n6. ⏳ 用户可以在网站上看到更新\n\n## 调试信息\n\n- 测试时间: 2024-08-19 11:00:00 UTC\n- 触发方式: 手动提交文件到 notes/ 目录\n- 预期结果: GitHub Actions 自动运行并生成静态内容\n\n如果您看到这个笔记出现在网站上，说明整个流程工作正常！",
+      "contentPreview": "# GitHub Actions 调试测试\n\n这是一个调试测试笔记，用于验证 GitHub Actions 是否正常工作。\n\n## 期望的工作流程\n\n1. ✅ 这个笔记被提交到 `notes/` 文件夹\n2. ⏳ GitHub Actions 应该自动触发\n3. ⏳ 构建脚本生成静态 JSON 文件\n4. ⏳ 静态文件被提交到仓库\n5. ⏳ Cloudflare Pages 检测到变化并重新部署\n...",
+      "fullContent": "---\ncreated_at: 2024-08-19T11:00:00Z\nupdated_at: 2024-08-19T11:00:00Z\nprivate: false\ntags: [调试, GitHub Actions, 测试]\n---\n\n# GitHub Actions 调试测试\n\n这是一个调试测试笔记，用于验证 GitHub Actions 是否正常工作。\n\n## 期望的工作流程\n\n1. ✅ 这个笔记被提交到 `notes/` 文件夹\n2. ⏳ GitHub Actions 应该自动触发\n3. ⏳ 构建脚本生成静态 JSON 文件\n4. ⏳ 静态文件被提交到仓库\n5. ⏳ Cloudflare Pages 检测到变化并重新部署\n6. ⏳ 用户可以在网站上看到更新\n\n## 调试信息\n\n- 测试时间: 2024-08-19 11:00:00 UTC\n- 触发方式: 手动提交文件到 notes/ 目录\n- 预期结果: GitHub Actions 自动运行并生成静态内容\n\n如果您看到这个笔记出现在网站上，说明整个流程工作正常！\n",
+      "created_at": "2024-08-19T11:00:00Z",
+      "updated_at": "2024-08-19T11:00:00Z",
+      "createdDate": "2024-08-19T11:00:00Z",
+      "updatedDate": "2024-08-19T11:00:00Z",
+      "isPrivate": false,
+      "tags": [
+        "调试",
+        "GitHub Actions",
+        "测试"
+      ],
+      "sha": "L2hvbWUvcnVubmVyL3dvcmsvc3Bhcmtsb2cvc3Bh",
+      "size": 801,
+      "type": "file"
+    },
+    {
       "name": "2024-01-01-12-00-00-000Z.md",
       "path": "notes/2024-01-01-12-00-00-000Z.md",
       "title": "2024-01-01-12-00-00-000Z",
@@ -44,9 +65,9 @@
     }
   ],
   "buildInfo": {
-    "buildTime": "2025-08-19T10:28:45.280Z",
-    "totalNotes": 3,
-    "publicNotes": 2,
+    "buildTime": "2025-08-19T10:55:08.914Z",
+    "totalNotes": 4,
+    "publicNotes": 3,
     "privateNotes": 1,
     "tags": [
       "GitHub Actions",
@@ -55,7 +76,8 @@
       "欢迎",
       "测试",
       "示例",
-      "私密"
+      "私密",
+      "调试"
     ],
     "type": "public"
   }
