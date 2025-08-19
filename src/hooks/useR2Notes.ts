@@ -147,7 +147,7 @@ export const useR2Notes = (): UseR2NotesReturn => {
     }
 
     try {
-      const adminToken = getGitHubToken()
+      const adminToken = getGitHubToken() || undefined
       const result = await noteOpsService.updateNote(note, noteData, adminToken, adminPassword)
       
       if (result.success) {
@@ -171,7 +171,7 @@ export const useR2Notes = (): UseR2NotesReturn => {
     }
 
     try {
-      const adminToken = getGitHubToken()
+      const adminToken = getGitHubToken() || undefined
       const result = await noteOpsService.deleteNote(note, adminToken)
       
       if (result.success) {

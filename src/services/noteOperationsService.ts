@@ -5,7 +5,7 @@
  */
 
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { encodeBase64Content, formatTagsForFrontMatter } from '@/utils/noteUtils'
+import { formatTagsForFrontMatter } from '@/utils/noteUtils'
 import { R2StorageService, R2Config } from './r2StorageService'
 import { EncryptionService } from './encryptionService'
 import { NoteCacheService } from './noteCacheService'
@@ -122,8 +122,7 @@ ${noteData.content.trim()}
         createdDate: currentTime,
         updatedDate: currentTime,
         isPrivate: noteData.isPrivate,
-        tags: noteData.tags,
-        title: timestamp
+        tags: noteData.tags
       }
 
       // 缓存笔记以便立即显示
