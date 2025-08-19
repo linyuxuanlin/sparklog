@@ -20,9 +20,10 @@ on:
 
 # 设置权限
 permissions:
-  contents: read
+  contents: write  # 需要写权限来提交文件
   pages: write
   id-token: write
+  actions: read
 
 # 并发控制，确保同时只有一个构建在运行
 concurrency:
@@ -40,6 +41,8 @@ jobs:
         with:
           # 获取完整历史记录，用于检测文件变更
           fetch-depth: 0
+          # 使用GitHub token进行身份验证
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: 设置 Node.js
         uses: actions/setup-node@v4
