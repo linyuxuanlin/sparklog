@@ -1,32 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
-import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X, Activity } from 'lucide-react'
+import { Plus, BookOpen, Search, Settings, AlertCircle, Lock, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
-import { useR2Notes } from '@/hooks/useR2Notes'
+import { useNotes } from '@/hooks/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import TagFilter from '@/components/TagFilter'
-import BuildStatusIndicator from '@/components/BuildStatusIndicator'
 import { Note } from '@/types/Note'
-import { showMessage } from '@/utils/noteUtils'
-import { checkEnvVarsConfigured, checkR2ConfigComplete } from '@/config/env'
+import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils/noteUtils'
+import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
   const { isLoading, isConnected, isLoggedIn } = useGitHub()
-  const { 
-    notes, 
-    isLoading: isLoadingNotes, 
-    error, 
-    buildInfo, 
-    buildStatus,
-    cacheStats,
-    refreshNotes, 
-    searchNotes, 
-    filterNotesByTags,
-    getAllTags,
-    deleteNote,
-    isR2Enabled
-  } = useR2Notes()
+  const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
   const params = useParams()
@@ -45,11 +31,11 @@ const NotesPage: React.FC = () => {
   useEffect(() => {
     if (location.state?.shouldRefresh) {
       console.log('检测到需要刷新笔记列表')
-      refreshNotes()
+      loadNotes(true)
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }
-  }, [location.state, refreshNotes, navigate, location.pathname])
+  }, [location.state, loadNotes, navigate, location.pathname])
 
   // 处理URL参数，如果有noteId参数则打开对应的笔记
   useEffect(() => {
@@ -89,17 +75,7 @@ const NotesPage: React.FC = () => {
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
-    // 如果启用了 R2 存储，检查 R2 配置
-    if (isR2Enabled) {
-      const r2ConfigComplete = checkR2ConfigComplete()
-      if (!r2ConfigComplete) {
-        setConfigModalType('env')
-        setShowConfigModal(true)
-        return
-      }
-    }
-    
-    // 检查 GitHub 连接状态和登录状态
+    // 检查GitHub连接状态和登录状态
     if (!isConnected || !isLoggedIn()) {
       // 检查环境变量是否已配置
       const envConfigured = checkEnvVarsConfigured()
@@ -139,7 +115,7 @@ const NotesPage: React.FC = () => {
     }
   }
 
-  // 删除笔记 - 使用 R2 存储的新架构
+  // 删除笔记
   const handleDeleteNote = async (note: Note) => {
     setConfirmingDelete(note.sha)
   }
@@ -149,24 +125,14 @@ const NotesPage: React.FC = () => {
     setDeletingNote(note.sha)
     
     try {
-      const success = await deleteNote(note)
+      await deleteNote(note)
+      handleShowMessage('笔记删除成功！', 'success')
       
-      if (success) {
-        handleShowMessage('笔记删除成功！内容已从 R2 存储删除，正在更新静态内容...', 'success')
-        
-        // 如果当前有模态框打开，关闭它
-        if (isModalOpen) {
-          setIsModalOpen(false)
-          setSelectedNote(null)
-          navigate('/')
-        }
-        
-        // 延迟刷新，给构建一些时间
-        setTimeout(() => {
-          refreshNotes()
-        }, 2000)
-      } else {
-        handleShowMessage('删除笔记失败，请重试', 'error')
+      // 如果当前有模态框打开，关闭它并跳转到首页
+      if (isModalOpen) {
+        setIsModalOpen(false)
+        setSelectedNote(null)
+        navigate('/')
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '请重试'
@@ -177,7 +143,7 @@ const NotesPage: React.FC = () => {
   }
 
   // 过滤笔记
-  let filteredNotes = searchNotes(searchQuery)
+  let filteredNotes = filterNotes(notes, searchQuery)
   filteredNotes = filterNotesByTags(filteredNotes, selectedTags)
 
   if (isLoading) {
@@ -185,7 +151,7 @@ const NotesPage: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">检查 GitHub 连接状态...</p>
+          <p className="mt-4 text-gray-600">检查GitHub连接状态...</p>
         </div>
       </div>
     )
@@ -276,35 +242,6 @@ const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* 构建状态和缓存状态指示器 */}
-      <div className="mb-4 flex justify-center items-center space-x-4">
-        <BuildStatusIndicator
-          buildStatus={buildStatus}
-          buildInfo={buildInfo}
-          onRefresh={refreshNotes}
-        />
-        
-        {/* R2 存储和缓存状态指示器 */}
-        {isR2Enabled && (
-          <div className="inline-flex items-center px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-700">
-            <Activity className="w-4 h-4 mr-2" />
-            <span className="text-sm font-medium">R2 存储已启用</span>
-          </div>
-        )}
-        
-        {/* 缓存统计 */}
-        {cacheStats.totalCached > 0 && (
-          <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-700">
-            <div className="flex items-center space-x-2 text-xs">
-              <span>缓存: {cacheStats.totalCached}</span>
-              {cacheStats.building > 0 && (
-                <span className="text-orange-600 dark:text-orange-300">构建中: {cacheStats.building}</span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* 搜索栏、标签筛选和按钮区域 */}
       <div className="mb-6 space-y-4">
         {/* 搜索栏和标签筛选 */}
@@ -323,7 +260,7 @@ const NotesPage: React.FC = () => {
             
             {/* 标签筛选按钮 */}
             <TagFilter
-              availableTags={getAllTags()}
+              availableTags={getAllTags(notes)}
               selectedTags={selectedTags}
               onTagsChange={setSelectedTags}
             />
@@ -387,14 +324,15 @@ const NotesPage: React.FC = () => {
         <div className="text-center py-12">
           <AlertCircle className="w-16 h-16 text-red-400 dark:text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            加载出错
+            {isRateLimited ? 'GitHub API 访问限制' : '加载出错'}
           </h2>
           <div className="max-w-md mx-auto text-gray-600 dark:text-gray-400 mb-6">
             <p className="mb-4">{error}</p>
+            {isRateLimited}
           </div>
           <div className="space-x-3">
             <button
-              onClick={refreshNotes}
+              onClick={() => loadNotes(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               重试
@@ -433,16 +371,54 @@ const NotesPage: React.FC = () => {
         </div>
              ) : (
          <div className="space-y-4">
-                     <div className="grid gap-4">
-            {filteredNotes.map((note, index) => (
-              <NoteCard
+           <div className="grid gap-4">
+             {filteredNotes.map((note, index) => (
+                             <NoteCard
                 key={`${note.sha}-${note.path || index}`}
                 note={note}
                 onOpen={handleOpenNote}
                 onTagClick={handleTagClick}
               />
-            ))}
-          </div>
+             ))}
+           </div>
+           
+                       {/* 加载更多按钮 - 只在没有筛选条件时显示 */}
+            {hasMoreNotes && selectedTags.length === 0 && !searchQuery && (
+              <div className="text-center pt-6">
+                <button
+                  onClick={loadMoreNotes}
+                  disabled={isLoadingNotes}
+                  className="btn-neomorphic inline-flex items-center"
+                >
+                  {isLoadingNotes ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      加载中...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      更多想法
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+           
+           {/* 加载进度显示 */}
+           {isLoadingNotes && loadingProgress.total > 0 && (
+             <div className="text-center py-4">
+               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                 <div 
+                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                   style={{ width: `${(loadingProgress.current / loadingProgress.total) * 100}%` }}
+                 ></div>
+               </div>
+               <p className="text-sm text-gray-600 dark:text-gray-400">
+                 正在加载笔记... {loadingProgress.current}/{loadingProgress.total}
+               </p>
+             </div>
+           )}
          </div>
        )}
       

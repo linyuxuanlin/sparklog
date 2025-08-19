@@ -1,179 +1,149 @@
-# SparkLog 开发指南
+# 开发指南
 
-## 🛠️ 开发环境搭建
+本文档提供SparkLog的开发环境搭建和贡献指南。
 
-本指南将帮助您搭建 SparkLog 的本地开发环境，并了解如何参与项目开发。
+## 开发环境搭建
 
-## 📋 环境要求
-
-### 必需软件
+### 环境要求
 
 - **Node.js**: 18.0.0 或更高版本
-- **npm**: 8.0.0 或更高版本（或 yarn/pnpm）
-- **Git**: 2.20.0 或更高版本
-- **代码编辑器**: VS Code（推荐）或其他现代编辑器
+- **npm**: 8.0.0 或更高版本
+- **Git**: 最新版本
 
-### 推荐工具
+### 安装步骤
 
-- **VS Code 扩展**:
-  - TypeScript Importer
-  - Tailwind CSS IntelliSense
-  - ESLint
-  - Prettier
-  - GitLens
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/linyuxuanlin/sparklog.git
+   cd sparklog
+   ```
 
-## 🚀 快速开始
+2. **安装依赖**
+   ```bash
+   npm install
+   ```
 
-### 1. 克隆项目
+3. **配置环境变量**
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-# 克隆主仓库
-git clone https://github.com/linyuxuanlin/sparklog.git
-cd sparklog
+4. **编辑环境变量**
+   在 `.env` 文件中配置以下变量：
+   ```env
+   VITE_REPO_OWNER=your-github-username
+   VITE_REPO_NAME=your-notes-repository
+   VITE_GITHUB_TOKEN=your-github-token
+   VITE_ADMIN_PASSWORD=your-admin-password
+   ```
 
-# 添加上游仓库（用于同步更新）
-git remote add upstream https://github.com/linyuxuanlin/sparklog.git
-```
+5. **启动开发服务器**
+   ```bash
+   npm run dev
+   ```
 
-### 2. 安装依赖
+### 开发工具配置
 
-```bash
-# 使用 npm
-npm install
+#### VS Code 推荐扩展
 
-# 或使用 yarn
-yarn install
+- **ESLint**: 代码质量检查
+- **Prettier**: 代码格式化
+- **TypeScript Importer**: TypeScript导入助手
+- **Tailwind CSS IntelliSense**: Tailwind CSS智能提示
+- **GitLens**: Git增强功能
 
-# 或使用 pnpm
-pnpm install
-```
+#### 代码规范
 
-### 3. 环境配置
-
-创建 `.env.local` 文件（本地开发专用）：
-
-```bash
-# 复制环境变量模板
-cp .env.example .env.local
-
-# 编辑 .env.local 文件
-```
-
-配置必要的环境变量：
-
-```env
-# GitHub 配置
-VITE_REPO_OWNER=your-github-username
-VITE_REPO_NAME=sparklog-notes
-VITE_GITHUB_TOKEN=ghp_your_github_token
-
-# 管理员密码
-VITE_ADMIN_PASSWORD=your-admin-password
-
-# Cloudflare R2 配置（开发环境）
-VITE_R2_ACCOUNT_ID=your_r2_account_id
-VITE_R2_ACCESS_KEY_ID=your_r2_access_key_id
-VITE_R2_SECRET_ACCESS_KEY=your_r2_secret_key
-VITE_R2_BUCKET_NAME=sparklog-dev-notes
-
-# 静态内容分支（可选）
-VITE_STATIC_BRANCH=static-content
-```
-
-### 4. 启动开发服务器
+项目使用ESLint和Prettier进行代码规范检查：
 
 ```bash
-# 启动开发服务器
-npm run dev
-
-# 或使用 yarn
-yarn dev
-
-# 或使用 pnpm
-pnpm dev
-```
-
-开发服务器将在 `http://localhost:5173` 启动。
-
-## 🏗️ 项目结构
-
-```
-sparklog/
-├── src/                          # 源代码目录
-│   ├── components/               # React 组件
-│   │   ├── __tests__/           # 组件测试
-│   │   ├── BuildStatusIndicator.tsx
-│   │   ├── Header.tsx
-│   │   ├── Layout.tsx
-│   │   ├── MarkdownRenderer.tsx
-│   │   ├── NoteCard.tsx
-│   │   ├── NoteDetailModal.tsx
-│   │   ├── Sidebar.tsx
-│   │   ├── SparkLogLogo.tsx
-│   │   ├── TagFilter.tsx
-│   │   └── TagManager.tsx
-│   ├── config/                   # 配置文件
-│   │   ├── defaultRepo.ts
-│   │   └── env.ts
-│   ├── hooks/                    # React Hooks
-│   │   ├── __tests__/           # Hook 测试
-│   │   ├── useGitHub.ts
-│   │   ├── useNotes.ts
-│   │   ├── useR2Notes.ts        # 新的 R2 核心 Hook
-│   │   └── useTheme.ts
-│   ├── pages/                    # 页面组件
-│   │   ├── NoteEditPage.tsx
-│   │   ├── NotesPage.tsx
-│   │   ├── SettingsPage.tsx
-│   │   └── WanderPage.tsx
-│   ├── services/                 # 业务服务
-│   │   ├── __tests__/           # 服务测试
-│   │   ├── encryptionService.ts # 加密服务
-│   │   ├── githubService.ts
-│   │   ├── noteCacheService.ts  # 缓存服务
-│   │   ├── noteOperationsService.ts
-│   │   ├── r2StorageService.ts  # R2 存储服务
-│   │   └── staticContentService.ts
-│   ├── types/                    # TypeScript 类型定义
-│   │   └── Note.ts
-│   ├── utils/                    # 工具函数
-│   │   └── noteUtils.ts
-│   ├── App.tsx                   # 主应用组件
-│   ├── main.tsx                  # 应用入口
-│   └── styles/                   # 样式文件
-│       └── index.css
-├── .github/                      # GitHub 配置
-│   └── workflows/                # GitHub Actions
-│       └── build-static-content.yml
-├── docs/                         # 文档
-├── public/                       # 静态资源
-├── scripts/                      # 构建脚本
-│   └── build-static-content.js
-├── package.json                  # 项目配置
-├── tsconfig.json                 # TypeScript 配置
-├── vite.config.ts                # Vite 配置
-└── tailwind.config.js            # Tailwind CSS 配置
-```
-
-## 🔧 开发工具
-
-### 1. 代码质量工具
-
-```bash
-# ESLint 检查
+# 检查代码规范
 npm run lint
 
-# ESLint 自动修复
+# 自动修复代码规范问题
 npm run lint:fix
 
-# TypeScript 类型检查
-npm run type-check
-
-# 代码格式化
+# 格式化代码
 npm run format
 ```
 
-### 2. 测试工具
+## 项目结构
+
+```
+sparklog/
+├── src/
+│   ├── components/          # UI组件
+│   │   ├── Header.tsx      # 页面头部
+│   │   ├── Layout.tsx      # 布局组件
+│   │   ├── Sidebar.tsx     # 侧边栏
+│   │   ├── NoteCard.tsx    # 笔记卡片
+│   │   ├── NoteDetailModal.tsx # 笔记详情弹窗
+│   │   ├── MarkdownRenderer.tsx # Markdown渲染器
+│   │   └── SparkLogLogo.tsx # Logo组件
+│   ├── pages/              # 页面组件
+│   │   ├── NotesPage.tsx   # 笔记列表页面
+│   │   ├── NoteEditPage.tsx # 笔记编辑页面
+│   │   └── SettingsPage.tsx # 设置页面
+│   ├── hooks/              # 自定义Hooks
+│   │   ├── useGitHub.ts    # GitHub认证Hook
+│   │   ├── useNotes.ts     # 笔记管理Hook
+│   │   └── useTheme.ts     # 主题Hook
+│   ├── config/             # 配置文件
+│   │   ├── env.ts          # 环境变量配置
+│   │   └── defaultRepo.ts  # 默认仓库配置
+│   ├── utils/              # 工具函数
+│   │   └── noteUtils.ts    # 笔记工具函数
+│   ├── types/              # TypeScript类型
+│   │   └── Note.ts         # 笔记类型定义
+│   ├── styles/             # 样式文件
+│   │   └── index.css       # 全局样式
+│   ├── App.tsx             # 应用主组件
+│   └── main.tsx            # 应用入口
+├── public/                 # 静态资源
+├── docs/                   # 文档
+├── dist/                   # 构建输出目录
+├── .env.example           # 环境变量示例
+├── package.json           # 项目配置
+├── vite.config.ts         # Vite配置
+├── tailwind.config.js     # Tailwind配置
+├── tsconfig.json          # TypeScript配置
+└── README.md              # 项目说明
+```
+
+## 开发工作流
+
+### 1. 功能开发
+
+1. **创建功能分支**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **开发功能**
+   - 编写代码
+   - 添加测试（可选）
+   - 更新文档
+
+3. **代码检查**
+   ```bash
+   npm run lint
+   npm run type-check
+   ```
+
+4. **提交代码**
+   ```bash
+   git add .
+   git commit -m "feat: add your feature description"
+   ```
+
+5. **推送分支**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+### 2. 测试
+
+#### 单元测试
 
 ```bash
 # 运行所有测试
@@ -182,397 +152,374 @@ npm test
 # 运行测试并监听文件变化
 npm run test:watch
 
-# 运行测试覆盖率报告
+# 生成测试覆盖率报告
 npm run test:coverage
-
-# 运行特定测试文件
-npm test -- src/services/__tests__/encryptionService.test.ts
 ```
 
-### 3. 构建工具
+#### 集成测试
 
 ```bash
-# 开发构建
-npm run build:dev
-
-# 生产构建
-npm run build
-
-# 预览生产构建
-npm run preview
-
-# 构建静态内容
-npm run build:static
+# 运行集成测试
+npm run test:integration
 ```
 
-## 🧪 测试指南
+### 3. 构建和部署
 
-### 1. 测试框架
+#### 本地构建
 
-- **Vitest**: 单元测试框架
-- **React Testing Library**: React 组件测试
-- **MSW**: API 模拟
+```bash
+# 构建生产版本
+npm run build
 
-### 2. 测试结构
+# 预览构建结果
+npm run preview
+```
+
+#### 部署测试
+
+```bash
+# 部署到测试环境
+npm run deploy:test
+
+# 部署到生产环境
+npm run deploy:prod
+```
+
+## 贡献指南
+
+### 贡献类型
+
+1. **Bug修复**: 修复现有功能的问题
+2. **功能增强**: 改进现有功能
+3. **新功能**: 添加新的功能
+4. **文档改进**: 更新或改进文档
+5. **性能优化**: 提升应用性能
+6. **代码重构**: 改进代码结构
+
+### 贡献流程
+
+1. **Fork项目**
+   - 在GitHub上Fork项目到你的账户
+
+2. **克隆Fork**
+   ```bash
+   git clone https://github.com/your-username/sparklog.git
+   cd sparklog
+   ```
+
+3. **设置上游仓库**
+   ```bash
+   git remote add upstream https://github.com/linyuxuanlin/sparklog.git
+   ```
+
+4. **创建功能分支**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+5. **开发功能**
+   - 编写代码
+   - 添加测试
+   - 更新文档
+
+6. **代码检查**
+   ```bash
+   npm run lint
+   npm run type-check
+   npm test
+   ```
+
+7. **提交代码**
+   ```bash
+   git add .
+   git commit -m "feat: add your feature description"
+   ```
+
+8. **推送分支**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+9. **创建Pull Request**
+   - 在GitHub上创建Pull Request
+   - 填写详细的描述
+   - 等待代码审查
+
+### 代码规范
+
+#### 提交信息规范
+
+使用[Conventional Commits](https://www.conventionalcommits.org/)规范：
+
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+类型说明：
+- `feat`: 新功能
+- `fix`: Bug修复
+- `docs`: 文档更新
+- `style`: 代码格式调整
+- `refactor`: 代码重构
+- `test`: 测试相关
+- `chore`: 构建过程或辅助工具的变动
+
+示例：
+```
+feat: add image upload functionality
+fix: resolve authentication issue
+docs: update deployment guide
+```
+
+#### 代码风格
+
+- 使用TypeScript进行类型检查
+- 遵循ESLint规则
+- 使用Prettier格式化代码
+- 编写清晰的注释
+- 使用有意义的变量名
+
+#### 组件开发规范
+
+1. **组件结构**
+   ```typescript
+   import React from 'react'
+   import { ComponentProps } from './types'
+   
+   interface Props {
+     // 组件属性定义
+   }
+   
+   export const Component: React.FC<Props> = ({ ...props }) => {
+     // 组件逻辑
+     return (
+       // JSX
+     )
+   }
+   ```
+
+2. **Hook开发规范**
+   ```typescript
+   import { useState, useEffect } from 'react'
+   
+   export const useCustomHook = () => {
+     // Hook逻辑
+     return {
+       // 返回值
+     }
+   }
+   ```
+
+### 测试规范
+
+#### 单元测试
 
 ```typescript
-// 示例：服务测试
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { EncryptionService } from '../encryptionService'
+import { render, screen } from '@testing-library/react'
+import { Component } from './Component'
 
-describe('EncryptionService', () => {
-  let service: EncryptionService
-
-  beforeEach(() => {
-    service = EncryptionService.getInstance()
-  })
-
-  it('应该是单例模式', () => {
-    const instance1 = EncryptionService.getInstance()
-    const instance2 = EncryptionService.getInstance()
-    expect(instance1).toBe(instance2)
-  })
-
-  it('应该能加密和解密内容', async () => {
-    const content = '测试内容'
-    const password = 'test-password'
-    
-    const encrypted = await service.encrypt(content, password)
-    expect(encrypted).not.toBe(content)
-    
-    const decrypted = await service.decrypt(encrypted, password)
-    expect(decrypted).toBe(content)
+describe('Component', () => {
+  it('should render correctly', () => {
+    render(<Component />)
+    expect(screen.getByText('Hello')).toBeInTheDocument()
   })
 })
 ```
 
-### 3. 测试最佳实践
-
-- **测试命名**: 使用描述性的测试名称
-- **测试隔离**: 每个测试应该独立运行
-- **模拟外部依赖**: 使用 vi.mock() 模拟外部服务
-- **测试覆盖率**: 目标至少 80% 的代码覆盖率
-
-## 🔄 开发流程
-
-### 1. 功能开发
-
-```bash
-# 创建功能分支
-git checkout -b feature/new-feature
-
-# 开发功能
-# ... 编写代码 ...
-
-# 运行测试
-npm test
-
-# 代码检查
-npm run lint
-
-# 提交代码
-git add .
-git commit -m "feat: 添加新功能"
-
-# 推送到远程
-git push origin feature/new-feature
-```
-
-### 2. 代码审查
-
-1. **创建 Pull Request**
-2. **填写 PR 模板**
-3. **等待代码审查**
-4. **根据反馈修改代码**
-5. **合并到主分支**
-
-### 3. 发布流程
-
-```bash
-# 切换到主分支
-git checkout main
-
-# 拉取最新代码
-git pull upstream main
-
-# 创建发布标签
-git tag v1.0.0
-git push origin v1.0.0
-
-# 推送到上游
-git push upstream main
-git push upstream v1.0.0
-```
-
-## 🏗️ 架构开发
-
-### 1. 添加新服务
+#### 集成测试
 
 ```typescript
-// src/services/newService.ts
-export class NewService {
-  private static instance: NewService
+import { render, screen, fireEvent } from '@testing-library/react'
+import { Component } from './Component'
 
-  private constructor() {}
-
-  static getInstance(): NewService {
-    if (!NewService.instance) {
-      NewService.instance = new NewService()
-    }
-    return NewService.instance
-  }
-
-  // 实现服务方法
-  async doSomething(): Promise<void> {
-    // 实现逻辑
-  }
-}
+describe('Component Integration', () => {
+  it('should handle user interaction', async () => {
+    render(<Component />)
+    const button = screen.getByRole('button')
+    fireEvent.click(button)
+    expect(screen.getByText('Clicked')).toBeInTheDocument()
+  })
+})
 ```
 
-### 2. 添加新 Hook
-
-```typescript
-// src/hooks/useNewFeature.ts
-import { useState, useEffect } from 'react'
-
-export function useNewFeature() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    // Hook 逻辑
-  }, [])
-
-  return { data, loading }
-}
-```
-
-### 3. 添加新组件
-
-```typescript
-// src/components/NewComponent.tsx
-import React from 'react'
-
-interface NewComponentProps {
-  title: string
-  children?: React.ReactNode
-}
-
-export function NewComponent({ title, children }: NewComponentProps) {
-  return (
-    <div className="new-component">
-      <h2>{title}</h2>
-      {children}
-    </div>
-  )
-}
-```
-
-## 🔐 安全开发
-
-### 1. 加密开发
-
-- **算法选择**: 使用 AES-GCM 256位
-- **密钥管理**: 不在代码中硬编码密钥
-- **随机性**: 使用 crypto.getRandomValues() 生成随机数
-
-### 2. 数据验证
-
-```typescript
-// 输入验证示例
-function validateNoteData(data: any): NoteData {
-  if (!data.title || typeof data.title !== 'string') {
-    throw new Error('标题是必需的且必须是字符串')
-  }
-  
-  if (data.content && typeof data.content !== 'string') {
-    throw new Error('内容必须是字符串')
-  }
-  
-  return data as NoteData
-}
-```
-
-### 3. 错误处理
-
-```typescript
-// 错误处理示例
-try {
-  const result = await riskyOperation()
-  return result
-} catch (error) {
-  console.error('操作失败:', error)
-  
-  // 用户友好的错误消息
-  if (error instanceof NetworkError) {
-    throw new Error('网络连接失败，请检查网络设置')
-  }
-  
-  throw new Error('操作失败，请稍后重试')
-}
-```
-
-## 📊 性能优化
-
-### 1. 代码分割
-
-```typescript
-// 路由级别的代码分割
-const NoteEditPage = lazy(() => import('./pages/NoteEditPage'))
-const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-```
-
-### 2. 缓存策略
-
-```typescript
-// 缓存服务示例
-class CacheService {
-  private cache = new Map<string, { data: any, timestamp: number }>()
-  private readonly TTL = 5 * 60 * 1000 // 5分钟
-
-  get<T>(key: string): T | null {
-    const cached = this.cache.get(key)
-    if (!cached) return null
-    
-    if (Date.now() - cached.timestamp > this.TTL) {
-      this.cache.delete(key)
-      return null
-    }
-    
-    return cached.data
-  }
-
-  set<T>(key: string, data: T): void {
-    this.cache.set(key, { data, timestamp: Date.now() })
-  }
-}
-```
-
-### 3. 懒加载
-
-```typescript
-// 图片懒加载
-function LazyImage({ src, alt }: { src: string; alt: string }) {
-  const [isLoaded, setIsLoaded] = useState(false)
-  
-  return (
-    <img
-      src={isLoaded ? src : 'placeholder.jpg'}
-      alt={alt}
-      onLoad={() => setIsLoaded(true)}
-      className={isLoaded ? 'loaded' : 'loading'}
-    />
-  )
-}
-```
-
-## 🐛 调试技巧
+## 调试技巧
 
 ### 1. 浏览器调试
 
-```typescript
-// 开发环境调试
-if (import.meta.env.DEV) {
-  console.log('调试信息:', { data, config })
-  
-  // 暴露到全局对象
-  ;(window as any).debugData = data
-}
+- 使用Chrome DevTools
+- 查看Console错误信息
+- 检查Network请求
+- 使用React Developer Tools
+
+### 2. 环境变量调试
+
+```javascript
+// 在浏览器控制台中检查环境变量
+console.log('REPO_OWNER:', import.meta.env.VITE_REPO_OWNER)
+console.log('REPO_NAME:', import.meta.env.VITE_REPO_NAME)
 ```
 
-### 2. 网络调试
+### 3. API调试
 
-```typescript
-// API 请求调试
-const response = await fetch(url, options)
-console.log('API 响应:', {
-  status: response.status,
-  headers: Object.fromEntries(response.headers.entries()),
-  body: await response.clone().text()
-})
+```javascript
+// 检查GitHub API请求
+const response = await fetch('https://api.github.com/repos/owner/repo')
+console.log('API Response:', response)
 ```
 
-### 3. 状态调试
+### 4. 性能调试
 
-```typescript
-// React 状态调试
-useEffect(() => {
-  console.log('状态变化:', { state, props })
-}, [state, props])
+- 使用React Profiler
+- 检查Bundle大小
+- 监控内存使用
+
+## 常见问题
+
+### 1. 依赖安装失败
+
+**解决方案**:
+```bash
+# 清除缓存
+npm cache clean --force
+
+# 删除node_modules
+rm -rf node_modules
+
+# 重新安装
+npm install
 ```
 
-## 📚 学习资源
+### 2. TypeScript错误
 
-### 1. 核心技术
+**解决方案**:
+```bash
+# 检查类型错误
+npm run type-check
 
-- [React 官方文档](https://react.dev/)
-- [TypeScript 官方文档](https://www.typescriptlang.org/)
-- [Vite 官方文档](https://vitejs.dev/)
-- [Tailwind CSS 文档](https://tailwindcss.com/)
+# 自动修复
+npm run type-check -- --fix
+```
 
-### 2. 测试相关
+### 3. 构建失败
 
-- [Vitest 文档](https://vitest.dev/)
-- [React Testing Library 文档](https://testing-library.com/docs/react-testing-library/intro/)
-- [MSW 文档](https://mswjs.io/)
+**解决方案**:
+```bash
+# 清理构建缓存
+npm run clean
 
-### 3. 架构设计
+# 重新构建
+npm run build
+```
 
-- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [SOLID 原则](https://en.wikipedia.org/wiki/SOLID)
-- [Design Patterns](https://refactoring.guru/design-patterns)
+### 4. 测试失败
 
-## 🤝 贡献指南
+**解决方案**:
+```bash
+# 运行特定测试
+npm test -- --grep "test name"
 
-### 1. 贡献类型
+# 更新快照
+npm test -- --updateSnapshot
+```
 
-- **Bug 修复**: 修复已知问题
-- **功能增强**: 添加新功能
-- **文档改进**: 完善文档和注释
-- **性能优化**: 提升应用性能
-- **测试覆盖**: 增加测试用例
+## 发布流程
 
-### 2. 贡献流程
+### 1. 版本管理
 
-1. **Fork 项目**
-2. **创建功能分支**
-3. **开发功能**
-4. **运行测试**
-5. **代码检查**
-6. **提交 PR**
-7. **等待审查**
-8. **合并代码**
+使用语义化版本控制：
 
-### 3. 代码规范
+```bash
+# 补丁版本 (1.0.0 -> 1.0.1)
+npm version patch
 
-- **TypeScript**: 严格类型检查
-- **ESLint**: 代码质量检查
-- **Prettier**: 代码格式化
-- **Git 提交**: 使用约定式提交
+# 次要版本 (1.0.0 -> 1.1.0)
+npm version minor
 
-## 🔮 未来规划
+# 主要版本 (1.0.0 -> 2.0.0)
+npm version major
+```
 
-### 1. 短期目标
+### 2. 发布步骤
 
-- 完善测试覆盖
-- 优化性能
-- 改进用户体验
-- 修复已知问题
+1. **更新版本号**
+   ```bash
+   npm version patch
+   ```
 
-### 2. 中期目标
+2. **构建项目**
+   ```bash
+   npm run build
+   ```
 
-- 添加更多功能
-- 支持多用户
-- 移动端优化
-- 国际化支持
+3. **运行测试**
+   ```bash
+   npm test
+   ```
 
-### 3. 长期目标
+4. **创建Git标签**
+   ```bash
+   git tag v1.0.1
+   git push origin v1.0.1
+   ```
 
-- 桌面应用
-- 协作功能
-- AI 辅助
-- 生态系统
+5. **部署到生产环境**
+   ```bash
+   npm run deploy:prod
+   ```
 
----
+### 3. 发布检查清单
 
-感谢您对 SparkLog 项目的关注和贡献！如果您有任何问题或建议，请随时联系我们。 
+- [ ] 所有测试通过
+- [ ] 代码规范检查通过
+- [ ] 文档已更新
+- [ ] 版本号已更新
+- [ ] 构建成功
+- [ ] 部署成功
+
+## 社区贡献
+
+### 1. 问题报告
+
+- 使用GitHub Issues
+- 提供详细的复现步骤
+- 包含环境信息
+- 添加错误日志
+
+### 2. 功能建议
+
+- 详细描述功能需求
+- 提供使用场景
+- 考虑实现复杂度
+- 讨论替代方案
+
+### 3. 代码审查
+
+- 仔细审查代码
+- 提供建设性反馈
+- 确保代码质量
+- 验证功能正确性
+
+## 学习资源
+
+### 1. 技术栈
+
+- [React官方文档](https://react.dev/)
+- [TypeScript官方文档](https://www.typescriptlang.org/)
+- [Tailwind CSS文档](https://tailwindcss.com/)
+- [Vite官方文档](https://vitejs.dev/)
+
+### 2. 开发工具
+
+- [ESLint文档](https://eslint.org/)
+- [Prettier文档](https://prettier.io/)
+- [Vitest文档](https://vitest.dev/)
+
+### 3. 最佳实践
+
+- [React最佳实践](https://react.dev/learn)
+- [TypeScript最佳实践](https://www.typescriptlang.org/docs/)
+- [Git工作流](https://git-scm.com/book/en/v2) 

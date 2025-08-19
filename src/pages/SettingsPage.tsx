@@ -88,7 +88,7 @@ const SettingsPage: React.FC = () => {
           
           <div className="space-y-4 text-gray-600 dark:text-gray-300">
             <p>
-              SparkLog 是一个基于 GitHub 仓库的静态笔记应用，支持公开笔记分享和私密笔记保护。
+              SparkLog 是一个基于GitHub仓库的静态笔记应用，支持公开笔记分享和私密笔记保护。
             </p>
             
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">

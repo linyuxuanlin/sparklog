@@ -1,10 +1,8 @@
 <div align="center">
   <img src="public/sparklog-favicon.svg" alt="SparkLog Logo" width="120" height="120">
   
-  &nbsp;
-
-  **SparkLog** 是一个基于 Cloudflare R2 存储的优雅免维护想法记录应用，不错过你的每一个奇思妙想。
-
+  **SparkLog** 是一个优雅免维护的想法记录应用，不错过你的每一个奇思妙想。
+  
   [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
   [![Vite](https://img.shields.io/badge/vite-5.0-646CFF)](https://vitejs.dev)
@@ -16,12 +14,11 @@
 ## 🌟 项目特点
 
 - **纯静态部署**: 基于 React + Vite 构建，你可以把它托管在 Cloudflare Pages、Vercel 等平台，无需服务器。
-- **Cloudflare R2 存储**: 笔记源文件存储在 Cloudflare R2 中，提供高可用性和全球分发。
-- **GitHub 静态编译**: 修改笔记后，GitHub Actions 自动编译为静态内容，极速加载。
-- **智能缓存机制**: 编辑后立即显示缓存内容，编译完成后自动更新。
-- **加密私密笔记**: 私密笔记使用 AES-GCM 加密存储，只有正确的管理员密码才能解密查看。
+- **GitHub 仓库存储**: 所有笔记数据存储在 GitHub 仓库中，永远不会丢失。
+- **无后端依赖**: 直接使用 GitHub API，无需维护服务器和数据库。
 - **实时编辑**: 无需其他编辑器，只要有网，就可记录你的想法。
-- **构建状态显示**: 实时显示编译状态和进度，让你了解内容更新情况。
+- **权限控制**: 支持笔记公开 / 私密设置。
+- **快捷分享**: 你可以一键把想法分享给好友。
 - **现代化 UI**: 简洁美观的界面设计，支持亮色 / 暗色自动切换。
 
 ## 🚀 快速开始
@@ -31,42 +28,10 @@
 - Node.js 18+
 - npm/yarn/pnpm
 
-请首先配置以下服务：
+请首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于笔记文件的存放。
 
-1. [**配置 Cloudflare R2 存储**](https://dash.cloudflare.com/?to=/:account/r2) 用于存放笔记源文件：
-   - 创建一个 R2 存储桶（例如：`sparklog-notes`）
-   - 获取 Account ID、Access Key ID 和 Secret Access Key
-   
-   **详细获取步骤**：
-   
-   **步骤 1: 获取 Account ID**
-   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-   - 在右侧边栏找到你的 Account ID（32 位字符）
-   
-   **步骤 2: 创建 R2 存储桶**
-   - 进入 "R2" → "Object Storage"
-   - 点击 "Create bucket"
-   - 输入存储桶名称（例如：`sparklog-notes`）
-   - 选择区域（建议选择离你最近的区域）
-   - 点击 "Create bucket"
-   
-   **步骤 3: 创建 API Token**
-   - 进入 "R2" → "Manage R2 API tokens"
-   - 点击 "Create User API token"
-   - 配置权限：
-     - **Permissions**: Object Read & Write
-     - **Resources**: 选择你刚创建的存储桶
-   - 点击 "Create API token"
-   - **重要**: 保存显示的 Access Key ID 和 Secret Access Key
-
-2. [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
-   获取的令牌格式例如：`ghp_xxxxxxxx`。
-
-> **新架构安全说明**: 
-> - 笔记源文件存储在您的 **Cloudflare R2** 存储桶中，提供高可用性
-> - 私密笔记使用 **AES-GCM 加密** 存储，确保安全性
-> - GitHub Actions 负责编译静态内容，只有编译后的内容部署到公开网站
-> - 支持**实时缓存**，编辑后立即显示，编译完成后自动更新
+然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），  
+获取的令牌格式例如：`ghp_xxxxxxxx`。
 
 ### 一. 本地开发
 
@@ -81,20 +46,11 @@ npm install
 # 创建环境变量文件
 cp .env.example .env  # 复制环境变量模板
 
-# 编辑 .env 文件，配置 GitHub 和 R2 存储信息
-# 详细配置说明请参考 .env.example 文件中的注释
-
-# 检查配置（推荐先运行）
-npm run check-config
-
-# 生成静态内容（首次运行必需）
-npm run build:static
+# 编辑.env文件，配置 GitHub 仓库信息
 
 # 启动开发服务器
 npm run dev
 ```
-
-> **注意**: 本地开发时需要先运行 `npm run build:static` 生成静态 JSON 文件，否则网站无法正常显示笔记内容。
 
 ### 二、部署到 Cloudflare Pages
 
@@ -119,188 +75,105 @@ npm run dev
 
 4. **设置环境变量**
 
-| 变量名                      | 说明                         | 示例                          |
-| --------------------------- | ---------------------------- | ----------------------------- |
-| `VITE_REPO_OWNER`           | GitHub 用户名或组织名        | `linyuxuanlin`                |
-| `VITE_REPO_NAME`            | 当前仓库名称                 | `sparklog`                    |
-| `VITE_GITHUB_TOKEN`         | GitHub 个人访问令牌          | `ghp_xxxxxxxx`                |
-| `VITE_ADMIN_PASSWORD`       | 管理员密码                   | `your-secure-password`        |
-| `VITE_R2_ACCOUNT_ID`        | Cloudflare R2 Account ID     | `1234567890abcdef`            |
-| `VITE_R2_ACCESS_KEY_ID`     | Cloudflare R2 Access Key ID  | `abc123def456`                |
-| `VITE_R2_SECRET_ACCESS_KEY` | Cloudflare R2 Secret Key     | `your-secret-access-key`      |
-| `VITE_R2_BUCKET_NAME`       | Cloudflare R2 存储桶名称     | `sparklog-notes`              |
-| `VITE_R2_PUBLIC_URL`        | R2 公开访问 URL（可选）      | `https://notes.example.com`   |
-| `VITE_STATIC_BRANCH`        | 静态内容分支名称（可选）     | `static-content`              |
+| 变量名                | 说明                  | 示例                   |
+| --------------------- | --------------------- | ---------------------- |
+| `VITE_REPO_OWNER`     | GitHub 用户名或组织名 | `linyuxuanlin`         |
+| `VITE_REPO_NAME`      | 笔记仓库名称          | `sparklog-notes`       |
+| `VITE_GITHUB_TOKEN`   | GitHub 个人访问令牌   | `ghp_xxxxxxxx`         |
+| `VITE_ADMIN_PASSWORD` | 管理员密码            | `your-secure-password` |
 
-5. **配置 GitHub Actions 权限**
-   
-   **重要**: 为了让自动编译功能正常工作，需要配置仓库权限：
-   
-   - 进入你 Fork 的仓库设置页面: `https://github.com/你的用户名/sparklog/settings`
-   - 点击左侧菜单 `Actions` → `General`
-   - 在 "Workflow permissions" 部分选择:
-     ```
-     ✅ Read and write permissions
-     ✅ Allow GitHub Actions to create and approve pull requests
-     ```
-   - 点击 "Save" 保存设置
-
-6. **部署**
+5. **部署**
    - 点击"Save and Deploy"
    - 等待构建完成
    - 访问你的部署地址，输入管理员密码
-   - 开始记录你的妙想
+   - 开始记录你的妙想。
 
 ## 🎯 功能特性
 
-### 核心功能
-- **📝 实时编辑**: 支持 Markdown 格式的笔记编辑，所见即所得
-- **🔍 智能搜索**: 快速搜索笔记标题、内容和标签
-- **🏷️ 标签系统**: 智能标签管理，支持筛选和搜索
-- **🔒 权限控制**: 公开笔记任何人可查看，私密笔记需要管理员验证
-- **📱 响应式设计**: 完美适配桌面和移动设备
+- **公开笔记分享**: 任何人都可以查看公开笔记
+- **私密笔记保护**: 只有通过管理员密码验证的用户才能管理私密笔记
+- **实时编辑**: 支持 Markdown 格式的笔记编辑
+- **智能搜索**: 快速搜索笔记标题、内容和标签
+- **标签系统**: 智能标签管理，支持筛选和搜索
+- **响应式设计**: 支持桌面和移动设备
+- **版本控制**: 所有更改都有 Git 提交记录
 
-### 静态架构优势
-- **⚡ 极速加载**: 静态 JSON 文件提供毫秒级加载速度
-- **🤖 自动编译**: 笔记变更时 GitHub Actions 自动重新编译
-- **📊 构建状态**: 实时显示内容编译状态和进度
-- **🛡️ 安全隔离**: 公开/私密内容物理分离，确保数据安全
-- **📈 零 API 限制**: 完全避免 GitHub API 调用限制问题
+### 管理笔记
 
-### 使用指南
+1. **查看笔记列表**
 
-1. **创建和编辑笔记**
-   - 登录后点击"新建笔记"开始创作
-   - 支持 Markdown 语法和实时预览
-   - 可设置笔记为公开或私密
-   - 使用标签管理器添加和管理标签
+   - 在首页查看所有可访问的笔记
+   - 按创建时间倒序排列（最新的在前）
+   - 支持按标签筛选和搜索功能
+   - 分页加载，提升性能体验
 
-2. **浏览和搜索**
-   - 首页显示所有可访问的笔记（按时间倒序）
-   - 使用搜索框进行全文搜索
-   - 通过标签筛选精确查找笔记
+2. **搜索和筛选**
+
+   - 使用搜索框进行全文搜索（标题、内容、标签）
+   - 使用"按标签筛选"功能精确筛选
    - 支持搜索和标签筛选的组合使用
+   - 实时显示筛选结果统计
 
-### 新架构工作原理
+3. **编辑笔记**
 
-SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
+   - 点击笔记卡片打开笔记详情
+   - 在详情页面点击"编辑"按钮进入编辑模式
+   - 支持 Markdown 实时编辑和标签管理
 
-#### 📝 笔记编辑流程
-1. **编辑笔记**: 在网站上编辑并保存笔记
-2. **加密处理**: 私密笔记使用 AES-GCM 算法加密
-3. **R2 存储**: 笔记源文件上传到 Cloudflare R2 存储桶
-4. **立即缓存**: 编辑后的内容立即缓存并显示，提供即时反馈
-5. **触发编译**: 自动触发 GitHub Actions 从 R2 获取内容并编译
+4. **删除笔记**
+   - 在笔记详情页面或编辑页面删除笔记
+   - 笔记将从 GitHub 仓库中同步删除
 
-#### 🔧 静态编译流程
-1. **获取源文件**: GitHub Actions 从 R2 存储桶获取所有笔记
-2. **内容编译**: 将 Markdown 文件编译为静态 JSON 文件
-3. **文件分离**: 生成 `public-notes.json`(公开)和 `all-notes.json`(完整)
-4. **分支部署**: 编译后的静态内容推送到 `static-content` 分支
-5. **缓存更新**: 编译完成后，静态内容自动覆盖缓存
+### 上传图片和附件（待更新）
 
-#### ⚡ 用户访问体验
-- **首次访问**: 从 `static-content` 分支加载静态 JSON 文件，毫秒级响应
-- **编辑后**: 立即显示缓存内容，同时显示编译状态
-- **编译完成**: 自动用最新静态内容替换缓存
-- **私密笔记**: 前端使用管理员密码实时解密显示
+1. **图片上传**
 
-## ⚙️ 环境变量配置
+   - 在编辑器中点击图片上传按钮
+   - 选择本地图片文件（支持 JPG、PNG、GIF、WebP）
+   - 图片将自动压缩和优化
+   - 上传到仓库的`assets/images/`目录
 
-### 环境变量模板
+2. **插入图片**
 
-项目提供了 `.env.example` 文件作为环境变量配置模板：
+   - 上传完成后自动插入图片链接
+   - 或手动插入：`![描述](图片链接)`
+   - 支持拖拽上传功能
 
-```bash
-# 复制环境变量模板
-cp .env.example .env
+3. **附件管理**
+   - 支持上传 PDF、文档等附件
+   - 存储在`assets/attachments/`目录
+   - 在笔记中插入附件链接
 
-# 编辑 .env 文件，填入实际配置值
-```
+### 标签系统
 
-### 必需的环境变量
+1. **添加标签**
+   - 编辑笔记时使用标签管理器添加标签
+   - 支持智能建议和快速输入
 
-| 变量名                      | 说明                         | 示例                          |
-| --------------------------- | ---------------------------- | ----------------------------- |
-| `VITE_REPO_OWNER`          | GitHub 用户名或组织名        | `linyuxuanlin`                |
-| `VITE_REPO_NAME`           | 当前仓库名称                 | `sparklog`                    |
-| `VITE_GITHUB_TOKEN`        | GitHub 个人访问令牌          | `ghp_xxxxxxxxxxxxxxxxxxxx`    |
-| `VITE_ADMIN_PASSWORD`      | 管理员密码（至少12位）       | `your-secure-password`        |
-| `VITE_R2_ACCOUNT_ID`       | Cloudflare R2 Account ID     | `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6` |
-| `VITE_R2_ACCESS_KEY_ID`    | R2 Access Key ID             | `AKIAIOSFODNN7EXAMPLE`        |
-| `VITE_R2_SECRET_ACCESS_KEY`| R2 Secret Access Key         | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
-| `VITE_R2_BUCKET_NAME`      | R2 存储桶名称                | `sparklog-notes`              |
+2. **筛选和搜索**
+   - 使用"按标签筛选"按钮多选筛选
+   - 标签内容支持全文搜索
+   - 可与关键词搜索组合使用
 
-### 可选的环境变量
 
-| 变量名                      | 说明                         | 默认值                        |
-| --------------------------- | ---------------------------- | ----------------------------- |
-| `VITE_R2_PUBLIC_URL`       | R2 存储桶公共访问 URL        | 自动生成                     |
-| `VITE_STATIC_BRANCH`       | 静态内容分支名称             | `static-content`              |
-| `VITE_APP_TITLE`           | 应用标题                     | `SparkLog`                    |
-| `VITE_APP_DESCRIPTION`     | 应用描述                     | `优雅免维护的想法记录应用`     |
-| `VITE_DEFAULT_THEME`       | 默认主题                     | `auto`                        |
+### 数据同步
 
-### 配置验证
+1. **自动同步**
 
-运行配置检查命令验证环境变量配置：
+   - 所有更改会自动同步到 GitHub 仓库
+   - 支持离线编辑，重新连接后同步
+   - 显示同步状态和最后同步时间
 
-```bash
-npm run check-config
-```
-
-## 🔧 故障排除
-
-### R2 存储配置问题
-
-如果遇到 R2 相关错误：
-
-1. **检查 R2 环境变量**：
-   - 确认 `VITE_R2_ACCOUNT_ID` 是否正确
-   - 确认 `VITE_R2_ACCESS_KEY_ID` 和 `VITE_R2_SECRET_ACCESS_KEY` 是否有效
-   - 确认 `VITE_R2_BUCKET_NAME` 存储桶是否存在
-
-2. **检查 R2 权限**：
-   - 确保 Access Key 有对应存储桶的读写权限
-   - 检查 R2 存储桶的 CORS 配置（如果需要）
-
-### 加密功能问题
-
-- **私密笔记无法解密**: 检查管理员密码是否正确
-- **加密失败**: 确保浏览器支持 Web Crypto API
-- **解密内容显示异常**: 可能是加密数据损坏，请检查 R2 存储完整性
-
-### GitHub Actions 权限错误
-
-如果遇到 `Permission denied` 或 `403` 错误：
-
-1. 检查仓库权限设置：
-   - 进入仓库设置: `Settings` → `Actions` → `General`
-   - 选择 "Read and write permissions"
-   - 勾选 "Allow GitHub Actions to create and approve pull requests"
-
-2. 确认 GitHub Actions 已启用：
-   - 检查 `.github/workflows/` 文件夹是否存在
-   - 确认 workflow 文件语法正确
-
-### 缓存和编译问题
-
-- **编辑后内容不更新**: 检查 R2 上传是否成功，查看浏览器开发者工具
-- **编译状态一直显示构建中**: 检查 GitHub Actions 是否正常运行
-- **缓存内容异常**: 清除浏览器缓存或使用隐私模式测试
-
-### 本地开发问题
-
-- **R2 存储未启用**: 检查环境变量配置，确保所有 R2 相关变量都已设置
-- **笔记不显示**: 确保运行了 `npm run build:static`
-- **构建失败**: 检查 R2 连接状态和存储桶权限
+2. **版本控制**
+   - 所有更改都有 Git 提交记录
+   - 可以在 GitHub 上查看历史版本
+   - 支持回滚到之前的版本
 
 ## 📚 详细文档
 
 - **[部署指南](./docs/DEPLOYMENT.md)** - 详细的部署说明和故障排除
 - **[架构原理](./docs/ARCHITECTURE.md)** - 技术架构和设计原理
 - **[开发指南](./docs/DEVELOPMENT.md)** - 开发环境搭建和贡献指南
-- **[配置指南](./docs/CONFIGURATION.md)** - 环境变量和服务配置详解
 
 ## 📄 许可证
 
