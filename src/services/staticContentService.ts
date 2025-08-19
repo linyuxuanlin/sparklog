@@ -1,4 +1,4 @@
-import { getStaticBranch } from '@/config/env'
+
 
 interface StaticContentResponse {
   success: boolean

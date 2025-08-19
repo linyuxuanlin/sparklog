@@ -4,8 +4,6 @@ import { useGitHub } from '@/hooks/useGitHub'
 import { 
   getR2Config, 
   getAdminPassword, 
-  getGitHubToken, 
-  getStaticBranch, 
   getAppTitle, 
   getAppDescription, 
   getDefaultTheme,
@@ -70,8 +68,6 @@ const SettingsPage: React.FC = () => {
   // 获取配置状态
   const r2Config = getR2Config()
   const adminPassword = getAdminPassword()
-  const githubToken = getGitHubToken()
-  const staticBranch = getStaticBranch()
   const appTitle = getAppTitle()
   const appDescription = getAppDescription()
   const defaultTheme = getDefaultTheme()
@@ -91,9 +87,7 @@ const SettingsPage: React.FC = () => {
     },
     // 管理员配置
     adminPassword: !!adminPassword,
-    githubToken: !!githubToken,
     // 应用配置
-    staticBranch: staticBranch !== 'static-content', // 如果不是默认值说明已配置
     appTitle: appTitle !== 'SparkLog', // 如果不是默认值说明已配置
     appDescription: appDescription !== '优雅免维护的想法记录应用', // 如果不是默认值说明已配置
     defaultTheme: defaultTheme !== 'auto', // 如果不是默认值说明已配置
@@ -223,12 +217,6 @@ const SettingsPage: React.FC = () => {
                           {envVars.adminPassword ? '✓ 已设置' : '✗ 未设置'}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-gray-700 dark:text-gray-300">GitHub Token</span>
-                        <span className={`text-sm font-medium ${envVars.githubToken ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {envVars.githubToken ? '✓ 已设置' : '✗ 未设置'}
-                        </span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -255,12 +243,6 @@ const SettingsPage: React.FC = () => {
                         <span className="text-sm text-gray-700 dark:text-gray-300">应用标题</span>
                         <span className="text-sm font-mono text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
                           {appTitle}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center py-2">
-                        <span className="text-sm text-gray-700 dark:text-gray-300">静态分支</span>
-                        <span className="text-sm font-mono text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">
-                          {staticBranch}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-2">
