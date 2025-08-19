@@ -39,39 +39,19 @@ export class R2Service {
     }
   }
 
-  // 获取 API 端点 - 优先使用 GitHub Actions 代理
   private getEndpoint(): string {
     if (!this.config) {
       throw new Error('R2 配置未初始化')
     }
-    
-    // 检查是否有 GitHub Actions 代理 URL
-    const proxyUrl = import.meta.env.VITE_R2_PROXY_URL
-    if (proxyUrl) {
-      return proxyUrl
-    }
-    
-    // 回退到直接 R2 访问（可能遇到 CORS 问题）
     return `https://${this.config.accountId}.r2.cloudflarestorage.com`
   }
 
-  // 检查是否使用代理
-  private isUsingProxy(): boolean {
-    return !!import.meta.env.VITE_R2_PROXY_URL
-  }
-
   private getHeaders(additionalHeaders: Record<string, string> = {}): Record<string, string> {
-    const headers: Record<string, string> = {
+    return {
+      'Authorization': `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`,
       'Content-Type': 'application/json',
       ...additionalHeaders
     }
-    
-    // 如果使用代理，不需要 AWS 签名
-    if (!this.isUsingProxy()) {
-      headers['Authorization'] = `AWS4-HMAC-SHA256 Credential=${this.config.accessKeyId}`
-    }
-    
-    return headers
   }
 
   private isValidCache(cacheKey: string): boolean {
@@ -100,15 +80,7 @@ export class R2Service {
 
     try {
       const endpoint = this.getEndpoint()
-      let url: string
-      
-      if (this.isUsingProxy()) {
-        // 使用代理时，路径直接传递
-        url = `${endpoint}/${prefix}?list-type=2`
-      } else {
-        // 直接访问 R2 时，需要完整的存储桶路径
-        url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
-      }
+      const url = `${endpoint}/${this.config.bucketName}?list-type=2&prefix=${encodeURIComponent(prefix)}`
       
       const response = await fetch(url, {
         method: 'GET',
@@ -119,42 +91,28 @@ export class R2Service {
         throw new Error(`R2 API 错误: ${response.status} - ${response.statusText}`)
       }
 
-      let files: R2File[] = []
+      const data = await response.text()
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(data, 'text/xml')
       
-      if (this.isUsingProxy()) {
-        // 代理返回 JSON 格式
-        const data = await response.json()
-        files = data.objects?.map((obj: any) => ({
-          name: obj.key.split('/').pop() || obj.key,
-          path: obj.key,
-          size: obj.size || 0,
-          uploaded: obj.uploaded || obj.etag || '',
-          etag: obj.etag || ''
-        })) || []
-      } else {
-        // 直接访问 R2 时解析 XML
-        const data = await response.text()
-        const parser = new DOMParser()
-        const xmlDoc = parser.parseFromString(data, 'text/xml')
-        
-        const contents = xmlDoc.getElementsByTagName('Contents')
-        
-        for (let i = 0; i < contents.length; i++) {
-          const content = contents[i]
-          const key = content.getElementsByTagName('Key')[0]?.textContent
-          const size = content.getElementsByTagName('Size')[0]?.textContent
-          const lastModified = content.getElementsByTagName('LastModified')[0]?.textContent
-          const etag = content.getElementsByTagName('ETag')[0]?.textContent
+      const contents = xmlDoc.getElementsByTagName('Contents')
+      const files: R2File[] = []
 
-          if (key && key.endsWith('.md')) {
-            files.push({
-              name: key.split('/').pop() || key,
-              path: key,
-              size: parseInt(size || '0'),
-              uploaded: lastModified || '',
-              etag: etag?.replace(/"/g, '') || ''
-            })
-          }
+      for (let i = 0; i < contents.length; i++) {
+        const content = contents[i]
+        const key = content.getElementsByTagName('Key')[0]?.textContent
+        const size = content.getElementsByTagName('Size')[0]?.textContent
+        const lastModified = content.getElementsByTagName('LastModified')[0]?.textContent
+        const etag = content.getElementsByTagName('ETag')[0]?.textContent
+
+        if (key && key.endsWith('.md')) {
+          files.push({
+            name: key.split('/').pop() || key,
+            path: key,
+            size: parseInt(size || '0'),
+            uploaded: lastModified || '',
+            etag: etag?.replace(/"/g, '') || ''
+          })
         }
       }
 
@@ -192,15 +150,7 @@ export class R2Service {
 
     try {
       const endpoint = this.getEndpoint()
-      let url: string
-      
-      if (this.isUsingProxy()) {
-        // 使用代理时，路径直接传递
-        url = `${endpoint}/${path}`
-      } else {
-        // 直接访问 R2 时，需要完整的存储桶路径
-        url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
-      }
+      const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
       
       const response = await fetch(url, {
         method: 'GET',
@@ -237,15 +187,7 @@ export class R2Service {
 
     try {
       const endpoint = this.getEndpoint()
-      let url: string
-      
-      if (this.isUsingProxy()) {
-        // 使用代理时，路径直接传递
-        url = `${endpoint}/${path}`
-      } else {
-        // 直接访问 R2 时，需要完整的存储桶路径
-        url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
-      }
+      const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
       
       // 如果是私密笔记，进行加密
       let finalContent = content
@@ -292,15 +234,7 @@ export class R2Service {
 
     try {
       const endpoint = this.getEndpoint()
-      let url: string
-      
-      if (this.isUsingProxy()) {
-        // 使用代理时，路径直接传递
-        url = `${endpoint}/${path}`
-      } else {
-        // 直接访问 R2 时，需要完整的存储桶路径
-        url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
-      }
+      const url = `${endpoint}/${this.config.bucketName}/${encodeURIComponent(path)}`
       
       const response = await fetch(url, {
         method: 'DELETE',
