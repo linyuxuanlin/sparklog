@@ -21,11 +21,11 @@ const SettingsPage: React.FC = () => {
   const [password, setPassword] = useState('')
   const [showLoginForm, setShowLoginForm] = useState(false)
   
-  // 折叠状态管理
+  // 折叠状态管理 - 默认全部折叠
   const [collapsedSections, setCollapsedSections] = useState({
-    r2: false,
-    admin: false,
-    app: false
+    r2: true,
+    admin: true,
+    app: true
   })
 
   // 切换折叠状态
