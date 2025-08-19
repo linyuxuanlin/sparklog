@@ -21,8 +21,6 @@ on:
 # 设置权限
 permissions:
   contents: write  # 需要写权限来提交文件
-  pages: write
-  id-token: write
   actions: read
 
 # 并发控制，确保同时只有一个构建在运行
@@ -150,47 +148,4 @@ jobs:
             echo "❌ 静态内容构建失败"
           fi
 
-  # 如果启用了 GitHub Pages，可以自动部署
-  deploy-pages:
-    name: 部署到 GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    
-    steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-      
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: 安装依赖
-        run: npm ci
-      
-      - name: 构建前端应用
-        run: npm run build
-      
-      - name: 下载静态内容
-        uses: actions/download-artifact@v4
-        with:
-          name: static-content
-          path: dist/
-      
-      - name: 设置 Pages
-        uses: actions/configure-pages@v4
-      
-      - name: 上传到 Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
-      
-      - name: 部署到 GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+
