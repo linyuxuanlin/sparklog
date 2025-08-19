@@ -3,7 +3,7 @@
   
   &nbsp;
 
-  **SparkLog** 是一个优雅免维护的想法记录应用，不错过你的每一个奇思妙想。
+  **SparkLog** 是一个基于 Cloudflare R2 存储的优雅免维护想法记录应用，不错过你的每一个奇思妙想。
 
   [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
@@ -36,6 +36,30 @@
 1. [**配置 Cloudflare R2 存储**](https://dash.cloudflare.com/?to=/:account/r2) 用于存放笔记源文件：
    - 创建一个 R2 存储桶（例如：`sparklog-notes`）
    - 获取 Account ID、Access Key ID 和 Secret Access Key
+   
+   **详细获取步骤**：
+   
+   **步骤 1: 获取 Account ID**
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 在右侧边栏找到你的 Account ID（32 位十六进制字符串）
+   - 或者进入 "R2" → "Manage R2 API tokens" → 查看 Account ID
+   
+   **步骤 2: 创建 R2 存储桶**
+   - 进入 "R2" → "Object Storage"
+   - 点击 "Create bucket"
+   - 输入存储桶名称（例如：`sparklog-notes`）
+   - 选择区域（建议选择离你最近的区域）
+   - 点击 "Create bucket"
+   
+   **步骤 3: 创建 API Token**
+   - 进入 "R2" → "Manage R2 API tokens"
+   - 点击 "Create API token"
+   - 选择 "Custom token" 模板
+   - 配置权限：
+     - **Permissions**: Object Read & Write
+     - **Resources**: 选择你刚创建的存储桶
+   - 点击 "Create API token"
+   - **重要**: 保存显示的 Access Key ID 和 Secret Access Key
 
 2. [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要 `repo` 权限），  
    获取的令牌格式例如：`ghp_xxxxxxxx`。
@@ -60,6 +84,7 @@ npm install
 cp .env.example .env  # 复制环境变量模板
 
 # 编辑 .env 文件，配置 GitHub 和 R2 存储信息
+# 详细配置说明请参考 .env.example 文件中的注释
 
 # 检查配置（推荐先运行）
 npm run check-config
@@ -181,6 +206,50 @@ SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
 - **编辑后**: 立即显示缓存内容，同时显示编译状态
 - **编译完成**: 自动用最新静态内容替换缓存
 - **私密笔记**: 前端使用管理员密码实时解密显示
+
+## ⚙️ 环境变量配置
+
+### 环境变量模板
+
+项目提供了 `.env.example` 文件作为环境变量配置模板：
+
+```bash
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，填入实际配置值
+```
+
+### 必需的环境变量
+
+| 变量名                      | 说明                         | 示例                          |
+| --------------------------- | ---------------------------- | ----------------------------- |
+| `VITE_REPO_OWNER`          | GitHub 用户名或组织名        | `linyuxuanlin`                |
+| `VITE_REPO_NAME`           | 当前仓库名称                 | `sparklog`                    |
+| `VITE_GITHUB_TOKEN`        | GitHub 个人访问令牌          | `ghp_xxxxxxxxxxxxxxxxxxxx`    |
+| `VITE_ADMIN_PASSWORD`      | 管理员密码（至少12位）       | `your-secure-password`        |
+| `VITE_R2_ACCOUNT_ID`       | Cloudflare R2 Account ID     | `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6` |
+| `VITE_R2_ACCESS_KEY_ID`    | R2 Access Key ID             | `AKIAIOSFODNN7EXAMPLE`        |
+| `VITE_R2_SECRET_ACCESS_KEY`| R2 Secret Access Key         | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
+| `VITE_R2_BUCKET_NAME`      | R2 存储桶名称                | `sparklog-notes`              |
+
+### 可选的环境变量
+
+| 变量名                      | 说明                         | 默认值                        |
+| --------------------------- | ---------------------------- | ----------------------------- |
+| `VITE_R2_PUBLIC_URL`       | R2 存储桶公共访问 URL        | 自动生成                     |
+| `VITE_STATIC_BRANCH`       | 静态内容分支名称             | `static-content`              |
+| `VITE_APP_TITLE`           | 应用标题                     | `SparkLog`                    |
+| `VITE_APP_DESCRIPTION`     | 应用描述                     | `优雅免维护的想法记录应用`     |
+| `VITE_DEFAULT_THEME`       | 默认主题                     | `auto`                        |
+
+### 配置验证
+
+运行配置检查命令验证环境变量配置：
+
+```bash
+npm run check-config
+```
 
 ## 🔧 故障排除
 
