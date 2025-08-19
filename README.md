@@ -1,8 +1,13 @@
 <div align="center">
   <img src="public/sparklog-favicon.svg" alt="SparkLog Logo" width="120" height="120">
   
+
+
+  
   **SparkLog** 是一个优雅免维护的想法记录应用，不错过你的每一个奇思妙想。
   
+
+
   [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
   [![Vite](https://img.shields.io/badge/vite-5.0-646CFF)](https://vitejs.dev)
