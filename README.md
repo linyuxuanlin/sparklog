@@ -121,7 +121,6 @@ npm run dev
 
 | 变量名                      | 说明                         | 示例                          |
 | --------------------------- | ---------------------------- | ----------------------------- |
-| `VITE_GITHUB_TOKEN`         | GitHub 个人访问令牌          | `ghp_xxxxxxxx`                |
 | `VITE_ADMIN_PASSWORD`       | 管理员密码                   | `your-secure-password`        |
 | `VITE_R2_ACCOUNT_ID`        | Cloudflare R2 Account ID     | `1234567890abcdef`            |
 | `VITE_R2_ACCESS_KEY_ID`     | Cloudflare R2 Access Key ID  | `abc123def456`                |
@@ -130,18 +129,14 @@ npm run dev
 | `VITE_R2_PUBLIC_URL`        | R2 公开访问 URL（可选）      | `https://notes.example.com`   |
 | `VITE_STATIC_BRANCH`        | 静态内容分支名称（可选）     | `static-content`              |
 
-5. **配置 GitHub Actions 权限**
+5. **配置 Cloudflare Pages**
    
-   **重要**: 为了让自动编译功能正常工作，需要配置仓库权限：
+   **重要**: 为了让自动编译功能正常工作，需要配置 Cloudflare Pages：
    
-   - 进入你 Fork 的仓库设置页面: `https://github.com/你的用户名/sparklog/settings`
-   - 点击左侧菜单 `Actions` → `General`
-   - 在 "Workflow permissions" 部分选择:
-     ```
-     ✅ Read and write permissions
-     ✅ Allow GitHub Actions to create and approve pull requests
-     ```
-   - 点击 "Save" 保存设置
+   - 在 Cloudflare Pages 控制台创建新项目
+   - 连接 GitHub 仓库并设置构建命令: `npm run build:pages`
+   - 配置环境变量（R2 配置、管理员密码等）
+   - 设置自定义域名（可选）
 
 6. **部署**
    - 点击"Save and Deploy"
@@ -160,7 +155,7 @@ npm run dev
 
 ### 静态架构优势
 - **⚡ 极速加载**: 静态 JSON 文件提供毫秒级加载速度
-- **🤖 自动编译**: 笔记变更时 GitHub Actions 自动重新编译
+- **🤖 自动编译**: 笔记变更时 Cloudflare Pages 自动重新编译
 - **📊 构建状态**: 实时显示内容编译状态和进度
 - **🛡️ 安全隔离**: 公开/私密内容物理分离，确保数据安全
 - **📈 零 API 限制**: 完全避免 GitHub API 调用限制问题
@@ -191,14 +186,14 @@ SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
 5. **触发编译**: 自动触发 GitHub Actions 从 R2 获取内容并编译
 
 #### 🔧 静态编译流程
-1. **获取源文件**: GitHub Actions 从 R2 存储桶获取所有笔记
+1. **获取源文件**: Cloudflare Pages 构建时从 R2 存储桶获取所有笔记
 2. **内容编译**: 将 Markdown 文件编译为静态 JSON 文件
 3. **文件分离**: 生成 `public-notes.json`(公开)和 `all-notes.json`(完整)
-4. **分支部署**: 编译后的静态内容推送到 `static-content` 分支
+4. **自动部署**: 编译后的静态内容自动部署到 Cloudflare Pages
 5. **缓存更新**: 编译完成后，静态内容自动覆盖缓存
 
 #### ⚡ 用户访问体验
-- **首次访问**: 从 `static-content` 分支加载静态 JSON 文件，毫秒级响应
+- **首次访问**: 从 Cloudflare Pages 加载静态 JSON 文件，毫秒级响应
 - **编辑后**: 立即显示缓存内容，同时显示编译状态
 - **编译完成**: 自动用最新静态内容替换缓存
 - **私密笔记**: 前端使用管理员密码实时解密显示

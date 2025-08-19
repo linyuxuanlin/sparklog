@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   checkEnvVarsConfigured,
   getRepoConfigFromEnv,
-  getGitHubToken,
   getAdminPassword,
   getR2Config,
   getStaticBranch,
@@ -37,7 +36,6 @@ describe('Environment Configuration', () => {
       ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
       ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
       ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
-      ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
       ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
 
       const result = checkEnvVarsConfigured()
@@ -46,7 +44,6 @@ describe('Environment Configuration', () => {
 
     it('should return false when R2 config is missing', () => {
       // 只设置部分环境变量，缺少 R2 配置
-      ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
       ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
 
       const result = checkEnvVarsConfigured()
@@ -59,25 +56,13 @@ describe('Environment Configuration', () => {
       ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
       ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
       ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
-      ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'test-token'
       // 缺少 VITE_ADMIN_PASSWORD
 
       const result = checkEnvVarsConfigured()
       expect(result).toBe(false)
     })
 
-    it('should return false when GitHub token is missing', () => {
-      // 设置 R2 配置和管理员密码但缺少 GitHub Token
-      ;(import.meta.env as any).VITE_R2_ACCOUNT_ID = 'test-account-id'
-      ;(import.meta.env as any).VITE_R2_ACCESS_KEY_ID = 'test-access-key'
-      ;(import.meta.env as any).VITE_R2_SECRET_ACCESS_KEY = 'test-secret-key'
-      ;(import.meta.env as any).VITE_R2_BUCKET_NAME = 'test-bucket'
-      ;(import.meta.env as any).VITE_ADMIN_PASSWORD = 'test-password'
-      // 缺少 VITE_GITHUB_TOKEN
 
-      const result = checkEnvVarsConfigured()
-      expect(result).toBe(false)
-    })
   })
 
   describe('getRepoConfigFromEnv', () => {
@@ -115,28 +100,7 @@ describe('Environment Configuration', () => {
     })
   })
 
-  describe('getGitHubToken', () => {
-    it('should return GitHub token from env', () => {
-      ;(import.meta.env as any).VITE_GITHUB_TOKEN = 'ghp_test123'
 
-      const result = getGitHubToken()
-      expect(result).toBe('ghp_test123')
-    })
-
-    it('should support alternative env var names', () => {
-      ;(import.meta.env as any).GITHUB_TOKEN = 'ghp_test123'
-
-      const result = getGitHubToken()
-      expect(result).toBe('ghp_test123')
-    })
-
-    it('should return null when token is missing', () => {
-      // 不设置任何环境变量
-
-      const result = getGitHubToken()
-      expect(result).toBeNull()
-    })
-  })
 
   describe('getAdminPassword', () => {
     it('should return admin password from env', () => {

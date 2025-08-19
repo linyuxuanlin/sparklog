@@ -1,10 +1,6 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  // GitHub 配置（用于静态内容分支管理）
-  readonly VITE_GITHUB_TOKEN?: string
-  readonly GITHUB_TOKEN?: string
-  
   // 管理员配置
   readonly VITE_ADMIN_PASSWORD?: string
   

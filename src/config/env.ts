@@ -19,11 +19,10 @@ export interface R2Config {
 export const checkEnvVarsConfigured = (): boolean => {
   const r2Config = getR2Config()
   const adminPassword = getAdminPassword()
-  const githubToken = getGitHubToken()
 
   // 检查必要的环境变量是否都已配置
-  // R2 配置是必须的，管理员密码是必须的，GitHub Token 用于静态内容分支管理
-  return !!(r2Config && adminPassword && githubToken)
+  // R2 配置是必须的，管理员密码是必须的
+  return !!(r2Config && adminPassword)
 }
 
 // 从环境变量获取仓库配置
@@ -50,12 +49,7 @@ export const getRepoConfigFromEnv = (): RepoConfig | null => {
   return null
 }
 
-// 获取GitHub Access Token（用于未连接用户访问私有仓库）
-export const getGitHubToken = (): string | null => {
-  return import.meta.env.VITE_GITHUB_TOKEN || 
-         import.meta.env.GITHUB_TOKEN || 
-         null
-}
+
 
 // 获取管理员密码
 export const getAdminPassword = (): string | null => {

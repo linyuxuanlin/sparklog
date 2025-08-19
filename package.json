@@ -10,7 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
-    "check-config": "node -e \"console.log('环境变量检查:'); console.log('R2 配置:', process.env.VITE_R2_ACCOUNT_ID ? '已配置' : '未配置'); console.log('GitHub Token:', process.env.VITE_GITHUB_TOKEN ? '已配置' : '未配置'); console.log('管理员密码:', process.env.VITE_ADMIN_PASSWORD ? '已配置' : '未配置');\"",
+    "check-config": "node -e \"console.log('环境变量检查:'); console.log('R2 配置:', process.env.VITE_R2_ACCOUNT_ID ? '已配置' : '未配置'); console.log('管理员密码:', process.env.VITE_ADMIN_PASSWORD ? '已配置' : '未配置');\"",
     "build:pages": "npm run pre-build && npm run build && npm run post-build",
     "pre-build": "node scripts/build-pages.js",
     "post-build": "echo 'Cloudflare Pages 构建完成！'",
