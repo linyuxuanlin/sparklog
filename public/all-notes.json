@@ -1,12 +1,33 @@
 {
   "notes": [
     {
+      "name": "2024-08-19-github-actions-test.md",
+      "path": "notes/2024-08-19-github-actions-test.md",
+      "title": "2024-08-19-github-actions-test",
+      "content": "# GitHub Actions 权限修复测试\n\n这是一个测试笔记，用于验证GitHub Actions权限问题是否已经解决。\n\n## 修复内容\n\n我们修复了以下问题：\n\n1. **权限配置**: 将 `contents: read` 改为 `contents: write`\n2. **Token配置**: 在checkout步骤中明确指定 `GITHUB_TOKEN`\n3. **仓库设置**: 确保启用了 \"Read and write permissions\"\n\n## 预期结果\n\n如果修复成功，这个笔记应该会触发GitHub Actions自动构建，并且：\n\n- ✅ 成功生成静态JSON文件\n- ✅ 成功提交到仓库\n- ✅ 不再出现403权限错误\n\n## 测试时间\n\n2024年8月19日 - GitHub Actions权限修复测试",
+      "contentPreview": "# GitHub Actions 权限修复测试\n\n这是一个测试笔记，用于验证GitHub Actions权限问题是否已经解决。\n\n## 修复内容\n\n我们修复了以下问题：\n\n1. **权限配置**: 将 `contents: read` 改为 `contents: write`\n2. **Token配置**: 在checkout步骤中明确指定 `GITHUB_TOKEN`\n3. **仓库设置**: ...",
+      "fullContent": "---\ncreated_at: 2024-08-19T10:30:00Z\nupdated_at: 2024-08-19T10:30:00Z\nprivate: false\ntags: [GitHub Actions, 测试, 权限修复]\n---\n\n# GitHub Actions 权限修复测试\n\n这是一个测试笔记，用于验证GitHub Actions权限问题是否已经解决。\n\n## 修复内容\n\n我们修复了以下问题：\n\n1. **权限配置**: 将 `contents: read` 改为 `contents: write`\n2. **Token配置**: 在checkout步骤中明确指定 `GITHUB_TOKEN`\n3. **仓库设置**: 确保启用了 \"Read and write permissions\"\n\n## 预期结果\n\n如果修复成功，这个笔记应该会触发GitHub Actions自动构建，并且：\n\n- ✅ 成功生成静态JSON文件\n- ✅ 成功提交到仓库\n- ✅ 不再出现403权限错误\n\n## 测试时间\n\n2024年8月19日 - GitHub Actions权限修复测试\n",
+      "created_at": "2024-08-19T10:30:00Z",
+      "updated_at": "2024-08-19T10:30:00Z",
+      "createdDate": "2024-08-19T10:30:00Z",
+      "updatedDate": "2024-08-19T10:30:00Z",
+      "isPrivate": false,
+      "tags": [
+        "GitHub Actions",
+        "测试",
+        "权限修复"
+      ],
+      "sha": "L2hvbWUvcnVubmVyL3dvcmsvc3Bhcmtsb2cvc3Bh",
+      "size": 783,
+      "type": "file"
+    },
+    {
       "name": "2024-01-02-10-30-00-000Z.md",
       "path": "notes/2024-01-02-10-30-00-000Z.md",
       "title": "2024-01-02-10-30-00-000Z",
-      "content": "# 私密笔记测试\r\n\r\n这是一个私密笔记，只有登录用户才能看到。\r\n\r\n## 私密内容特性\r\n\r\n- 未登录用户无法在public-notes.json中看到此内容\r\n- 只有在用户登录后加载all-notes.json时才会显示\r\n- 确保了敏感信息的安全性\r\n\r\n## 测试场景\r\n\r\n1. **未登录状态**: 应该只能看到公开笔记\r\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记\r\n3. **静态文件分离**: public-notes.json vs all-notes.json\r\n\r\n这验证了我们的权限控制机制工作正常！",
-      "contentPreview": "# 私密笔记测试\r\n\r\n这是一个私密笔记，只有登录用户才能看到。\r\n\r\n## 私密内容特性\r\n\r\n- 未登录用户无法在public-notes.json中看到此内容\r\n- 只有在用户登录后加载all-notes.json时才会显示\r\n- 确保了敏感信息的安全性\r\n\r\n## 测试场景\r\n\r\n1. **未登录状态**: 应该只能看到公开笔记\r\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记...",
-      "fullContent": "---\r\ncreated_at: 2024-01-02T10:30:00Z\r\nupdated_at: 2024-01-02T10:30:00Z\r\nprivate: true\r\ntags: [私密, 测试, 内部]\r\n---\r\n\r\n# 私密笔记测试\r\n\r\n这是一个私密笔记，只有登录用户才能看到。\r\n\r\n## 私密内容特性\r\n\r\n- 未登录用户无法在public-notes.json中看到此内容\r\n- 只有在用户登录后加载all-notes.json时才会显示\r\n- 确保了敏感信息的安全性\r\n\r\n## 测试场景\r\n\r\n1. **未登录状态**: 应该只能看到公开笔记\r\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记\r\n3. **静态文件分离**: public-notes.json vs all-notes.json\r\n\r\n这验证了我们的权限控制机制工作正常！\r\n",
+      "content": "# 私密笔记测试\n\n这是一个私密笔记，只有登录用户才能看到。\n\n## 私密内容特性\n\n- 未登录用户无法在public-notes.json中看到此内容\n- 只有在用户登录后加载all-notes.json时才会显示\n- 确保了敏感信息的安全性\n\n## 测试场景\n\n1. **未登录状态**: 应该只能看到公开笔记\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记\n3. **静态文件分离**: public-notes.json vs all-notes.json\n\n这验证了我们的权限控制机制工作正常！",
+      "contentPreview": "# 私密笔记测试\n\n这是一个私密笔记，只有登录用户才能看到。\n\n## 私密内容特性\n\n- 未登录用户无法在public-notes.json中看到此内容\n- 只有在用户登录后加载all-notes.json时才会显示\n- 确保了敏感信息的安全性\n\n## 测试场景\n\n1. **未登录状态**: 应该只能看到公开笔记\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记\n3. **静态文件分离*...",
+      "fullContent": "---\ncreated_at: 2024-01-02T10:30:00Z\nupdated_at: 2024-01-02T10:30:00Z\nprivate: true\ntags: [私密, 测试, 内部]\n---\n\n# 私密笔记测试\n\n这是一个私密笔记，只有登录用户才能看到。\n\n## 私密内容特性\n\n- 未登录用户无法在public-notes.json中看到此内容\n- 只有在用户登录后加载all-notes.json时才会显示\n- 确保了敏感信息的安全性\n\n## 测试场景\n\n1. **未登录状态**: 应该只能看到公开笔记\n2. **已登录状态**: 可以看到所有笔记，包括私密笔记\n3. **静态文件分离**: public-notes.json vs all-notes.json\n\n这验证了我们的权限控制机制工作正常！\n",
       "created_at": "2024-01-02T10:30:00Z",
       "updated_at": "2024-01-02T10:30:00Z",
       "createdDate": "2024-01-02T10:30:00Z",
@@ -17,17 +38,17 @@
         "测试",
         "内部"
       ],
-      "sha": "QzpcVXNlcnNcUG93ZXJcUHJvamVjdHNcc3Bhcmts",
-      "size": 673,
+      "sha": "L2hvbWUvcnVubmVyL3dvcmsvc3Bhcmtsb2cvc3Bh",
+      "size": 649,
       "type": "file"
     },
     {
       "name": "2024-01-01-12-00-00-000Z.md",
       "path": "notes/2024-01-01-12-00-00-000Z.md",
       "title": "2024-01-01-12-00-00-000Z",
-      "content": "# 欢迎使用 SparkLog 静态架构\r\n\r\n这是一个测试笔记，用于验证新的静态内容架构。\r\n\r\n## 主要特性\r\n\r\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\r\n- 🔒 **私密保护**: 登录用户才能访问私密内容\r\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\r\n- 📱 **实时状态**: 显示内容编译状态和进度\r\n\r\n## 技术亮点\r\n\r\n新架构采用了以下技术：\r\n\r\n1. **静态内容生成**: Markdown → JSON\r\n2. **GitHub Actions**: 自动化构建工作流\r\n3. **权限分离**: 公开/私密内容分离\r\n4. **缓存优化**: 智能缓存策略\r\n\r\n这标志着从动态API调用架构到静态内容架构的重大升级！",
-      "contentPreview": "# 欢迎使用 SparkLog 静态架构\r\n\r\n这是一个测试笔记，用于验证新的静态内容架构。\r\n\r\n## 主要特性\r\n\r\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\r\n- 🔒 **私密保护**: 登录用户才能访问私密内容\r\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\r\n- 📱 **实时状态**: 显示内容编译状态和进度\r\n\r\n## 技术亮点\r...",
-      "fullContent": "---\r\ncreated_at: 2024-01-01T12:00:00Z\r\nupdated_at: 2024-01-01T12:00:00Z\r\nprivate: false\r\ntags: [测试, 示例, 欢迎]\r\n---\r\n\r\n# 欢迎使用 SparkLog 静态架构\r\n\r\n这是一个测试笔记，用于验证新的静态内容架构。\r\n\r\n## 主要特性\r\n\r\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\r\n- 🔒 **私密保护**: 登录用户才能访问私密内容\r\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\r\n- 📱 **实时状态**: 显示内容编译状态和进度\r\n\r\n## 技术亮点\r\n\r\n新架构采用了以下技术：\r\n\r\n1. **静态内容生成**: Markdown → JSON\r\n2. **GitHub Actions**: 自动化构建工作流\r\n3. **权限分离**: 公开/私密内容分离\r\n4. **缓存优化**: 智能缓存策略\r\n\r\n这标志着从动态API调用架构到静态内容架构的重大升级！\r\n",
+      "content": "# 欢迎使用 SparkLog 静态架构\n\n这是一个测试笔记，用于验证新的静态内容架构。\n\n## 主要特性\n\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\n- 🔒 **私密保护**: 登录用户才能访问私密内容\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\n- 📱 **实时状态**: 显示内容编译状态和进度\n\n## 技术亮点\n\n新架构采用了以下技术：\n\n1. **静态内容生成**: Markdown → JSON\n2. **GitHub Actions**: 自动化构建工作流\n3. **权限分离**: 公开/私密内容分离\n4. **缓存优化**: 智能缓存策略\n\n这标志着从动态API调用架构到静态内容架构的重大升级！",
+      "contentPreview": "# 欢迎使用 SparkLog 静态架构\n\n这是一个测试笔记，用于验证新的静态内容架构。\n\n## 主要特性\n\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\n- 🔒 **私密保护**: 登录用户才能访问私密内容\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\n- 📱 **实时状态**: 显示内容编译状态和进度\n\n## 技术亮点\n\n新架构采用了以下技术...",
+      "fullContent": "---\ncreated_at: 2024-01-01T12:00:00Z\nupdated_at: 2024-01-01T12:00:00Z\nprivate: false\ntags: [测试, 示例, 欢迎]\n---\n\n# 欢迎使用 SparkLog 静态架构\n\n这是一个测试笔记，用于验证新的静态内容架构。\n\n## 主要特性\n\n- 🚀 **极速加载**: 静态JSON文件提供毫秒级加载速度\n- 🔒 **私密保护**: 登录用户才能访问私密内容\n- ⚡ **自动编译**: GitHub Actions自动触发内容编译\n- 📱 **实时状态**: 显示内容编译状态和进度\n\n## 技术亮点\n\n新架构采用了以下技术：\n\n1. **静态内容生成**: Markdown → JSON\n2. **GitHub Actions**: 自动化构建工作流\n3. **权限分离**: 公开/私密内容分离\n4. **缓存优化**: 智能缓存策略\n\n这标志着从动态API调用架构到静态内容架构的重大升级！\n",
       "created_at": "2024-01-01T12:00:00Z",
       "updated_at": "2024-01-01T12:00:00Z",
       "createdDate": "2024-01-01T12:00:00Z",
@@ -38,18 +59,20 @@
         "示例",
         "欢迎"
       ],
-      "sha": "QzpcVXNlcnNcUG93ZXJcUHJvamVjdHNcc3Bhcmts",
-      "size": 835,
+      "sha": "L2hvbWUvcnVubmVyL3dvcmsvc3Bhcmtsb2cvc3Bh",
+      "size": 807,
       "type": "file"
     }
   ],
   "buildInfo": {
-    "buildTime": "2025-08-19T10:12:21.169Z",
-    "totalNotes": 2,
-    "publicNotes": 1,
+    "buildTime": "2025-08-19T10:28:45.280Z",
+    "totalNotes": 3,
+    "publicNotes": 2,
     "privateNotes": 1,
     "tags": [
+      "GitHub Actions",
       "内部",
+      "权限修复",
       "欢迎",
       "测试",
       "示例",
