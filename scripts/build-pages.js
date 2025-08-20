@@ -157,10 +157,43 @@ function parseNoteContent(content, filename) {
       }
     } else if (inFrontmatter && line.startsWith('title:')) {
       title = line.replace('title:', '').trim()
-    } else if (inFrontmatter && line.startsWith('date:') || line.startsWith('createdDate:')) {
-      const dateStr = line.split(':')[1].trim()
-      if (dateStr) {
-        createdDate = new Date(dateStr).toISOString()
+    } else if (inFrontmatter && (line.startsWith('date:') || line.startsWith('createdDate:') || line.startsWith('created_at:'))) {
+      // 使用正则表达式正确提取时间值，避免被冒号分割
+      const match = line.match(/^(date|createdDate|created_at):\s*(.+)$/)
+      if (match) {
+        const dateStr = match[2].trim().replace(/"/g, '').replace(/'/g, '')
+        if (dateStr) {
+          try {
+            const parsedDate = new Date(dateStr)
+            if (!isNaN(parsedDate.getTime())) {
+              createdDate = parsedDate.toISOString()
+            } else {
+              console.warn(`⚠️ 无效的创建时间格式: ${dateStr}，使用默认时间`)
+            }
+          } catch (error) {
+            console.warn(`⚠️ 解析创建时间失败: ${dateStr}，使用默认时间`, error.message)
+          }
+        }
+      }
+    } else if (inFrontmatter && (line.startsWith('updatedDate:') || line.startsWith('updated_at:'))) {
+      // 使用正则表达式正确提取时间值，避免被冒号分割
+      const match = line.match(/^(updatedDate|updated_at):\s*(.+)$/)
+      if (match) {
+        const dateStr = match[2].trim().replace(/"/g, '').replace(/'/g, '')
+        if (dateStr) {
+          // 注意：这里我们暂时不设置 updatedDate，因为后面会使用 file.LastModified
+          try {
+            const parsedDate = new Date(dateStr)
+            if (!isNaN(parsedDate.getTime())) {
+              // 可以在这里设置 updatedDate 如果需要的话
+              console.log(`📅 解析到更新时间: ${parsedDate.toISOString()}`)
+            } else {
+              console.warn(`⚠️ 无效的更新时间格式: ${dateStr}`)
+            }
+          } catch (error) {
+            console.warn(`⚠️ 解析更新时间失败: ${dateStr}`, error.message)
+          }
+        }
       }
     } else if (inFrontmatter && line.startsWith('private:')) {
       isPrivate = line.split(':')[1].trim() === 'true'
@@ -259,6 +292,9 @@ async function generateStaticContent() {
         excerpt: parsed.excerpt,
         createdDate: parsed.createdDate,
         updatedDate: file.LastModified || new Date().toISOString(),
+        // 添加前端期望的字段
+        created_at: parsed.createdDate,
+        updated_at: file.LastModified || new Date().toISOString(),
         isPrivate: parsed.isPrivate,
         tags: parsed.tags,
         size: file.Size || 0,
@@ -276,8 +312,8 @@ async function generateStaticContent() {
     }
     
     // 按时间排序（新到旧）
-    allNotes.sort((a, b) => new Date(b.updatedDate) - new Date(a.updatedDate))
-    publicNotes.sort((a, b) => new Date(b.updatedDate) - new Date(a.updatedDate))
+    allNotes.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))
+    publicNotes.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate))
     
     console.log(`✅ 成功处理 ${allNotes.length} 个笔记，其中 ${publicNotes.length} 个为公开笔记`)
     

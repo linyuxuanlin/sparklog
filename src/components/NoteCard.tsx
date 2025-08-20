@@ -161,8 +161,8 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
   const createdTime = note.created_at || note.createdDate
   const updatedTime = note.updated_at || note.updatedDate
   
-  // 优先使用更新时间，如果没有则使用创建时间
-  const displayTime = updatedTime || createdTime
+  // 优先使用创建时间，如果没有则使用更新时间
+  const displayTime = createdTime || updatedTime
   
   // 生成悬停提示内容
   const getTooltipContent = () => {
