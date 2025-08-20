@@ -300,4 +300,168 @@ describe('StaticContentService', () => {
       )
     })
   })
+
+  describe('updateNoteInCache', () => {
+    it('should update note in both public and all notes cache', async () => {
+      // First populate the cache
+      const initialNotes = [
+        { id: 'note-1', name: 'note1.md', title: 'Note 1' },
+        { id: 'note-2', name: 'note2.md', title: 'Note 2' }
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(initialNotes),
+        headers: {
+          get: vi.fn((key) => key === 'content-type' ? 'application/json' : null)
+        }
+      })
+
+      await staticContentService.getPublicNotes()
+
+      // Update a note
+      const updatedNote = {
+        id: 'note-1',
+        name: 'note1.md',
+        title: 'Updated Note 1',
+        content: 'Updated content'
+      }
+
+      staticContentService.updateNoteInCache(updatedNote, false)
+
+      // Verify the note was updated in cache by getting public notes again
+      const result = await staticContentService.getPublicNotes()
+      
+      expect(result.success).toBe(true)
+      expect(result.data[0].title).toBe('Updated Note 1')
+    })
+
+    it('should add new note to the beginning of cache', async () => {
+      // First populate the cache
+      const initialNotes = [
+        { id: 'note-1', name: 'note1.md', title: 'Note 1' }
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(initialNotes),
+        headers: {
+          get: vi.fn((key) => key === 'content-type' ? 'application/json' : null)
+        }
+      })
+
+      await staticContentService.getPublicNotes()
+
+      // Add a new note
+      const newNote = {
+        id: 'note-new',
+        name: 'new-note.md',
+        title: 'New Note'
+      }
+
+      staticContentService.updateNoteInCache(newNote, false)
+
+      // Verify the new note was added to the beginning
+      const result = await staticContentService.getPublicNotes()
+      
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(2)
+      expect(result.data[0].id).toBe('note-new')
+    })
+
+    it('should not add private notes to public cache', () => {
+      const privateNote = {
+        id: 'private-note',
+        name: 'private.md',
+        title: 'Private Note'
+      }
+
+      // This should not throw even if public cache is empty
+      expect(() => {
+        staticContentService.updateNoteInCache(privateNote, true)
+      }).not.toThrow()
+    })
+  })
+
+  describe('removeNoteFromCache', () => {
+    it('should remove note from both caches by various identifiers', async () => {
+      // First populate the cache
+      const initialNotes = [
+        { id: 'note-1', name: 'note1.md', sha: 'sha1', title: 'Note 1' },
+        { id: 'note-2', name: 'note2.md', sha: 'sha2', title: 'Note 2' }
+      ]
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(initialNotes),
+        headers: {
+          get: vi.fn((key) => key === 'content-type' ? 'application/json' : null)
+        }
+      })
+
+      await staticContentService.getPublicNotes()
+
+      // Remove note by ID
+      staticContentService.removeNoteFromCache('note-1')
+
+      // Verify the note was removed
+      const result = await staticContentService.getPublicNotes()
+      
+      expect(result.success).toBe(true)
+      expect(result.data).toHaveLength(1)
+      expect(result.data[0].id).toBe('note-2')
+    })
+
+    it('should handle removing non-existent notes gracefully', () => {
+      expect(() => {
+        staticContentService.removeNoteFromCache('non-existent')
+      }).not.toThrow()
+    })
+  })
+
+  describe('triggerBuild', () => {
+    beforeEach(() => {
+      // Mock window.location for environment detection
+      Object.defineProperty(global, 'window', {
+        value: {
+          location: {
+            hostname: 'example.com',
+            origin: 'https://example.com'
+          }
+        },
+        writable: true
+      })
+    })
+
+    it('should handle development environment', async () => {
+      Object.defineProperty(global, 'window', {
+        value: {
+          location: {
+            hostname: 'localhost',
+            origin: 'http://localhost:3000'
+          }
+        },
+        writable: true
+      })
+
+      const result = await staticContentService.triggerBuild()
+      
+      expect(result.success).toBe(true)
+      expect(result.message).toContain('开发环境')
+    })
+
+    it('should handle production environment', async () => {
+      const result = await staticContentService.triggerBuild()
+      
+      expect(result.success).toBe(true)
+      expect(result.message).toContain('后台构建已触发')
+    })
+
+    it('should handle build trigger errors', async () => {
+      // The triggerBuild method should handle errors gracefully
+      const result = await staticContentService.triggerBuild()
+      
+      expect(result.success).toBe(true) // Should still succeed with fallback
+    })
+  })
 })

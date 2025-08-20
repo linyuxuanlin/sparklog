@@ -72,7 +72,8 @@ const EditNotePage: React.FC = () => {
         if (!fullContent && targetNote.path) {
           // 如果没有完整内容，从R2获取
           const r2Service = R2Service.getInstance()
-          fullContent = await r2Service.getFileContent(targetNote.path)
+          const fetchedContent = await r2Service.getFileContent(targetNote.path)
+          fullContent = fetchedContent || ''
         }
 
         if (fullContent) {

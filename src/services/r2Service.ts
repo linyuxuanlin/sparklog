@@ -330,6 +330,11 @@ export class R2Service {
     throw new Error(`无法获取 R2 文件内容，所有 CORS 策略都失败: ${lastError?.message || '未知错误'}`)
   }
 
+  // 保存文件（uploadFile的别名）
+  async saveFile(path: string, content: string, isPrivate: boolean = false): Promise<R2UploadResponse> {
+    return this.uploadFile(path, content, isPrivate)
+  }
+
   // 上传文件
   async uploadFile(path: string, content: string, isPrivate: boolean = false): Promise<R2UploadResponse> {
     if (!this.config) {
