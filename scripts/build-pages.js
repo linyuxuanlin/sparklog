@@ -47,15 +47,25 @@ if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_N
 
 // 初始化 S3 客户端（R2 兼容）
 console.log('🚀 初始化 S3 客户端...')
-const s3Client = new S3Client({
-  region: 'auto',
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  },
-})
-console.log('✅ S3 客户端初始化完成')
+let s3Client
+try {
+  s3Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  })
+  console.log('✅ S3 客户端初始化完成')
+  console.log('🔧 S3客户端配置:', {
+    endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    region: 'auto'
+  })
+} catch (error) {
+  console.error('❌ S3 客户端初始化失败:', error)
+  throw error
+}
 
 /**
  * 从 R2 获取所有笔记文件
@@ -365,21 +375,25 @@ async function main() {
     console.log(`🔧 环境: ${process.env.NODE_ENV || 'production'}`)
     console.log(`📅 构建时间: ${new Date().toISOString()}`)
     
+    console.log('📡 开始调用 generateStaticContent...')
     await generateStaticContent()
+    console.log('📡 generateStaticContent 完成')
     
     console.log('✅ 构建完成！')
   } catch (error) {
     console.error('❌ 构建失败:', error)
+    console.error('错误堆栈:', error.stack)
     process.exit(1)
   }
 }
 
 // 如果直接运行此脚本
-// 修复路径比较逻辑，支持 Windows 和 Unix 路径
-const scriptUrl = new URL(import.meta.url)
-const scriptPath = scriptUrl.pathname.replace(/^\//, '') // 移除开头的斜杠
-const argvPath = process.argv[1].replace(/\\/g, '/') // 将反斜杠转换为正斜杠
-
-if (scriptPath === argvPath) {
-  main()
+// 简化的执行条件检查
+if (import.meta.url === `file://${process.argv[1]}` || 
+    process.argv[1].endsWith('build-pages.js')) {
+  console.log('🎬 脚本开始执行...')
+  main().catch(error => {
+    console.error('❌ 主函数执行失败:', error)
+    process.exit(1)
+  })
 }
