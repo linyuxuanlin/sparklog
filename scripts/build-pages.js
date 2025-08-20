@@ -132,7 +132,10 @@ async function getFileContent(key) {
  * 解析笔记内容
  */
 function parseNoteContent(content, filename) {
-  const lines = content.split('\n')
+  // 统一换行符，处理 Windows 和 Unix 的差异
+  const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const lines = normalizedContent.split('\n')
+  
   let inFrontmatter = false
   let frontmatterEndIndex = -1
   let title = filename.replace('.md', '')
