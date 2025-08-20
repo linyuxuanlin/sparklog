@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
-import CreateNotePage from '@/pages/CreateNotePage'
+import EditNotePage from '@/pages/EditNotePage'
 import { useGitHub } from '@/hooks/useGitHub'
 import { R2Service } from '@/services/r2Service'
 import { StaticContentService } from '@/services/staticContentService'
@@ -14,7 +14,8 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
   return {
     ...actual,
-    useNavigate: () => vi.fn()
+    useNavigate: () => vi.fn(),
+    useParams: () => ({})
   }
 })
 
@@ -22,7 +23,7 @@ const mockUseGitHub = vi.mocked(useGitHub)
 const mockR2Service = vi.mocked(R2Service)
 const mockStaticContentService = vi.mocked(StaticContentService)
 
-describe('CreateNotePage', () => {
+describe('EditNotePage (Create Mode)', () => {
   const mockSaveFile = vi.fn()
   const mockUpdateNoteInCache = vi.fn()
   const mockTriggerBuild = vi.fn()
@@ -68,7 +69,7 @@ describe('CreateNotePage', () => {
   const renderCreateNotePage = () => {
     return render(
       <BrowserRouter>
-        <CreateNotePage />
+        <EditNotePage isCreate={true} />
       </BrowserRouter>
     )
   }
@@ -97,7 +98,7 @@ describe('CreateNotePage', () => {
 
     renderCreateNotePage()
     
-    expect(screen.getByText('需要登录才能创建笔记')).toBeInTheDocument()
+    expect(screen.getByText('需要管理员权限')).toBeInTheDocument()
   })
 
   it('allows typing content', () => {
@@ -232,20 +233,18 @@ describe('CreateNotePage', () => {
     await waitFor(() => {
       expect(mockSaveFile).toHaveBeenCalledWith(
         expect.stringMatching(/^notes\/.*\.md$/),
-        expect.stringContaining('This is my new note content'),
-        true
+        expect.stringContaining('This is my new note content')
       )
     })
     
     // Check that the content includes proper front matter
-    const [, content, isPrivate] = mockSaveFile.mock.calls[0]
+    const [, content] = mockSaveFile.mock.calls[0]
     expect(content).toContain('---')
     expect(content).toContain('created_at:')
     expect(content).toContain('updated_at:')
     expect(content).toContain('private: true')
     expect(content).toContain('tags: [tag1, tag2]')
     expect(content).toContain('This is my new note content')
-    expect(isPrivate).toBe(true)
   })
 
   it('triggers cache update and build after successful creation', async () => {

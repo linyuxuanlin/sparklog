@@ -8,19 +8,15 @@ import { parseNoteContent, formatTagsForFrontMatter, showMessage } from '@/utils
 import { R2Service } from '@/services/r2Service'
 import { StaticContentService } from '@/services/staticContentService'
 
-const EditNotePage: React.FC = () => {
+interface EditNotePageProps {
+  isCreate?: boolean
+}
+
+const EditNotePage: React.FC<EditNotePageProps> = ({ isCreate = false }) => {
   const { noteId } = useParams<{ noteId: string }>()
   const navigate = useNavigate()
   const { hasManagePermission } = useGitHub()
   const { notes, loadNotes } = useNotes()
-  
-  // 添加调试日志
-  console.log('EditNotePage 渲染:', { 
-    noteId, 
-    hasManagePermission: hasManagePermission(),
-    notesLength: notes.length,
-    currentPath: window.location.pathname
-  })
   
   const [note, setNote] = useState<Note | null>(null)
   const [content, setContent] = useState('')
@@ -41,8 +37,13 @@ const EditNotePage: React.FC = () => {
     showMessage(setMessage, setMessageType, text, type)
   }
 
-  // 加载笔记内容
+  // 加载笔记内容（仅在编辑模式下）
   useEffect(() => {
+    if (isCreate) {
+      setIsLoading(false)
+      return
+    }
+
     // 如果已经加载过笔记或者正在加载，则跳过
     if (hasLoadedNoteRef.current || isLoadingRef.current) {
       return
@@ -50,7 +51,6 @@ const EditNotePage: React.FC = () => {
 
     // 如果笔记列表为空，等待笔记加载完成
     if (notes.length === 0) {
-      console.log('笔记列表为空，等待笔记加载...')
       return
     }
 
@@ -74,24 +74,11 @@ const EditNotePage: React.FC = () => {
         
         // 先从已加载的笔记中查找
         const decodedNoteId = decodeURIComponent(noteId)
-        console.log('开始查找笔记:', {
-          noteId,
-          decodedNoteId,
-          notesCount: notes.length,
-          availableNotes: notes.map(n => ({
-            name: n.name,
-            path: n.path,
-            filename: (n as any).filename,
-            id: (n as any).id,
-            sha: n.sha
-          }))
-        })
         
         let targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
         
         // 如果仍然找不到，尝试从静态内容中查找（使用不同的字段匹配）
         if (!targetNote) {
-          console.log('尝试从静态内容中查找笔记...')
           targetNote = notes.find(n => 
             n.name.replace(/\.md$/, '') === decodedNoteId ||
             (n as any).filename?.replace(/\.md$/, '') === decodedNoteId ||
@@ -101,7 +88,6 @@ const EditNotePage: React.FC = () => {
 
         // 如果仍然找不到，尝试更宽松的匹配策略
         if (!targetNote) {
-          console.log('尝试更宽松的匹配策略...')
           // 尝试部分匹配
           targetNote = notes.find(n => {
             const noteName = n.name.replace(/\.md$/, '')
@@ -111,15 +97,10 @@ const EditNotePage: React.FC = () => {
                    noteName.includes(decodedNoteId) ||
                    notePath.includes(decodedNoteId)
           })
-          
-          if (targetNote) {
-            console.log('通过宽松匹配找到笔记:', targetNote)
-          }
         }
 
         // 如果仍然找不到，尝试从所有可能的字段中查找
         if (!targetNote) {
-          console.log('尝试从所有字段中查找笔记...')
           targetNote = notes.find(n => {
             // 检查所有可能的字段
             const fields = [
@@ -136,15 +117,10 @@ const EditNotePage: React.FC = () => {
               return cleanField === decodedNoteId || cleanField.includes(decodedNoteId)
             })
           })
-          
-          if (targetNote) {
-            console.log('通过字段搜索找到笔记:', targetNote)
-          }
         }
 
         // 如果仍然找不到，尝试直接从R2获取笔记信息（作为备用方案）
         if (!targetNote) {
-          console.log('尝试直接从R2获取笔记信息...')
           try {
             const r2Service = R2Service.getInstance()
             const notePath = `notes/${decodedNoteId}.md`
@@ -153,8 +129,6 @@ const EditNotePage: React.FC = () => {
             if (noteContent) {
               // 检查返回的内容是否是HTML页面
               if (noteContent.trim().startsWith('<!DOCTYPE html>') || noteContent.trim().startsWith('<html')) {
-                console.error('R2返回了HTML内容而不是笔记内容，可能是配置问题')
-                // 不立即跳转，而是显示错误信息
                 handleShowMessage('R2配置可能有问题，但已从缓存加载笔记内容', 'error')
                 // 继续尝试从缓存中查找
               } else {
@@ -177,29 +151,19 @@ const EditNotePage: React.FC = () => {
                   isPrivate: false,
                   tags: []
                 } as Note
-                console.log('从R2创建临时笔记对象:', targetNote)
               }
             }
           } catch (r2Error) {
-            console.error('从R2获取笔记失败:', r2Error)
             // 不立即跳转，而是继续尝试从缓存中查找
           }
         }
 
         if (!targetNote) {
-          console.error('所有查找策略都失败了，无法找到笔记:', {
-            noteId,
-            decodedNoteId,
-            notesCount: notes.length,
-            noteNames: notes.map(n => n.name),
-            notePaths: notes.map(n => n.path)
-          })
           handleShowMessage('未找到指定的笔记', 'error')
           navigate('/')
           return
         }
 
-        console.log('找到目标笔记:', targetNote)
         setNote(targetNote)
 
         // 获取完整内容
@@ -207,7 +171,6 @@ const EditNotePage: React.FC = () => {
         
         // 如果笔记内容不完整，尝试从R2获取（但这不是必需的）
         if (!fullContent && targetNote.path) {
-          console.log('尝试从R2获取完整笔记内容...')
           try {
             const r2Service = R2Service.getInstance()
             const fetchedContent = await r2Service.getFileContent(targetNote.path)
@@ -215,7 +178,7 @@ const EditNotePage: React.FC = () => {
               fullContent = fetchedContent
             }
           } catch (error) {
-            console.log('从R2获取完整内容失败，使用缓存内容:', error)
+            // 使用缓存内容
           }
         }
 
@@ -255,7 +218,6 @@ const EditNotePage: React.FC = () => {
         // 标记笔记已加载完成
         hasLoadedNoteRef.current = true
       } catch (error) {
-        console.error('加载笔记失败:', error)
         handleShowMessage('加载笔记失败', 'error')
         navigate('/')
       } finally {
@@ -265,7 +227,7 @@ const EditNotePage: React.FC = () => {
     }
 
     loadNote()
-  }, [noteId, hasManagePermission, navigate, notes, loadNotes]) // 添加 notes 和 loadNotes 依赖
+  }, [noteId, hasManagePermission, navigate, notes, loadNotes, isCreate])
 
   // 添加标签
   const handleAddTag = () => {
@@ -283,15 +245,35 @@ const EditNotePage: React.FC = () => {
 
   // 保存笔记
   const handleSave = async () => {
-    if (!note) return
+    if (isCreate && !content.trim()) {
+      handleShowMessage('笔记内容不能为空', 'error')
+      return
+    }
+
+    if (!isCreate && !note) return
 
     setIsSaving(true)
     try {
+      let filePath: string
+      let fileName: string
+
+      if (isCreate) {
+        // 创建新笔记
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+        fileName = `${timestamp}.md`
+        filePath = `notes/${fileName}`
+      } else {
+        // 编辑现有笔记
+        filePath = note!.path
+        fileName = note!.name
+      }
+
       // 生成front matter
+      const now = new Date().toISOString()
       const frontMatter = [
         '---',
-        `created_at: "${note.created_at || note.createdDate || new Date().toISOString()}"`,
-        `updated_at: "${new Date().toISOString()}"`,
+        `created_at: "${isCreate ? now : (note?.created_at || note?.createdDate || now)}"`,
+        `updated_at: "${now}"`,
         `private: ${isPrivate}`,
         `tags: ${formatTagsForFrontMatter(tags)}`,
         '---'
@@ -301,40 +283,74 @@ const EditNotePage: React.FC = () => {
 
       // 保存到R2
       const r2Service = R2Service.getInstance()
-      await r2Service.saveFile(note.path, fullContent)
+      await r2Service.saveFile(filePath, fullContent)
 
-      // 解析更新后的内容
-      const parsedContent = parseNoteContent(fullContent, note.name)
-      
-      // 创建更新后的笔记对象
-      const updatedNote = {
-        ...note,
-        contentPreview: parsedContent.contentPreview,
-        fullContent: fullContent,
-        content: fullContent,
-        isPrivate: isPrivate,
-        tags: tags,
-        updated_at: new Date().toISOString(),
-        updatedDate: new Date().toISOString()
+      if (isCreate) {
+        // 创建新笔记对象
+        const parsedContent = parseNoteContent(fullContent, fileName)
+        const newNote = {
+          name: fileName,
+          path: filePath,
+          sha: `note-${Date.now()}`,
+          size: fullContent.length,
+          url: '',
+          git_url: '',
+          html_url: '',
+          download_url: '',
+          type: 'file',
+          contentPreview: parsedContent.contentPreview,
+          fullContent: fullContent,
+          content: fullContent,
+          isPrivate: isPrivate,
+          tags: tags,
+          created_at: now,
+          updated_at: now,
+          createdDate: now,
+          updatedDate: now
+        }
+
+        // 立即更新缓存，让用户看到新笔记
+        const staticContentService = StaticContentService.getInstance()
+        staticContentService.updateNoteInCache(newNote, isPrivate)
+
+        // 触发后台构建
+        staticContentService.triggerBuild()
+
+        handleShowMessage('笔记创建成功！', 'success')
+      } else {
+        // 解析更新后的内容
+        const parsedContent = parseNoteContent(fullContent, note!.name)
+        
+        // 创建更新后的笔记对象
+        const updatedNote = {
+          ...note!,
+          contentPreview: parsedContent.contentPreview,
+          fullContent: fullContent,
+          content: fullContent,
+          isPrivate: isPrivate,
+          tags: tags,
+          updated_at: now,
+          updatedDate: now
+        }
+
+        // 立即更新缓存，让用户看到更改
+        const staticContentService = StaticContentService.getInstance()
+        staticContentService.updateNoteInCache(updatedNote, isPrivate)
+
+        // 触发后台构建
+        staticContentService.triggerBuild()
+
+        handleShowMessage('笔记保存成功！', 'success')
       }
-
-      // 立即更新缓存，让用户看到更改
-      const staticContentService = StaticContentService.getInstance()
-      staticContentService.updateNoteInCache(updatedNote, isPrivate)
-
-      // 触发后台构建
-      staticContentService.triggerBuild()
-
-      handleShowMessage('笔记保存成功！', 'success')
       
       // 延迟跳转，让用户看到成功消息
       setTimeout(() => {
         navigate('/', { state: { shouldRefresh: true } })
       }, 1000)
     } catch (error) {
-      console.error('保存笔记失败:', error)
       const errorMessage = error instanceof Error ? error.message : '请重试'
-      handleShowMessage(`保存失败: ${errorMessage}`, 'error')
+      const action = isCreate ? '创建' : '保存'
+      handleShowMessage(`${action}失败: ${errorMessage}`, 'error')
     } finally {
       setIsSaving(false)
     }
@@ -349,7 +365,7 @@ const EditNotePage: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">需要管理员权限</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">编辑笔记需要管理员身份验证</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">{isCreate ? '创建' : '编辑'}笔记需要管理员身份验证</p>
             <div className="space-x-3">
               <button
                 onClick={() => navigate('/')}
@@ -370,7 +386,7 @@ const EditNotePage: React.FC = () => {
     )
   }
 
-  if (isLoading) {
+  if (!isCreate && isLoading) {
     return (
       <div className="max-w-4xl mx-auto py-8">
         <div className="text-center">
@@ -381,7 +397,7 @@ const EditNotePage: React.FC = () => {
     )
   }
 
-  if (!note) {
+  if (!isCreate && !note) {
     return (
       <div className="max-w-4xl mx-auto py-8 text-center">
         <div className="text-gray-500 dark:text-gray-400">未找到笔记</div>
@@ -391,17 +407,6 @@ const EditNotePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-6">
-      {/* 调试信息 */}
-      <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
-        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">调试信息</h3>
-        <p className="text-sm text-yellow-700 dark:text-yellow-300">
-          noteId: {noteId} | 
-          权限: {hasManagePermission() ? '有' : '无'} | 
-          笔记数量: {notes.length} | 
-          当前路径: {window.location.pathname}
-        </p>
-      </div>
-      
       {/* 消息提示 */}
       {message && (
         <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
@@ -428,102 +433,99 @@ const EditNotePage: React.FC = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             返回
           </button>
-          
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="btn-primary inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  保存中...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  保存
-                </>
-              )}
-            </button>
-          </div>
         </div>
         
         <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
           <FileText className="w-4 h-4" />
-          <span>编辑笔记: {note.name.replace(/\.md$/, '')}</span>
-        </div>
-      </div>
-
-      {/* 设置区域 */}
-      <div className="mb-6 space-y-4">
-        {/* 隐私设置 */}
-        <div className="flex items-center space-x-3">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-white dark:bg-gray-700"
-            />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">私密笔记</span>
-          </label>
-        </div>
-
-        {/* 标签管理 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            标签
-          </label>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {tags.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
-              >
-                <Tag className="w-3 h-3 mr-1" />
-                {tag}
-                <button
-                  onClick={() => handleRemoveTag(tag)}
-                  className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-              placeholder="添加标签"
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            />
-            <button
-              onClick={handleAddTag}
-              disabled={!newTag.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              添加
-            </button>
-          </div>
+          <span>{isCreate ? '新建笔记' : `编辑笔记: ${note?.name.replace(/\.md$/, '')}`}</span>
         </div>
       </div>
 
       {/* 内容编辑器 */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          内容
-        </label>
+      <div className="mb-6">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="在这里写下你的想法..."
           className="w-full h-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none font-mono"
         />
+      </div>
+
+      {/* 标签和隐私设置区域 */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          {/* 标签管理 */}
+          <div className="flex-1 max-w-2xl">
+            <div className="flex flex-wrap gap-2 mb-3">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+                >
+                  <Tag className="w-3 h-3 mr-1" />
+                  {tag}
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+                placeholder="添加标签"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              <button
+                onClick={handleAddTag}
+                disabled={!newTag.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                添加
+              </button>
+            </div>
+          </div>
+
+          {/* 隐私设置 */}
+          <div className="ml-8 flex items-center">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-white dark:bg-gray-700"
+              />
+              <span className="ml-3 text-base text-gray-700 dark:text-gray-300">私密笔记</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* 保存按钮 */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={isSaving || (isCreate && !content.trim())}
+          className="btn-primary inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSaving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {isCreate ? '创建中...' : '保存中...'}
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              {isCreate ? '创建笔记' : '保存'}
+            </>
+          )}
+        </button>
       </div>
     </div>
   )
