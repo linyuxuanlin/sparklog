@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { X, Edit, Trash2, Share, Check, Github, Tag } from 'lucide-react'
+import { X, Edit, Trash2, Share, Check, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -194,16 +194,6 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                       <Edit className="w-5 h-5" />
                     </button>
                     
-                    {/* GitHub链接按钮 */}
-                    <a
-                      href={note.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-                      title="在GitHub查看"
-                    >
-                      <Github className="w-5 h-5" />
-                    </a>
                     
                     {/* 删除按钮 */}
                     {isConfirming ? (

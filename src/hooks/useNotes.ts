@@ -356,7 +356,17 @@ export const useNotes = () => {
       const r2Service = R2Service.getInstance()
       await r2Service.deleteFile(note.path)
       
+      // 从本地状态中删除
       setNotes(prev => prev.filter(n => n.sha !== note.sha))
+      
+      // 从缓存中删除
+      const staticContentService = StaticContentService.getInstance()
+      staticContentService.removeNoteFromCache(note.sha)
+      staticContentService.removeNoteFromCache(note.name.replace(/\.md$/, ''))
+      
+      // 触发后台构建
+      staticContentService.triggerBuild()
+      
       return true
     } catch (error) {
       console.error('删除笔记失败:', error)

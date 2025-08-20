@@ -3,6 +3,8 @@ import Layout from '@/components/Layout'
 import NotesPage from '@/pages/NotesPage'
 import WanderPage from '@/pages/WanderPage'
 import SettingsPage from '@/pages/SettingsPage'
+import EditNotePage from '@/pages/EditNotePage'
+import CreateNotePage from '@/pages/CreateNotePage'
 import { useGitHub } from '@/hooks/useGitHub'
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
           <Route path="wander/:noteId" element={<WanderPage />} />
 
           <Route path="note/:noteId" element={<NotesPage />} />
+          <Route path="note/new" element={<CreateNotePage />} />
+          <Route path="note/edit/:noteId" element={<EditNotePage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>

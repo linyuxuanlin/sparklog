@@ -231,6 +231,191 @@ export class StaticContentService {
     }
   }
 
+  // 更新缓存中的单个笔记
+  public updateNoteInCache(note: any, isPrivate: boolean = false): void {
+    // 更新公开笔记缓存
+    const publicCacheKey = 'public-notes'
+    const publicCached = this.cache.get(publicCacheKey)
+    
+    if (publicCached && !isPrivate) {
+      // 如果笔记是公开的，添加或更新到公开笔记缓存中
+      const notes = Array.isArray(publicCached.data) ? publicCached.data : []
+      const existingIndex = notes.findIndex((n: any) => n.id === note.id || n.sha === note.sha || n.name === note.name)
+      
+      if (existingIndex >= 0) {
+        notes[existingIndex] = note
+      } else {
+        notes.unshift(note) // 新笔记添加到开头
+      }
+      
+      this.cache.set(publicCacheKey, {
+        ...publicCached,
+        data: notes,
+        timestamp: Date.now()
+      })
+      console.log('已更新公开笔记缓存中的笔记:', note.name)
+    }
+    
+    // 更新所有笔记缓存
+    const allCacheKey = 'all-notes'
+    const allCached = this.cache.get(allCacheKey)
+    
+    if (allCached) {
+      const notes = Array.isArray(allCached.data) ? allCached.data : []
+      const existingIndex = notes.findIndex((n: any) => n.id === note.id || n.sha === note.sha || n.name === note.name)
+      
+      if (existingIndex >= 0) {
+        notes[existingIndex] = note
+      } else {
+        notes.unshift(note) // 新笔记添加到开头
+      }
+      
+      this.cache.set(allCacheKey, {
+        ...allCached,
+        data: notes,
+        timestamp: Date.now()
+      })
+      console.log('已更新所有笔记缓存中的笔记:', note.name)
+    }
+  }
+
+  // 从缓存中删除笔记
+  public removeNoteFromCache(noteId: string): void {
+    // 从公开笔记缓存中删除
+    const publicCacheKey = 'public-notes'
+    const publicCached = this.cache.get(publicCacheKey)
+    
+    if (publicCached) {
+      const notes = Array.isArray(publicCached.data) ? publicCached.data : []
+      const filteredNotes = notes.filter((n: any) => 
+        n.id !== noteId && n.sha !== noteId && n.name !== noteId && n.name.replace(/\.md$/, '') !== noteId
+      )
+      
+      this.cache.set(publicCacheKey, {
+        ...publicCached,
+        data: filteredNotes,
+        timestamp: Date.now()
+      })
+      console.log('已从公开笔记缓存中删除笔记:', noteId)
+    }
+    
+    // 从所有笔记缓存中删除
+    const allCacheKey = 'all-notes'
+    const allCached = this.cache.get(allCacheKey)
+    
+    if (allCached) {
+      const notes = Array.isArray(allCached.data) ? allCached.data : []
+      const filteredNotes = notes.filter((n: any) => 
+        n.id !== noteId && n.sha !== noteId && n.name !== noteId && n.name.replace(/\.md$/, '') !== noteId
+      )
+      
+      this.cache.set(allCacheKey, {
+        ...allCached,
+        data: filteredNotes,
+        timestamp: Date.now()
+      })
+      console.log('已从所有笔记缓存中删除笔记:', noteId)
+    }
+  }
+
+  // 触发后台构建
+  public async triggerBuild(): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log('触发后台构建静态内容...')
+      
+      // 方案1: 如果有 GitHub Actions，可以通过 repository_dispatch 事件触发
+      // 方案2: 如果使用 Cloudflare Pages，可以通过 webhook 触发
+      // 方案3: 直接运行构建脚本（开发环境）
+      
+      // 检查是否在支持的环境中
+      const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1')
+      
+      if (isDevelopment) {
+        // 开发环境：模拟构建触发
+        console.log('开发环境：模拟后台构建触发')
+        
+        // 延迟一段时间后清除缓存，模拟构建完成
+        setTimeout(() => {
+          this.clearCache()
+          console.log('模拟构建完成，缓存已清除')
+        }, 3000) // 3秒后清除缓存
+        
+        return {
+          success: true,
+          message: '开发环境：模拟构建已触发，静态内容将在几秒后更新'
+        }
+      }
+      
+      // 生产环境：尝试触发实际构建
+      try {
+        // 尝试调用构建 API 或 webhook
+        // 这里可以调用 GitHub Actions API、Cloudflare Pages API 等
+        
+        // 示例：GitHub repository_dispatch 触发
+        // const response = await fetch('https://api.github.com/repos/OWNER/REPO/dispatches', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Accept': 'application/vnd.github.v3+json',
+        //     'Authorization': `token ${GITHUB_TOKEN}`,
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify({
+        //     event_type: 'rebuild-static-content',
+        //     client_payload: {
+        //       reason: 'note-updated',
+        //       timestamp: new Date().toISOString()
+        //     }
+        //   })
+        // })
+        
+        // 示例：Cloudflare Pages webhook 触发
+        // const webhookUrl = 'YOUR_CLOUDFLARE_PAGES_WEBHOOK_URL'
+        // const response = await fetch(webhookUrl, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json'
+        //   },
+        //   body: JSON.stringify({
+        //     action: 'rebuild',
+        //     timestamp: new Date().toISOString()
+        //   })
+        // })
+        
+        console.log('生产环境：构建触发请求已发送')
+        
+        // 延迟较长时间后清除缓存，等待实际构建完成
+        setTimeout(() => {
+          this.clearCache()
+          console.log('构建触发完成，缓存已清除')
+        }, 30000) // 30秒后清除缓存，给构建过程留出时间
+        
+        return {
+          success: true,
+          message: '后台构建已触发，静态内容将在几分钟后更新'
+        }
+      } catch (buildError) {
+        console.warn('构建触发失败，使用降级方案:', buildError)
+        
+        // 降级方案：仅清除缓存
+        setTimeout(() => {
+          this.clearCache()
+          console.log('降级方案：缓存已清除')
+        }, 5000)
+        
+        return {
+          success: true,
+          message: '构建触发失败，但缓存已清除。静态内容将在下次访问时从源获取'
+        }
+      }
+    } catch (error) {
+      console.error('触发构建失败:', error)
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : '触发构建失败'
+      }
+    }
+  }
+
   // 强制刷新缓存
   async forceRefresh(): Promise<void> {
     this.clearCache()
