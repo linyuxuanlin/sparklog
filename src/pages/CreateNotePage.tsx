@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, ArrowLeft, FileText, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -8,7 +8,7 @@ import { StaticContentService } from '@/services/staticContentService'
 
 const CreateNotePage: React.FC = () => {
   const navigate = useNavigate()
-  const { hasManagePermission } = useGitHub()
+  const { hasManagePermission, isLoading, refreshAuthStatus } = useGitHub()
   
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -24,11 +24,33 @@ const CreateNotePage: React.FC = () => {
   }
 
   // 检查管理权限
-  React.useEffect(() => {
+  useEffect(() => {
+    // 如果还在加载中，等待加载完成
+    if (isLoading) {
+      return
+    }
+
+    // 强制刷新权限状态
+    refreshAuthStatus()
+    
+    // 检查权限
     if (!hasManagePermission()) {
       handleShowMessage('需要管理权限才能创建笔记', 'error')
     }
-  }, [hasManagePermission])
+  }, [hasManagePermission, isLoading, refreshAuthStatus])
+
+  // 监听权限状态变化
+  useEffect(() => {
+    const handleAuthChange = () => {
+      refreshAuthStatus()
+    }
+
+    window.addEventListener('sparklog_auth_change', handleAuthChange)
+    
+    return () => {
+      window.removeEventListener('sparklog_auth_change', handleAuthChange)
+    }
+  }, [refreshAuthStatus])
 
   // 添加标签
   const handleAddTag = () => {
@@ -122,6 +144,19 @@ const CreateNotePage: React.FC = () => {
     }
   }
 
+  // 如果还在加载中，显示加载状态
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">检查权限中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果没有管理权限，显示权限提示
   if (!hasManagePermission()) {
     return (
       <div className="max-w-4xl mx-auto py-8">
