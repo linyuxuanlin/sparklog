@@ -266,14 +266,14 @@ const NoteCard: React.FC<NoteCardProps> = ({
         const contentElement = contentRef.current
         const isContentTruncated = contentElement.scrollHeight > contentElement.clientHeight
         // 如果原始内容较长，即使过滤后较短也显示按钮
-        const hasLongOriginalContent = Boolean(note.contentPreview && note.contentPreview.length > 150)
+        const hasLongOriginalContent = Boolean(note.contentPreview && (note.contentPreview.length > 200 || note.contentPreview.includes('...')))
         setShowExpandButton(isContentTruncated || hasLongOriginalContent)
       } else if (isExpanded) {
         // 如果已展开，总是显示收起按钮（只要有内容）
         setShowExpandButton(Boolean(note.contentPreview))
       } else {
         // 如果没有内容引用，回退到长度判断
-        setShowExpandButton(Boolean(note.contentPreview && note.contentPreview.length > 150))
+        setShowExpandButton(Boolean(note.contentPreview && (note.contentPreview.length > 200 || note.contentPreview.includes('...'))))
       }
 
       // 检测按钮文字显示空间
