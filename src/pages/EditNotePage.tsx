@@ -14,6 +14,14 @@ const EditNotePage: React.FC = () => {
   const { hasManagePermission } = useGitHub()
   const { notes, loadNotes } = useNotes()
   
+  // 添加调试日志
+  console.log('EditNotePage 渲染:', { 
+    noteId, 
+    hasManagePermission: hasManagePermission(),
+    notesLength: notes.length,
+    currentPath: window.location.pathname
+  })
+  
   const [note, setNote] = useState<Note | null>(null)
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -42,6 +50,7 @@ const EditNotePage: React.FC = () => {
 
     // 如果笔记列表为空，等待笔记加载完成
     if (notes.length === 0) {
+      console.log('笔记列表为空，等待笔记加载...')
       return
     }
 
@@ -65,10 +74,24 @@ const EditNotePage: React.FC = () => {
         
         // 先从已加载的笔记中查找
         const decodedNoteId = decodeURIComponent(noteId)
+        console.log('开始查找笔记:', {
+          noteId,
+          decodedNoteId,
+          notesCount: notes.length,
+          availableNotes: notes.map(n => ({
+            name: n.name,
+            path: n.path,
+            filename: (n as any).filename,
+            id: (n as any).id,
+            sha: n.sha
+          }))
+        })
+        
         let targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
         
         // 如果仍然找不到，尝试从静态内容中查找（使用不同的字段匹配）
         if (!targetNote) {
+          console.log('尝试从静态内容中查找笔记...')
           targetNote = notes.find(n => 
             n.name.replace(/\.md$/, '') === decodedNoteId ||
             (n as any).filename?.replace(/\.md$/, '') === decodedNoteId ||
@@ -78,6 +101,7 @@ const EditNotePage: React.FC = () => {
 
         // 如果仍然找不到，尝试更宽松的匹配策略
         if (!targetNote) {
+          console.log('尝试更宽松的匹配策略...')
           // 尝试部分匹配
           targetNote = notes.find(n => {
             const noteName = n.name.replace(/\.md$/, '')
@@ -87,10 +111,15 @@ const EditNotePage: React.FC = () => {
                    noteName.includes(decodedNoteId) ||
                    notePath.includes(decodedNoteId)
           })
+          
+          if (targetNote) {
+            console.log('通过宽松匹配找到笔记:', targetNote)
+          }
         }
 
         // 如果仍然找不到，尝试从所有可能的字段中查找
         if (!targetNote) {
+          console.log('尝试从所有字段中查找笔记...')
           targetNote = notes.find(n => {
             // 检查所有可能的字段
             const fields = [
@@ -107,10 +136,15 @@ const EditNotePage: React.FC = () => {
               return cleanField === decodedNoteId || cleanField.includes(decodedNoteId)
             })
           })
+          
+          if (targetNote) {
+            console.log('通过字段搜索找到笔记:', targetNote)
+          }
         }
 
         // 如果仍然找不到，尝试直接从R2获取笔记信息（作为备用方案）
         if (!targetNote) {
+          console.log('尝试直接从R2获取笔记信息...')
           try {
             const r2Service = R2Service.getInstance()
             const notePath = `notes/${decodedNoteId}.md`
@@ -143,6 +177,7 @@ const EditNotePage: React.FC = () => {
                   isPrivate: false,
                   tags: []
                 } as Note
+                console.log('从R2创建临时笔记对象:', targetNote)
               }
             }
           } catch (r2Error) {
@@ -164,6 +199,7 @@ const EditNotePage: React.FC = () => {
           return
         }
 
+        console.log('找到目标笔记:', targetNote)
         setNote(targetNote)
 
         // 获取完整内容
@@ -171,6 +207,7 @@ const EditNotePage: React.FC = () => {
         
         // 如果笔记内容不完整，尝试从R2获取（但这不是必需的）
         if (!fullContent && targetNote.path) {
+          console.log('尝试从R2获取完整笔记内容...')
           try {
             const r2Service = R2Service.getInstance()
             const fetchedContent = await r2Service.getFileContent(targetNote.path)
@@ -178,7 +215,7 @@ const EditNotePage: React.FC = () => {
               fullContent = fetchedContent
             }
           } catch (error) {
-            // 静默处理错误，使用缓存内容
+            console.log('从R2获取完整内容失败，使用缓存内容:', error)
           }
         }
 
@@ -354,6 +391,17 @@ const EditNotePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-6">
+      {/* 调试信息 */}
+      <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">调试信息</h3>
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+          noteId: {noteId} | 
+          权限: {hasManagePermission() ? '有' : '无'} | 
+          笔记数量: {notes.length} | 
+          当前路径: {window.location.pathname}
+        </p>
+      </div>
+      
       {/* 消息提示 */}
       {message && (
         <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${
@@ -408,92 +456,74 @@ const EditNotePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 内容编辑器 - 优先显示 */}
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          笔记内容
+      {/* 设置区域 */}
+      <div className="mb-6 space-y-4">
+        {/* 隐私设置 */}
+        <div className="flex items-center space-x-3">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-white dark:bg-gray-700"
+            />
+            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">私密笔记</span>
+          </label>
+        </div>
+
+        {/* 标签管理 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            标签
+          </label>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+              >
+                <Tag className="w-3 h-3 mr-1" />
+                {tag}
+                <button
+                  onClick={() => handleRemoveTag(tag)}
+                  className="ml-1 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
+              placeholder="添加标签"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            />
+            <button
+              onClick={handleAddTag}
+              disabled={!newTag.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              添加
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 内容编辑器 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          内容
         </label>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="在这里写下你的想法..."
-          className="w-full h-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none leading-relaxed"
-          style={{ fontFamily: 'inherit' }}
+          className="w-full h-96 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none font-mono"
         />
-      </div>
-
-      {/* 设置区域 */}
-      <div className="space-y-6">
-        {/* 隐私设置 */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">笔记设置</h3>
-          <div className="flex items-center space-x-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={isPrivate}
-                onChange={(e) => setIsPrivate(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 bg-white dark:bg-gray-700"
-              />
-              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">私密笔记</span>
-            </label>
-          </div>
-        </div>
-
-        {/* 标签管理 */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">标签管理</h3>
-          
-          {/* 现有标签显示 */}
-          {tags.length > 0 && (
-            <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                现有标签
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-md"
-                  >
-                    <Tag className="w-3 h-3 mr-2" />
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveTag(tag)}
-                      className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 添加新标签 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-              添加新标签
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-                placeholder="输入标签名称，按回车添加"
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 text-sm"
-              />
-              <button
-                onClick={handleAddTag}
-                disabled={!newTag.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-              >
-                添加
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
