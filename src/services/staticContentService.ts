@@ -35,9 +35,18 @@ export class StaticContentService {
 
   // 获取静态分支的 URL
   private getStaticBranchUrl(): string {
-    // 在 Cloudflare Pages 环境下，静态内容文件应该在同一域名下
-    const currentOrigin = window.location.origin
-    return `${currentOrigin}`
+    // 检查是否为开发环境
+    const isDevelopment = import.meta.env.DEV
+    
+    if (isDevelopment) {
+      // 开发环境下，从 dist 目录加载文件
+      const currentOrigin = window.location.origin
+      return `${currentOrigin}`
+    } else {
+      // 生产环境下，静态内容文件应该在同一域名下
+      const currentOrigin = window.location.origin
+      return `${currentOrigin}`
+    }
   }
 
   // 获取公开笔记的静态内容
