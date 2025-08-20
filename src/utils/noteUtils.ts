@@ -89,29 +89,9 @@ export const parseNoteContent = (content: string, fileName: string) => {
       const key = line.substring(0, colonIndex).trim()
       const value = line.substring(colonIndex + 1).trim()
       if (key === 'created_at') {
-        const dateStr = value.replace(/"/g, '').trim()
-        try {
-          const parsedDate = new Date(dateStr)
-          if (!isNaN(parsedDate.getTime())) {
-            createdDate = parsedDate.toISOString()
-          } else {
-            console.warn(`⚠️ 无效的创建时间格式: ${dateStr}`)
-          }
-        } catch (error) {
-          console.warn(`⚠️ 解析创建时间失败: ${dateStr}`, error)
-        }
+        createdDate = value.replace(/"/g, '').trim()
       } else if (key === 'updated_at') {
-        const dateStr = value.replace(/"/g, '').trim()
-        try {
-          const parsedDate = new Date(dateStr)
-          if (!isNaN(parsedDate.getTime())) {
-            updatedDate = parsedDate.toISOString()
-          } else {
-            console.warn(`⚠️ 无效的更新时间格式: ${dateStr}`)
-          }
-        } catch (error) {
-          console.warn(`⚠️ 解析更新时间失败: ${dateStr}`, error)
-        }
+        updatedDate = value.replace(/"/g, '').trim()
       } else if (key === 'private') {
         isPrivate = value === 'true'
       } else if (key === 'tags') {
@@ -137,55 +117,9 @@ export const parseNoteContent = (content: string, fileName: string) => {
     ? lines.slice(frontmatterEndIndex + 1) 
     : lines
   
-  // 生成内容预览 - 改进截断逻辑，保留完整段落
+  // 生成内容预览
   const previewText = contentLines.join('\n').trim()
-  
-  // 如果内容较短，直接返回
-  if (previewText.length <= 200) {
-    contentPreview = previewText
-  } else {
-    // 寻找合适的截断点：优先选择段落分隔、句号、或自然换行点
-    let cutPoint = 200
-    const searchRange = Math.min(previewText.length, 300) // 在200-300字符范围内寻找合适截断点
-    
-    // 寻找段落分隔（双换行）
-    for (let i = 150; i < searchRange; i++) {
-      if (previewText.substring(i, i + 2) === '\n\n') {
-        cutPoint = i
-        break
-      }
-    }
-    
-    // 如果没找到段落分隔，寻找句号
-    if (cutPoint === 200) {
-      for (let i = 150; i < searchRange; i++) {
-        const char = previewText[i]
-        if (char === '。' || char === '!' || char === '?' || char === '.') {
-          cutPoint = i + 1
-          break
-        }
-      }
-    }
-    
-    // 如果没找到句号，寻找换行符
-    if (cutPoint === 200) {
-      for (let i = 150; i < searchRange; i++) {
-        if (previewText[i] === '\n') {
-          cutPoint = i
-          break
-        }
-      }
-    }
-    
-    // 避免在单词中间截断（对于英文内容）
-    if (cutPoint === 200 && cutPoint < previewText.length) {
-      while (cutPoint > 150 && /[a-zA-Z0-9]/.test(previewText[cutPoint]) && /[a-zA-Z0-9]/.test(previewText[cutPoint - 1])) {
-        cutPoint--
-      }
-    }
-    
-    contentPreview = previewText.substring(0, cutPoint).trim() + '...'
-  }
+  contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '')
   
   return {
     title: fileName.replace(/\.md$/, ''), // 使用文件名作为标题

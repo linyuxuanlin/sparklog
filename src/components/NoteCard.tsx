@@ -5,11 +5,8 @@ import { useGitHub } from '@/hooks/useGitHub'
 
 // 过滤front matter的函数
 const removeFrontMatter = (content: string): string => {
-  if (!content) return content
-  
-  // 处理不同的换行符格式
-  const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-  const lines = normalizedContent.split('\n')
+  // 按行分割内容
+  const lines = content.split('\n')
   
   let inFrontmatter = false
   let frontmatterEndIndex = -1
@@ -27,38 +24,23 @@ const removeFrontMatter = (content: string): string => {
     }
   }
   
-  // 如果找到了完整的front matter，从结束位置后开始提取内容
+  // 如果找到了front matter，从结束位置后开始提取内容
   if (frontmatterEndIndex >= 0) {
     const contentLines = lines.slice(frontmatterEndIndex + 1)
-    const result = contentLines.join('\n').trim()
-    return result
+    return contentLines.join('\n').trim()
   }
   
-  // 如果没有找到完整的front matter结束标记，但开头是---，则跳过front matter字段
-  if (lines.length > 0 && lines[0].trim() === '---') {
-    const filteredLines = lines.filter(line => {
-      const trimmedLine = line.trim()
-      // 跳过front matter相关的行
-      return trimmedLine !== '---' && 
-             !trimmedLine.includes('created_at:') && 
-             !trimmedLine.includes('updated_at:') && 
-             !trimmedLine.includes('private:') &&
-             !trimmedLine.includes('tags:') &&
-             !trimmedLine.match(/^[a-zA-Z_]+:/)  // 跳过任何看起来像YAML字段的行
-    })
-    
-    const result = filteredLines.join('\n').trim()
-    
-    // 如果过滤后内容太短，返回原内容（但仍然去掉front matter标记）
-    if (result.length < 50) {
-      return normalizedContent.replace(/^---[\s\S]*?---\s*/, '').trim()
-    }
-    
-    return result
-  }
+  // 如果没有找到标准front matter，使用原来的过滤方法
+  const filteredLines = lines.filter(line => {
+    const trimmedLine = line.trim()
+    // 跳过空行和包含front matter字段的行
+    return trimmedLine !== '' && 
+           !trimmedLine.includes('created_at:') && 
+           !trimmedLine.includes('updated_at:') && 
+           !trimmedLine.includes('private:')
+  })
   
-  // 如果不是以---开头，直接返回内容
-  return content.trim()
+  return filteredLines.join('\n').trim()
 }
 
 interface Note {
@@ -161,8 +143,8 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
   const createdTime = note.created_at || note.createdDate
   const updatedTime = note.updated_at || note.updatedDate
   
-  // 优先使用创建时间，如果没有则使用更新时间
-  const displayTime = createdTime || updatedTime
+  // 优先使用更新时间，如果没有则使用创建时间
+  const displayTime = updatedTime || createdTime
   
   // 生成悬停提示内容
   const getTooltipContent = () => {
@@ -203,7 +185,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   defaultExpanded = false,
   hideCollapseButton = false
 }) => {
-  const { hasManagePermission } = useGitHub()
+  const { isLoggedIn } = useGitHub()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
@@ -265,15 +247,13 @@ const NoteCard: React.FC<NoteCardProps> = ({
       if (contentRef.current && !isExpanded) {
         const contentElement = contentRef.current
         const isContentTruncated = contentElement.scrollHeight > contentElement.clientHeight
-        // 如果原始内容较长，即使过滤后较短也显示按钮
-        const hasLongOriginalContent = Boolean(note.contentPreview && (note.contentPreview.length > 200 || note.contentPreview.includes('...')))
-        setShowExpandButton(isContentTruncated || hasLongOriginalContent)
+        setShowExpandButton(isContentTruncated)
       } else if (isExpanded) {
         // 如果已展开，总是显示收起按钮（只要有内容）
         setShowExpandButton(Boolean(note.contentPreview))
       } else {
         // 如果没有内容引用，回退到长度判断
-        setShowExpandButton(Boolean(note.contentPreview && (note.contentPreview.length > 200 || note.contentPreview.includes('...'))))
+        setShowExpandButton(Boolean(note.contentPreview && note.contentPreview.length > 200))
       }
 
       // 检测按钮文字显示空间
@@ -342,7 +322,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   <div>
                     <div ref={contentRef} className="line-clamp-3">
                       <MarkdownRenderer 
-                        content={removeFrontMatter(note.contentPreview)}
+                        content={note.contentPreview}
                         preview={true}
                       />
                     </div>
@@ -419,7 +399,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
               </div>
             )}
             <TimeDisplay note={note} />
-            {hasManagePermission() && (
+            {isLoggedIn() && (
               <div className="flex items-center space-x-1">
                 {note.isPrivate ? (
                   <>

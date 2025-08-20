@@ -8,21 +8,27 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@/components': path.resolve(__dirname, './src/components'),
+      '@/pages': path.resolve(__dirname, './src/pages'),
+      '@/styles': path.resolve(__dirname, './src/styles'),
+    },
+  },
+  server: {
+    port: 3000,
+    open: true,
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
+      },
     },
   },
   define: {
-    global: 'globalThis',
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
   },
-  server: {
-    // 开发服务器配置
-    port: 5173,
-    host: true
-  },
-  // 配置静态文件服务
-  build: {
-    // 确保构建输出到 dist 目录
-    outDir: 'dist'
-  },
-  // 设置公共目录为 dist，这样开发环境也能访问构建后的文件
-  publicDir: 'dist'
 }) 

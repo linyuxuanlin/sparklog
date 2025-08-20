@@ -1,7 +1,7 @@
 {
   "name": "sparklog",
   "version": "0.1.0",
-  "description": "一个基于 Cloudflare R2 存储的优雅免维护想法记录应用",
+  "description": "一个基于GitHub仓库的静态笔记应用",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,26 +9,10 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
-    "type-check": "tsc --noEmit",
-    "check-config": "node scripts/check-env.js",
-    "test-env": "node scripts/test-env.js",
-    "verify-deployment": "node scripts/verify-deployment.js",
-    "build:pages": "npm run build && npm run pre-build && npm run post-build",
-    "pre-build": "node scripts/build-pages.js",
-    "post-build": "echo 'Cloudflare Pages 构建完成！'",
-    "deploy:pages": "node scripts/deploy-pages.js deploy",
-    "deploy:staging": "node scripts/deploy-pages.js staging",
-    "deploy:preview": "node scripts/deploy-pages.js preview",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test-build": "node scripts/test-build.js",
-    "pre-deploy": "node scripts/pre-deploy-check.js"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.864.0",
     "@tailwindcss/typography": "^0.5.9",
-    "dotenv": "^17.2.1",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -39,25 +23,18 @@
     "tailwindcss": "^3.3.0"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.7.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.3",
-    "@vitest/coverage-v8": "^1.6.1",
-    "@vitest/ui": "^1.6.1",
     "autoprefixer": "^10.4.14",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",
-    "jsdom": "^26.1.0",
     "postcss": "^8.4.27",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "vitest": "^1.6.1"
+    "vite": "^4.4.5"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -66,11 +43,10 @@
   "keywords": [
     "notes",
     "markdown",
-    "cloudflare-r2",
+    "github",
     "static",
     "react",
-    "typescript",
-    "sparklog"
+    "typescript"
   ],
   "author": "Your Name",
   "license": "MIT",

@@ -11,7 +11,7 @@ import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
-  const { isLoading, hasManagePermission } = useGitHub()
+  const { isLoading, isConnected, isLoggedIn } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
@@ -75,8 +75,8 @@ const NotesPage: React.FC = () => {
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
-    // 检查是否有管理权限
-    if (!hasManagePermission()) {
+    // 检查GitHub连接状态和登录状态
+    if (!isConnected || !isLoggedIn()) {
       // 检查环境变量是否已配置
       const envConfigured = checkEnvVarsConfigured()
       
@@ -92,7 +92,7 @@ const NotesPage: React.FC = () => {
       return
     }
     
-    // 如果有管理权限，直接跳转到创建笔记页面
+    // 如果已连接且已登录，直接跳转到创建笔记页面
     navigate('/note/new')
   }
 
@@ -104,19 +104,8 @@ const NotesPage: React.FC = () => {
     
     // 然后跳转到编辑页面
     const timestamp = note.name.replace(/\.md$/, '')
-    console.log('编辑笔记:', { 
-      originalName: note.name, 
-      timestamp, 
-      encoded: encodeURIComponent(timestamp),
-      currentPath: window.location.pathname,
-      targetPath: `/note/edit/${encodeURIComponent(timestamp)}`
-    })
-    
-    // 添加延迟，确保模态框关闭后再跳转
-    setTimeout(() => {
-      console.log('执行路由跳转到:', `/note/edit/${encodeURIComponent(timestamp)}`)
-      navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
-    }, 100)
+    console.log('编辑笔记:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
+    navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
   }
 
   // 处理标签点击
@@ -348,7 +337,7 @@ const NotesPage: React.FC = () => {
             >
               重试
             </button>
-            {!hasManagePermission() && (
+            {!isLoggedIn() && (
               <button
                 onClick={() => navigate('/settings')}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
