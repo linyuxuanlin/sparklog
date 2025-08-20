@@ -30,7 +30,8 @@ const removeFrontMatter = (content: string): string => {
   // 如果找到了完整的front matter，从结束位置后开始提取内容
   if (frontmatterEndIndex >= 0) {
     const contentLines = lines.slice(frontmatterEndIndex + 1)
-    return contentLines.join('\n').trim()
+    const result = contentLines.join('\n').trim()
+    return result
   }
   
   // 如果没有找到完整的front matter结束标记，但开头是---，则跳过front matter字段
@@ -47,6 +48,12 @@ const removeFrontMatter = (content: string): string => {
     })
     
     const result = filteredLines.join('\n').trim()
+    
+    // 如果过滤后内容太短，返回原内容（但仍然去掉front matter标记）
+    if (result.length < 50) {
+      return normalizedContent.replace(/^---[\s\S]*?---\s*/, '').trim()
+    }
+    
     return result
   }
   
@@ -258,13 +265,15 @@ const NoteCard: React.FC<NoteCardProps> = ({
       if (contentRef.current && !isExpanded) {
         const contentElement = contentRef.current
         const isContentTruncated = contentElement.scrollHeight > contentElement.clientHeight
-        setShowExpandButton(isContentTruncated)
+        // 如果原始内容较长，即使过滤后较短也显示按钮
+        const hasLongOriginalContent = Boolean(note.contentPreview && note.contentPreview.length > 150)
+        setShowExpandButton(isContentTruncated || hasLongOriginalContent)
       } else if (isExpanded) {
         // 如果已展开，总是显示收起按钮（只要有内容）
         setShowExpandButton(Boolean(note.contentPreview))
       } else {
         // 如果没有内容引用，回退到长度判断
-        setShowExpandButton(Boolean(note.contentPreview && note.contentPreview.length > 200))
+        setShowExpandButton(Boolean(note.contentPreview && note.contentPreview.length > 150))
       }
 
       // 检测按钮文字显示空间
