@@ -257,6 +257,13 @@ export class R2Service {
         if (response.ok) {
           console.log('公共 R2 URL 获取文件内容成功')
           const content = await response.text()
+          
+          // 检查返回的内容是否是HTML页面（说明公共URL配置错误）
+          if (content.trim().startsWith('<!DOCTYPE html>') || content.trim().startsWith('<html')) {
+            console.warn('公共 R2 URL 返回了HTML内容，可能配置错误，回退到R2 API')
+            throw new Error('公共URL返回HTML内容，配置可能错误')
+          }
+          
           this.cache.set(cacheKey, { data: content, timestamp: Date.now() })
           return content
         }

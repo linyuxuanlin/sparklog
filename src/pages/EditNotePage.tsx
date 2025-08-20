@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Save, ArrowLeft, FileText, Tag, X } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -31,6 +31,10 @@ const EditNotePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('')
+  
+  // 使用 useRef 跟踪笔记加载状态，避免无限循环
+  const hasLoadedNoteRef = useRef(false)
+  const isLoadingRef = useRef(false)
 
   // 显示消息
   const handleShowMessage = (text: string, type: 'success' | 'error') => {
@@ -39,6 +43,11 @@ const EditNotePage: React.FC = () => {
 
   // 加载笔记内容
   useEffect(() => {
+    // 如果已经加载过笔记或者正在加载，则跳过
+    if (hasLoadedNoteRef.current || isLoadingRef.current) {
+      return
+    }
+
     const loadNote = async () => {
       if (!noteId) {
         handleShowMessage('笔记ID无效', 'error')
@@ -54,6 +63,7 @@ const EditNotePage: React.FC = () => {
       }
 
       try {
+        isLoadingRef.current = true
         setIsLoading(true)
         
         // 先从已加载的笔记中查找
@@ -79,8 +89,18 @@ const EditNotePage: React.FC = () => {
           targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
         }
 
+        // 如果仍然找不到，尝试从静态内容中查找（使用不同的字段匹配）
         if (!targetNote) {
-          // 如果仍然找不到，尝试直接从R2获取笔记信息
+          console.log('尝试从静态内容中查找笔记...')
+          targetNote = notes.find(n => 
+            n.name.replace(/\.md$/, '') === decodedNoteId ||
+            (n as any).filename?.replace(/\.md$/, '') === decodedNoteId ||
+            (n as any).id === decodedNoteId
+          )
+        }
+
+        if (!targetNote) {
+          // 最后尝试直接从R2获取笔记信息（作为备用方案）
           console.log('尝试直接从R2获取笔记信息...')
           try {
             const r2Service = R2Service.getInstance()
@@ -88,29 +108,38 @@ const EditNotePage: React.FC = () => {
             const noteContent = await r2Service.getFileContent(notePath)
             
             if (noteContent) {
-              // 创建一个临时的笔记对象
-              targetNote = {
-                sha: `temp-${decodedNoteId}`,
-                path: notePath,
-                name: `${decodedNoteId}.md`,
-                size: noteContent.length,
-                url: '',
-                git_url: '',
-                html_url: '',
-                download_url: '',
-                type: 'file',
-                content: noteContent,
-                fullContent: noteContent,
-                contentPreview: noteContent.substring(0, 100) + '...',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                isPrivate: false,
-                tags: []
-              } as Note
-              console.log('从R2创建临时笔记对象:', targetNote)
+              // 检查返回的内容是否是HTML页面
+              if (noteContent.trim().startsWith('<!DOCTYPE html>') || noteContent.trim().startsWith('<html')) {
+                console.error('R2返回了HTML内容而不是笔记内容，可能是配置问题')
+                // 不立即跳转，而是显示错误信息
+                handleShowMessage('R2配置可能有问题，但已从缓存加载笔记内容', 'error')
+                // 继续尝试从缓存中查找
+              } else {
+                // 创建一个临时的笔记对象
+                targetNote = {
+                  sha: `temp-${decodedNoteId}`,
+                  path: notePath,
+                  name: `${decodedNoteId}.md`,
+                  size: noteContent.length,
+                  url: '',
+                  git_url: '',
+                  html_url: '',
+                  download_url: '',
+                  type: 'file',
+                  content: noteContent,
+                  fullContent: noteContent,
+                  contentPreview: noteContent.substring(0, 100) + '...',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  isPrivate: false,
+                  tags: []
+                } as Note
+                console.log('从R2创建临时笔记对象:', targetNote)
+              }
             }
           } catch (r2Error) {
             console.error('从R2获取笔记失败:', r2Error)
+            // 不立即跳转，而是继续尝试从缓存中查找
           }
         }
 
@@ -126,12 +155,18 @@ const EditNotePage: React.FC = () => {
         // 获取完整内容
         let fullContent = targetNote.fullContent || targetNote.content || ''
         
+        // 如果笔记内容不完整，尝试从R2获取（但这不是必需的）
         if (!fullContent && targetNote.path) {
-          // 如果没有完整内容，从R2获取
-          console.log('从R2获取笔记内容...')
-          const r2Service = R2Service.getInstance()
-          const fetchedContent = await r2Service.getFileContent(targetNote.path)
-          fullContent = fetchedContent || ''
+          console.log('尝试从R2获取完整笔记内容...')
+          try {
+            const r2Service = R2Service.getInstance()
+            const fetchedContent = await r2Service.getFileContent(targetNote.path)
+            if (fetchedContent && !fetchedContent.trim().startsWith('<!DOCTYPE html>')) {
+              fullContent = fetchedContent
+            }
+          } catch (error) {
+            console.log('从R2获取完整内容失败，使用缓存内容:', error)
+          }
         }
 
         if (fullContent) {
@@ -160,19 +195,27 @@ const EditNotePage: React.FC = () => {
           setIsPrivate(parsed.isPrivate)
           setTags(parsed.tags || [])
         } else {
-          setContent('')
+          // 如果没有完整内容，尝试从笔记的其他字段获取
+          const fallbackContent = targetNote.contentPreview || (targetNote as any).excerpt || targetNote.content || ''
+          setContent(fallbackContent)
+          setIsPrivate(targetNote.isPrivate || false)
+          setTags(targetNote.tags || [])
         }
+        
+        // 标记笔记已加载完成
+        hasLoadedNoteRef.current = true
       } catch (error) {
         console.error('加载笔记失败:', error)
         handleShowMessage('加载笔记失败', 'error')
         navigate('/')
       } finally {
+        isLoadingRef.current = false
         setIsLoading(false)
       }
     }
 
     loadNote()
-  }, [noteId, notes, loadNotes, hasManagePermission, navigate])
+  }, [noteId, hasManagePermission, navigate]) // 移除 notes 和 loadNotes 依赖
 
   // 添加标签
   const handleAddTag = () => {
