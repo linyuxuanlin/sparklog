@@ -244,23 +244,6 @@ async function generateStaticContent() {
     
     console.log(`✅ 成功处理 ${allNotes.length} 个笔记，其中 ${publicNotes.length} 个为公开笔记`)
     
-    // 确保输出目录存在
-    const outputDir = path.join(__dirname, '..', 'dist')
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true })
-    }
-    
-    // 写入静态内容文件
-    fs.writeFileSync(
-      path.join(outputDir, 'public-notes.json'),
-      JSON.stringify(publicNotes, null, 2)
-    )
-    
-    fs.writeFileSync(
-      path.join(outputDir, 'all-notes.json'),
-      JSON.stringify(allNotes, null, 2)
-    )
-    
     // 生成构建信息
     const buildInfo = {
       buildTime: new Date().toISOString(),
@@ -271,9 +254,48 @@ async function generateStaticContent() {
       environment: process.env.NODE_ENV || 'production',
       buildVersion: process.env.BUILD_VERSION || '1.0.0',
     }
+
+    // 确保输出目录存在
+    const distDir = path.join(__dirname, '..', 'dist')
+    const publicDir = path.join(__dirname, '..', 'public')
+    
+    if (!fs.existsSync(distDir)) {
+      fs.mkdirSync(distDir, { recursive: true })
+    }
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true })
+    }
+    
+    // 写入静态内容文件到两个位置
+    // 1. public 目录 - 用于开发时访问和 Vite 复制
+    fs.writeFileSync(
+      path.join(publicDir, 'public-notes.json'),
+      JSON.stringify(publicNotes, null, 2)
+    )
     
     fs.writeFileSync(
-      path.join(outputDir, 'build-info.json'),
+      path.join(publicDir, 'all-notes.json'),
+      JSON.stringify(allNotes, null, 2)
+    )
+    
+    fs.writeFileSync(
+      path.join(publicDir, 'build-info.json'),
+      JSON.stringify(buildInfo, null, 2)
+    )
+    
+    // 2. dist 目录 - 用于直接部署访问
+    fs.writeFileSync(
+      path.join(distDir, 'public-notes.json'),
+      JSON.stringify(publicNotes, null, 2)
+    )
+    
+    fs.writeFileSync(
+      path.join(distDir, 'all-notes.json'),
+      JSON.stringify(allNotes, null, 2)
+    )
+    
+    fs.writeFileSync(
+      path.join(distDir, 'build-info.json'),
       JSON.stringify(buildInfo, null, 2)
     )
     
