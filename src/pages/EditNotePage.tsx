@@ -41,7 +41,7 @@ const EditNotePage: React.FC = () => {
       // 检查登录状态
       if (!isLoggedIn()) {
         handleShowMessage('需要登录才能编辑笔记', 'error')
-        navigate('/settings')
+        setIsLoading(false)
         return
       }
 
@@ -187,6 +187,36 @@ const EditNotePage: React.FC = () => {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (!isLoggedIn()) {
+    return (
+      <div className="max-w-4xl mx-auto py-8">
+        <div className="text-center">
+          <div className="mb-4">
+            <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">需要管理员权限</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">编辑笔记需要管理员身份验证</p>
+            <div className="space-x-3">
+              <button
+                onClick={() => navigate('/')}
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                返回首页
+              </button>
+              <button
+                onClick={() => navigate('/settings')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                前往登录
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isLoading) {
