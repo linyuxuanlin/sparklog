@@ -21,7 +21,9 @@
     "deploy:preview": "node scripts/deploy-pages.js preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test-build": "node scripts/test-build.js",
+    "pre-deploy": "node scripts/pre-deploy-check.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.864.0",
@@ -42,8 +44,8 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.0.3",
     "@vitest/coverage-v8": "^1.6.1",
     "@vitest/ui": "^1.6.1",
