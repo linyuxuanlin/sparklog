@@ -88,6 +88,10 @@ async function listNotes() {
     console.log('📋 正在从 R2 获取笔记列表...')
     console.log(`🔗 连接端点: https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`)
     console.log(`📦 存储桶: ${R2_BUCKET_NAME}`)
+    console.log('🔑 检查 R2 凭据...')
+    console.log('  - Account ID 长度:', R2_ACCOUNT_ID?.length || 0)
+    console.log('  - Access Key ID 长度:', R2_ACCESS_KEY_ID?.length || 0)
+    console.log('  - Secret Access Key 长度:', R2_SECRET_ACCESS_KEY?.length || 0)
     
     const command = new ListObjectsV2Command({
       Bucket: R2_BUCKET_NAME,
@@ -108,6 +112,9 @@ async function listNotes() {
     return markdownFiles
   } catch (error) {
     console.error('❌ 获取笔记列表失败:', error)
+    console.error('错误类型:', error.constructor.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
     throw error
   }
 }
@@ -203,9 +210,13 @@ function parseNoteContent(content, filename) {
 async function generateStaticContent() {
   try {
     console.log('🚀 开始生成静态内容...')
+    console.log('📍 当前工作目录:', process.cwd())
+    console.log('📍 脚本目录:', __dirname)
     
     // 获取所有笔记
+    console.log('📋 准备调用 listNotes 函数...')
     const files = await listNotes()
+    console.log('📋 listNotes 函数执行完成，返回文件数量:', files.length)
     
     if (files.length === 0) {
       console.log('⚠️ 没有找到笔记文件')
@@ -331,11 +342,14 @@ async function main() {
     console.log(`🔧 环境: ${process.env.NODE_ENV || 'production'}`)
     console.log(`📅 构建时间: ${new Date().toISOString()}`)
     
+    console.log('🚀 准备调用 generateStaticContent 函数...')
     await generateStaticContent()
+    console.log('✅ generateStaticContent 函数执行完成')
     
     console.log('✅ 构建完成！')
   } catch (error) {
     console.error('❌ 构建失败:', error)
+    console.error('错误堆栈:', error.stack)
     process.exit(1)
   }
 }
