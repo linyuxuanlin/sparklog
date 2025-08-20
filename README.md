@@ -17,11 +17,10 @@
 
 - **纯静态部署**: 基于 React + Vite 构建，你可以把它托管在 Cloudflare Pages、Vercel 等平台，无需服务器。
 - **Cloudflare R2 存储**: 笔记源文件存储在 Cloudflare R2 中，提供高可用性和全球分发。
-- **GitHub 静态编译**: 修改笔记后，GitHub Actions 自动编译为静态内容，极速加载。
-- **智能缓存机制**: 编辑后立即显示缓存内容，编译完成后自动更新。
+- **双重部署方式**: 支持 Cloudflare 自动部署和本地手动部署，灵活选择。
+- **智能缓存机制**: 编辑后立即显示缓存内容，部署完成后自动更新。
 - **加密私密笔记**: 私密笔记使用 AES-GCM 加密存储，只有正确的管理员密码才能解密查看。
 - **实时编辑**: 无需其他编辑器，只要有网，就可记录你的想法。
-- **构建状态显示**: 实时显示编译状态和进度，让你了解内容更新情况。
 - **现代化 UI**: 简洁美观的界面设计，支持亮色 / 暗色自动切换。
 
 ## 🚀 快速开始
@@ -65,8 +64,8 @@
 > **新架构安全说明**: 
 > - 笔记源文件存储在您的 **Cloudflare R2** 存储桶中，提供高可用性
 > - 私密笔记使用 **AES-GCM 加密** 存储，确保安全性
-> - GitHub Actions 负责编译静态内容，只有编译后的内容部署到公开网站
-> - 支持**实时缓存**，编辑后立即显示，编译完成后自动更新
+> - 支持**双重部署方式**：Cloudflare 自动部署或本地手动构建
+> - 支持**实时缓存**，编辑后立即显示，部署完成后自动更新
 
 ### 一. 本地开发
 
@@ -88,15 +87,38 @@ cp .env.example .env  # 复制环境变量模板
 npm run check-config
 
 # 生成静态内容（首次运行必需）
-npm run build:static
+npm run build:pages
 
 # 启动开发服务器
 npm run dev
 ```
 
-> **注意**: 本地开发时需要先运行 `npm run build:static` 生成静态 JSON 文件，否则网站无法正常显示笔记内容。
+> **注意**: 本地开发时需要先运行 `npm run build:pages` 生成静态 JSON 文件，否则网站无法正常显示笔记内容。
 
 ### 二、部署到 Cloudflare Pages
+
+#### 部署前检查
+
+在部署到 Cloudflare Pages 之前，强烈建议运行以下检查命令，确保代码质量和配置正确：
+
+```bash
+# 运行完整的部署前检查
+npm run pre-deploy
+
+# 或者分步检查
+npm run type-check    # TypeScript 类型检查
+npm run lint          # ESLint 代码规范检查
+npm run test-build    # 构建测试
+```
+
+这些检查将帮助你：
+- ✅ 验证 TypeScript 类型正确性
+- ✅ 检查代码规范问题
+- ✅ 验证构建过程
+- ✅ 检查配置文件完整性
+- ✅ 确保所有必要的脚本和文件存在
+
+#### 方式一：自动部署（推荐）
 
 1. **Fork 项目**
 
@@ -113,7 +135,7 @@ npm run dev
 3. **配置构建设置**
 
    - **Framework preset**: None
-   - **Build command**: `npm run build`
+   - **Build command**: `npm run build:pages`
    - **Build output directory**: `dist`
    - **Root directory**: `/` (留空)
 
@@ -128,18 +150,49 @@ npm run dev
 | `VITE_R2_BUCKET_NAME`       | Cloudflare R2 存储桶名称     | `sparklog-notes`              |
 | `VITE_R2_PUBLIC_URL`        | R2 公开访问 URL（可选）      | `https://notes.example.com`   |
 
-5. **配置 Cloudflare Pages**
-   
-   **重要**: 为了让自动编译功能正常工作，需要配置 Cloudflare Pages：
-   
-   - 在 Cloudflare Pages 控制台创建新项目
-   - 连接 GitHub 仓库并设置构建命令: `npm run build:pages`
-   - 配置环境变量（R2 配置、管理员密码等）
-   - 设置自定义域名（可选）
-
-6. **部署**
+5. **部署**
    - 点击"Save and Deploy"
    - 等待构建完成
+   - 访问你的部署地址，输入管理员密码
+   - 开始记录你的妙想
+
+#### 方式二：手动部署
+
+1. **准备项目**
+
+   - 克隆或下载 SparkLog 项目到本地
+   - 确保已配置好环境变量和 R2 存储
+
+2. **本地构建**
+
+   ```bash
+   # 运行部署前检查（强烈推荐）
+   npm run pre-deploy
+   
+   # 构建项目
+   npm run build:pages
+   ```
+
+3. **上传到 Cloudflare Pages**
+
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 进入"Pages" → "Create a project"
+   - 选择"Upload assets"
+   - 上传 `dist` 目录中的所有文件
+
+4. **配置环境变量**
+
+| 变量名                      | 说明                         | 示例                          |
+| --------------------------- | ---------------------------- | ----------------------------- |
+| `VITE_ADMIN_PASSWORD`       | 管理员密码                   | `your-secure-password`        |
+| `VITE_R2_ACCOUNT_ID`        | Cloudflare R2 Account ID     | `1234567890abcdef`            |
+| `VITE_R2_ACCESS_KEY_ID`     | Cloudflare R2 Access Key ID  | `abc123def456`                |
+| `VITE_R2_SECRET_ACCESS_KEY` | Cloudflare R2 Secret Key     | `your-secret-access-key`      |
+| `VITE_R2_BUCKET_NAME`       | Cloudflare R2 存储桶名称     | `sparklog-notes`              |
+| `VITE_R2_PUBLIC_URL`        | R2 公开访问 URL（可选）      | `https://notes.example.com`   |
+
+5. **部署完成**
+   - 等待部署完成
    - 访问你的部署地址，输入管理员密码
    - 开始记录你的妙想
 
@@ -154,8 +207,8 @@ npm run dev
 
 ### 静态架构优势
 - **⚡ 极速加载**: 静态 JSON 文件提供毫秒级加载速度
-- **🤖 自动编译**: 笔记变更时 Cloudflare Pages 自动重新编译
-- **📊 构建状态**: 实时显示内容编译状态和进度
+- **🤖 自动部署**: Cloudflare Pages 自动构建和部署，无需手动操作
+- **🔧 手动部署**: 本地构建和手动上传，完全控制部署时机
 - **🛡️ 安全隔离**: 公开/私密内容物理分离，确保数据安全
 - **📈 零 API 限制**: 完全避免 GitHub API 调用限制问题
 
@@ -182,19 +235,20 @@ SparkLog 采用了创新的 **R2 + 静态编译 + 智能缓存** 三层架构：
 2. **加密处理**: 私密笔记使用 AES-GCM 算法加密
 3. **R2 存储**: 笔记源文件上传到 Cloudflare R2 存储桶
 4. **立即缓存**: 编辑后的内容立即缓存并显示，提供即时反馈
-5. **触发编译**: 自动触发 GitHub Actions 从 R2 获取内容并编译
+5. **触发构建**: 自动触发 Cloudflare Pages 构建或手动本地构建
 
 #### 🔧 静态编译流程
-1. **获取源文件**: Cloudflare Pages 构建时从 R2 存储桶获取所有笔记
+1. **获取源文件**: 构建时从 R2 存储桶获取所有笔记
 2. **内容编译**: 将 Markdown 文件编译为静态 JSON 文件
 3. **文件分离**: 生成 `public-notes.json`(公开)和 `all-notes.json`(完整)
-4. **自动部署**: 编译后的静态内容自动部署到 Cloudflare Pages
-5. **缓存更新**: 编译完成后，静态内容自动覆盖缓存
+4. **自动部署**: Cloudflare Pages 自动部署或手动上传到 Cloudflare Pages
+5. **缓存更新**: 部署完成后，静态内容自动覆盖缓存
 
 #### ⚡ 用户访问体验
 - **首次访问**: 从 Cloudflare Pages 加载静态 JSON 文件，毫秒级响应
-- **编辑后**: 立即显示缓存内容，同时显示编译状态
-- **编译完成**: 自动用最新静态内容替换缓存
+- **编辑后**: 立即显示缓存内容，同时显示构建状态
+- **自动部署**: Cloudflare Pages 自动构建和部署，无需手动操作
+- **手动部署**: 本地重新构建并上传到 Cloudflare Pages
 - **私密笔记**: 前端使用管理员密码实时解密显示
 
 ## 🚨 常见问题解决
@@ -328,29 +382,44 @@ npm run check-config
 - **加密失败**: 确保浏览器支持 Web Crypto API
 - **解密内容显示异常**: 可能是加密数据损坏，请检查 R2 存储完整性
 
-### GitHub Actions 权限错误
+### 自动部署问题
 
-如果遇到 `Permission denied` 或 `403` 错误：
+如果遇到自动部署问题：
 
-1. 检查仓库权限设置：
-   - 进入仓库设置: `Settings` → `Actions` → `General`
-   - 选择 "Read and write permissions"
-   - 勾选 "Allow GitHub Actions to create and approve pull requests"
+1. 检查 GitHub 仓库设置：
+   - 确认 Cloudflare Pages 已连接 GitHub 仓库
+   - 验证构建命令设置为 `npm run build:pages`
+   - 检查环境变量是否正确配置
 
-2. 确认 GitHub Actions 已启用：
-   - 检查 `.github/workflows/` 文件夹是否存在
-   - 确认 workflow 文件语法正确
+2. 检查构建日志：
+   - 在 Cloudflare Pages 控制台查看构建日志
+   - 确认 `build-pages.js` 脚本执行成功
+   - 验证 R2 存储桶可访问
 
-### 缓存和编译问题
+### 手动部署问题
+
+如果遇到手动部署问题：
+
+1. 检查本地构建：
+   - 运行 `npm run pre-deploy` 进行完整检查
+   - 确保 `npm run build:pages` 成功执行
+   - 验证 `dist` 目录包含所有必要文件
+
+2. 检查 Cloudflare Pages 设置：
+   - 确认环境变量正确配置
+   - 验证上传的文件完整性
+
+### 缓存和内容更新问题
 
 - **编辑后内容不更新**: 检查 R2 上传是否成功，查看浏览器开发者工具
-- **编译状态一直显示构建中**: 检查 GitHub Actions 是否正常运行
+- **自动部署延迟**: 检查 Cloudflare Pages 构建状态和日志
+- **手动部署延迟**: 本地重新构建并上传到 Cloudflare Pages
 - **缓存内容异常**: 清除浏览器缓存或使用隐私模式测试
 
 ### 本地开发问题
 
 - **R2 存储未启用**: 检查环境变量配置，确保所有 R2 相关变量都已设置
-- **笔记不显示**: 确保运行了 `npm run build:static`
+- **笔记不显示**: 确保运行了 `npm run build:pages`
 - **构建失败**: 检查 R2 连接状态和存储桶权限
 
 ## 📚 详细文档
