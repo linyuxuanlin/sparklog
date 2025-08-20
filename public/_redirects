@@ -1,0 +1,9 @@
+# Cloudflare Pages 重定向配置
+
+# SPA 路由支持 - 所有非静态文件的请求都重定向到 index.html
+/*    /index.html   200
+
+# 静态内容文件直接访问
+/public-notes.json    /public-notes.json   200
+/all-notes.json       /all-notes.json      200
+/build-info.json      /build-info.json     200
