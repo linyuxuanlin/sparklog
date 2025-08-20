@@ -11,6 +11,7 @@
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
     "check-config": "node scripts/check-env.js",
+    "test-env": "node scripts/test-env.js",
     "verify-deployment": "node scripts/verify-deployment.js",
     "build:pages": "npm run build && npm run pre-build && npm run post-build",
     "pre-build": "node scripts/build-pages.js",

@@ -28,6 +28,11 @@ console.log('  VITE_R2_ACCOUNT_ID:', R2_ACCOUNT_ID ? '已设置' : '未设置')
 console.log('  VITE_R2_ACCESS_KEY_ID:', R2_ACCESS_KEY_ID ? '已设置' : '未设置')
 console.log('  VITE_R2_SECRET_ACCESS_KEY:', R2_SECRET_ACCESS_KEY ? '已设置' : '未设置')
 console.log('  VITE_R2_BUCKET_NAME:', R2_BUCKET_NAME ? '已设置' : '未设置')
+console.log('🔧 运行环境信息:')
+console.log('  Node.js版本:', process.version)
+console.log('  平台:', process.platform)
+console.log('  架构:', process.arch)
+console.log('  工作目录:', process.cwd())
 console.log('')
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
@@ -79,7 +84,15 @@ async function listNotes() {
     console.log(`✅ 找到 ${markdownFiles.length} 个笔记文件`)
     return markdownFiles
   } catch (error) {
-    console.error('❌ 获取笔记列表失败:', error)
+    console.error('❌ 获取笔记列表失败:')
+    console.error('错误类型:', error.name)
+    console.error('错误消息:', error.message)
+    if (error.code) {
+      console.error('错误代码:', error.code)
+    }
+    if (error.$metadata) {
+      console.error('请求元数据:', JSON.stringify(error.$metadata, null, 2))
+    }
     throw error
   }
 }
@@ -255,47 +268,26 @@ async function generateStaticContent() {
       buildVersion: process.env.BUILD_VERSION || '1.0.0',
     }
 
-    // 确保输出目录存在
-    const distDir = path.join(__dirname, '..', 'dist')
-    const publicDir = path.join(__dirname, '..', 'public')
+    // 确保输出目录存在 - 统一生成到 dist 目录
+    const outputDir = path.join(__dirname, '..', 'dist')
     
-    if (!fs.existsSync(distDir)) {
-      fs.mkdirSync(distDir, { recursive: true })
-    }
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true })
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true })
     }
     
-    // 写入静态内容文件到两个位置
-    // 1. public 目录 - 用于开发时访问和 Vite 复制
+    // 写入静态内容文件到 dist 目录
     fs.writeFileSync(
-      path.join(publicDir, 'public-notes.json'),
+      path.join(outputDir, 'public-notes.json'),
       JSON.stringify(publicNotes, null, 2)
     )
     
     fs.writeFileSync(
-      path.join(publicDir, 'all-notes.json'),
+      path.join(outputDir, 'all-notes.json'),
       JSON.stringify(allNotes, null, 2)
     )
     
     fs.writeFileSync(
-      path.join(publicDir, 'build-info.json'),
-      JSON.stringify(buildInfo, null, 2)
-    )
-    
-    // 2. dist 目录 - 用于直接部署访问
-    fs.writeFileSync(
-      path.join(distDir, 'public-notes.json'),
-      JSON.stringify(publicNotes, null, 2)
-    )
-    
-    fs.writeFileSync(
-      path.join(distDir, 'all-notes.json'),
-      JSON.stringify(allNotes, null, 2)
-    )
-    
-    fs.writeFileSync(
-      path.join(distDir, 'build-info.json'),
+      path.join(outputDir, 'build-info.json'),
       JSON.stringify(buildInfo, null, 2)
     )
     
@@ -310,7 +302,55 @@ async function generateStaticContent() {
     console.log(`  - 私密笔记: ${allNotes.length - publicNotes.length}`)
     
   } catch (error) {
-    console.error('❌ 生成静态内容失败:', error)
+    console.error('❌ 生成静态内容失败:')
+    console.error('错误类型:', error.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
+    
+    // 如果是网络错误，提供降级方案
+    if (error.name === 'NetworkingError' || error.code === 'ENOTFOUND' || error.message.includes('fetch')) {
+      console.log('🔄 检测到网络错误，尝试创建空的JSON文件...')
+      try {
+        const emptyNotes = []
+        const outputDir = path.join(__dirname, '..', 'dist')
+        
+        if (!fs.existsSync(outputDir)) {
+          fs.mkdirSync(outputDir, { recursive: true })
+        }
+        
+        fs.writeFileSync(
+          path.join(outputDir, 'public-notes.json'),
+          JSON.stringify(emptyNotes, null, 2)
+        )
+        
+        fs.writeFileSync(
+          path.join(outputDir, 'all-notes.json'),
+          JSON.stringify(emptyNotes, null, 2)
+        )
+        
+        const fallbackBuildInfo = {
+          buildTime: new Date().toISOString(),
+          totalNotes: 0,
+          publicNotes: 0,
+          privateNotes: 0,
+          source: 'R2 Storage (连接失败)',
+          environment: process.env.NODE_ENV || 'production',
+          buildVersion: process.env.BUILD_VERSION || '1.0.0',
+          error: 'R2连接失败，使用空数据'
+        }
+        
+        fs.writeFileSync(
+          path.join(outputDir, 'build-info.json'),
+          JSON.stringify(fallbackBuildInfo, null, 2)
+        )
+        
+        console.log('✅ 已创建空的JSON文件作为降级方案')
+        return
+      } catch (fallbackError) {
+        console.error('❌ 降级方案也失败了:', fallbackError)
+      }
+    }
+    
     process.exit(1)
   }
 }

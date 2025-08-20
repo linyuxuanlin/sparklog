@@ -3,7 +3,7 @@ compatibility_date = "2024-01-01"
 
 # Cloudflare Pages 配置
 [build]
-command = "npm run build:pages"
+command = "npm run test-env && npm run build:pages"
 cwd = "."
 
 # 构建输出目录配置（Cloudflare Pages 专用）
