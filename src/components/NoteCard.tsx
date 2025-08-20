@@ -5,6 +5,8 @@ import { useGitHub } from '@/hooks/useGitHub'
 
 // 过滤front matter的函数
 const removeFrontMatter = (content: string): string => {
+  if (!content) return content
+  
   // 按行分割内容
   const lines = content.split('\n')
   
@@ -30,14 +32,16 @@ const removeFrontMatter = (content: string): string => {
     return contentLines.join('\n').trim()
   }
   
-  // 如果没有找到标准front matter，使用原来的过滤方法
+  // 如果没有找到标准front matter，但开头有front matter字段，过滤掉这些行
   const filteredLines = lines.filter(line => {
     const trimmedLine = line.trim()
     // 跳过空行和包含front matter字段的行
     return trimmedLine !== '' && 
            !trimmedLine.includes('created_at:') && 
            !trimmedLine.includes('updated_at:') && 
-           !trimmedLine.includes('private:')
+           !trimmedLine.includes('private:') &&
+           !trimmedLine.includes('tags:') &&
+           !trimmedLine.match(/^[a-zA-Z_]+:/)  // 跳过任何看起来像YAML字段的行
   })
   
   return filteredLines.join('\n').trim()
@@ -322,7 +326,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   <div>
                     <div ref={contentRef} className="line-clamp-3">
                       <MarkdownRenderer 
-                        content={note.contentPreview}
+                        content={removeFrontMatter(note.contentPreview)}
                         preview={true}
                       />
                     </div>
