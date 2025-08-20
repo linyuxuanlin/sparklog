@@ -10,7 +10,7 @@ import { showMessage, filterNotesByTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const WanderPage: React.FC = () => {
-  const { isLoading, isConnected, hasManagePermission } = useGitHub()
+  const { isLoading, hasManagePermission } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, deleteNote, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()

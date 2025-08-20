@@ -11,7 +11,7 @@ import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/utils
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const NotesPage: React.FC = () => {
-  const { isLoading, isConnected, hasManagePermission } = useGitHub()
+  const { isLoading, hasManagePermission } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, loadMoreNotes, deleteNote, hasMoreNotes, loadingProgress, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
