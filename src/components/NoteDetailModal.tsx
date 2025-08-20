@@ -51,7 +51,6 @@ interface NoteDetailModalProps {
   onEdit: (note: Note) => void
   onDelete: (note: Note) => void
   onConfirmDelete: (note: Note) => void
-  onCancelDelete: () => void
   confirmingDeleteId: string | null
   deletingNoteId: string | null
 }
@@ -63,7 +62,6 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
   onEdit,
   onDelete,
   onConfirmDelete,
-  onCancelDelete,
   confirmingDeleteId,
   deletingNoteId
 }) => {

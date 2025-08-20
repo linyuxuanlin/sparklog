@@ -430,7 +430,6 @@ const NotesPage: React.FC = () => {
         onEdit={handleEditNote}
         onDelete={handleDeleteNote}
         onConfirmDelete={confirmDelete}
-        onCancelDelete={() => setConfirmingDelete(null)}
         confirmingDeleteId={confirmingDelete}
         deletingNoteId={deletingNote}
       />
