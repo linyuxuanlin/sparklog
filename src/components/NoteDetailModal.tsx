@@ -207,22 +207,13 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                     
                     {/* 删除按钮 */}
                     {isConfirming ? (
-                      <>
-                        <button
-                          onClick={() => onConfirmDelete(note)}
-                          className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
-                          title="确认删除"
-                        >
-                          <Check className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={onCancelDelete}
-                          className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-                          title="取消删除"
-                        >
-                          <X className="w-5 h-5" />
-                        </button>
-                      </>
+                      <button
+                        onClick={() => onConfirmDelete(note)}
+                        className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                        title="确认删除"
+                      >
+                        <Check className="w-5 h-5" />
+                      </button>
                     ) : (
                       <button
                         onClick={() => onDelete(note)}
