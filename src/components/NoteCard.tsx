@@ -7,8 +7,9 @@ import { useGitHub } from '@/hooks/useGitHub'
 const removeFrontMatter = (content: string): string => {
   if (!content) return content
   
-  // 按行分割内容
-  const lines = content.split('\n')
+  // 处理不同的换行符格式
+  const normalizedContent = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const lines = normalizedContent.split('\n')
   
   let inFrontmatter = false
   let frontmatterEndIndex = -1
@@ -26,25 +27,31 @@ const removeFrontMatter = (content: string): string => {
     }
   }
   
-  // 如果找到了front matter，从结束位置后开始提取内容
+  // 如果找到了完整的front matter，从结束位置后开始提取内容
   if (frontmatterEndIndex >= 0) {
     const contentLines = lines.slice(frontmatterEndIndex + 1)
     return contentLines.join('\n').trim()
   }
   
-  // 如果没有找到标准front matter，但开头有front matter字段，过滤掉这些行
-  const filteredLines = lines.filter(line => {
-    const trimmedLine = line.trim()
-    // 跳过空行和包含front matter字段的行
-    return trimmedLine !== '' && 
-           !trimmedLine.includes('created_at:') && 
-           !trimmedLine.includes('updated_at:') && 
-           !trimmedLine.includes('private:') &&
-           !trimmedLine.includes('tags:') &&
-           !trimmedLine.match(/^[a-zA-Z_]+:/)  // 跳过任何看起来像YAML字段的行
-  })
+  // 如果没有找到完整的front matter结束标记，但开头是---，则跳过front matter字段
+  if (lines.length > 0 && lines[0].trim() === '---') {
+    const filteredLines = lines.filter(line => {
+      const trimmedLine = line.trim()
+      // 跳过front matter相关的行
+      return trimmedLine !== '---' && 
+             !trimmedLine.includes('created_at:') && 
+             !trimmedLine.includes('updated_at:') && 
+             !trimmedLine.includes('private:') &&
+             !trimmedLine.includes('tags:') &&
+             !trimmedLine.match(/^[a-zA-Z_]+:/)  // 跳过任何看起来像YAML字段的行
+    })
+    
+    const result = filteredLines.join('\n').trim()
+    return result
+  }
   
-  return filteredLines.join('\n').trim()
+  // 如果不是以---开头，直接返回内容
+  return content.trim()
 }
 
 interface Note {
