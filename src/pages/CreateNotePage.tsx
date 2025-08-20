@@ -8,7 +8,7 @@ import { StaticContentService } from '@/services/staticContentService'
 
 const CreateNotePage: React.FC = () => {
   const navigate = useNavigate()
-  const { isLoggedIn } = useGitHub()
+  const { hasManagePermission } = useGitHub()
   
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -23,12 +23,12 @@ const CreateNotePage: React.FC = () => {
     showMessage(setMessage, setMessageType, text, type)
   }
 
-  // 检查登录状态
+  // 检查管理权限
   React.useEffect(() => {
-    if (!isLoggedIn()) {
-      handleShowMessage('需要登录才能创建笔记', 'error')
+    if (!hasManagePermission()) {
+      handleShowMessage('需要管理权限才能创建笔记', 'error')
     }
-  }, [isLoggedIn])
+  }, [hasManagePermission])
 
   // 添加标签
   const handleAddTag = () => {
@@ -122,7 +122,7 @@ const CreateNotePage: React.FC = () => {
     }
   }
 
-  if (!isLoggedIn()) {
+  if (!hasManagePermission()) {
     return (
       <div className="max-w-4xl mx-auto py-8">
         <div className="text-center">

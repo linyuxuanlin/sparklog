@@ -9,10 +9,10 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
-  const { isLoggedIn, isConnected } = useGitHub()
+  const { hasManagePermission, isConnected } = useGitHub()
 
   console.log('Sidebar调试:', {
-    isLoggedIn: isLoggedIn(),
+    hasManagePermission: hasManagePermission(),
     isConnected,
     menuItems: '不包含新建笔记'
   })

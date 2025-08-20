@@ -203,7 +203,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
   defaultExpanded = false,
   hideCollapseButton = false
 }) => {
-  const { isLoggedIn } = useGitHub()
+  const { hasManagePermission } = useGitHub()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [showButtonText, setShowButtonText] = useState(true)
@@ -419,7 +419,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
               </div>
             )}
             <TimeDisplay note={note} />
-            {isLoggedIn() && (
+            {hasManagePermission() && (
               <div className="flex items-center space-x-1">
                 {note.isPrivate ? (
                   <>

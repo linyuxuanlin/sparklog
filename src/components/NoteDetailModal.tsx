@@ -67,7 +67,7 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
   confirmingDeleteId,
   deletingNoteId
 }) => {
-  const { isLoggedIn } = useGitHub()
+  const { hasManagePermission } = useGitHub()
   const [isVisible, setIsVisible] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'entered' | 'exiting' | 'exited'>('exited')
@@ -180,7 +180,7 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                 </button>
                 
                 {/* 管理员操作按钮 */}
-                {isLoggedIn() && (
+                {hasManagePermission() && (
                   <>
                     {/* 编辑按钮 */}
                     <button

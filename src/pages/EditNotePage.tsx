@@ -11,7 +11,7 @@ import { StaticContentService } from '@/services/staticContentService'
 const EditNotePage: React.FC = () => {
   const { noteId } = useParams<{ noteId: string }>()
   const navigate = useNavigate()
-  const { isLoggedIn } = useGitHub()
+  const { hasManagePermission } = useGitHub()
   const { notes, loadNotes } = useNotes()
   
   const [note, setNote] = useState<Note | null>(null)
@@ -38,9 +38,9 @@ const EditNotePage: React.FC = () => {
         return
       }
 
-      // 检查登录状态
-      if (!isLoggedIn()) {
-        handleShowMessage('需要登录才能编辑笔记', 'error')
+      // 检查管理权限
+      if (!hasManagePermission()) {
+        handleShowMessage('需要管理权限才能编辑笔记', 'error')
         setIsLoading(false)
         return
       }
@@ -114,7 +114,7 @@ const EditNotePage: React.FC = () => {
     }
 
     loadNote()
-  }, [noteId, notes, loadNotes, isLoggedIn, navigate])
+  }, [noteId, notes, loadNotes, hasManagePermission, navigate])
 
   // 添加标签
   const handleAddTag = () => {
@@ -189,7 +189,7 @@ const EditNotePage: React.FC = () => {
     }
   }
 
-  if (!isLoggedIn()) {
+  if (!hasManagePermission()) {
     return (
       <div className="max-w-4xl mx-auto py-8">
         <div className="text-center">

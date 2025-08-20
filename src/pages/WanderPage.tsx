@@ -10,7 +10,7 @@ import { showMessage, filterNotesByTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 
 const WanderPage: React.FC = () => {
-  const { isLoading, isConnected, isLoggedIn } = useGitHub()
+  const { isLoading, isConnected, hasManagePermission } = useGitHub()
   const { notes, isLoadingNotes, loadNotes, deleteNote, error, isRateLimited } = useNotes()
   const navigate = useNavigate()
   const location = useLocation()
@@ -98,8 +98,8 @@ const WanderPage: React.FC = () => {
 
   // 处理创建笔记点击
   const handleCreateNote = () => {
-    // 检查GitHub连接状态和登录状态
-    if (!isConnected || !isLoggedIn()) {
+    // 检查是否有管理权限
+    if (!hasManagePermission()) {
       // 检查环境变量是否已配置
       const envConfigured = checkEnvVarsConfigured()
       
@@ -115,7 +115,7 @@ const WanderPage: React.FC = () => {
       return
     }
     
-    // 如果已连接且已登录，直接跳转到创建笔记页面
+    // 如果有管理权限，直接跳转到创建笔记页面
     navigate('/note/new')
   }
 
@@ -350,7 +350,7 @@ const WanderPage: React.FC = () => {
             >
               重试
             </button>
-            {!isLoggedIn() && (
+            {!hasManagePermission() && (
               <button
                 onClick={() => navigate('/settings')}
                 className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

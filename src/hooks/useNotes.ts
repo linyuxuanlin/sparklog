@@ -6,11 +6,11 @@ import { R2Service } from '@/services/r2Service'
 import { StaticContentService } from '@/services/staticContentService'
 
 export const useNotes = () => {
-  const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
+  const { isConnected, hasManagePermission, getGitHubToken, isLoading } = useGitHub()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
-  const [loginStatus, setLoginStatus] = useState(isLoggedIn())
+  const [loginStatus, setLoginStatus] = useState(hasManagePermission())
   const [hasMoreNotes, setHasMoreNotes] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 })
@@ -206,8 +206,8 @@ export const useNotes = () => {
     setIsRateLimited(false)
     
     try {
-      // 获取当前登录状态
-      const currentLoginStatus = isLoggedIn()
+      // 获取当前管理权限状态
+      const currentLoginStatus = hasManagePermission()
       
       // 首先尝试从静态内容加载
       let notesFromStatic = await loadNotesFromStatic(currentLoginStatus)
@@ -310,7 +310,7 @@ export const useNotes = () => {
       setError(`加载笔记失败: ${errorMessage}`)
       setIsLoadingNotes(false)
     }
-  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn, loadNotesFromStatic, loadNotesFromR2])
+  }, [isConnected, getGitHubToken, preloadNextBatch, hasManagePermission, loadNotesFromStatic, loadNotesFromR2])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -338,7 +338,7 @@ export const useNotes = () => {
         const hasMoreToPreload = nextStartIndex < allMarkdownFiles.length
         
         if (hasMoreToPreload) {
-          const currentLoginStatus = isLoggedIn()
+          const currentLoginStatus = hasManagePermission()
           preloadNextBatch(allMarkdownFiles, nextStartIndex, currentLoginStatus)
         } else {
           setHasMoreNotes(false)
@@ -348,7 +348,7 @@ export const useNotes = () => {
         loadNotes(false, currentPage + 1)
       }
     }
-  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn])
+  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, hasManagePermission])
 
   // 删除笔记
   const deleteNote = async (note: Note) => {
@@ -402,7 +402,7 @@ export const useNotes = () => {
   // 优化后的登录状态监听
   useEffect(() => {
     if (!isLoading && hasLoaded) {
-      const currentStatus = isLoggedIn()
+      const currentStatus = hasManagePermission()
       if (currentStatus !== lastLoginStatusRef.current) {
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
