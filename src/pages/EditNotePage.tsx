@@ -48,6 +48,12 @@ const EditNotePage: React.FC = () => {
       return
     }
 
+    // 如果笔记列表为空，等待笔记加载完成
+    if (notes.length === 0) {
+      console.log('笔记列表为空，等待笔记加载...')
+      return
+    }
+
     const loadNote = async () => {
       if (!noteId) {
         handleShowMessage('笔记ID无效', 'error')
@@ -68,27 +74,21 @@ const EditNotePage: React.FC = () => {
         
         // 先从已加载的笔记中查找
         const decodedNoteId = decodeURIComponent(noteId)
+        console.log('开始查找笔记:', {
+          noteId,
+          decodedNoteId,
+          notesCount: notes.length,
+          availableNotes: notes.map(n => ({
+            name: n.name,
+            path: n.path,
+            filename: (n as any).filename,
+            id: (n as any).id,
+            sha: n.sha
+          }))
+        })
+        
         let targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
         
-        // 如果笔记列表为空，先尝试加载笔记
-        if (notes.length === 0) {
-          console.log('笔记列表为空，开始加载笔记...')
-          await loadNotes(true)
-          // 等待一下让状态更新
-          await new Promise(resolve => setTimeout(resolve, 100))
-          // 重新查找目标笔记
-          targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
-        }
-        
-        if (!targetNote) {
-          // 如果还是没找到，尝试重新加载笔记列表
-          console.log('未找到目标笔记，重新加载笔记列表...')
-          await loadNotes(true)
-          // 等待一下让状态更新
-          await new Promise(resolve => setTimeout(resolve, 100))
-          targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
-        }
-
         // 如果仍然找不到，尝试从静态内容中查找（使用不同的字段匹配）
         if (!targetNote) {
           console.log('尝试从静态内容中查找笔记...')
@@ -99,8 +99,51 @@ const EditNotePage: React.FC = () => {
           )
         }
 
+        // 如果仍然找不到，尝试更宽松的匹配策略
         if (!targetNote) {
-          // 最后尝试直接从R2获取笔记信息（作为备用方案）
+          console.log('尝试更宽松的匹配策略...')
+          // 尝试部分匹配
+          targetNote = notes.find(n => {
+            const noteName = n.name.replace(/\.md$/, '')
+            const notePath = n.path.replace(/^notes\//, '').replace(/\.md$/, '')
+            return noteName === decodedNoteId || 
+                   notePath === decodedNoteId ||
+                   noteName.includes(decodedNoteId) ||
+                   notePath.includes(decodedNoteId)
+          })
+          
+          if (targetNote) {
+            console.log('通过宽松匹配找到笔记:', targetNote)
+          }
+        }
+
+        // 如果仍然找不到，尝试从所有可能的字段中查找
+        if (!targetNote) {
+          console.log('尝试从所有字段中查找笔记...')
+          targetNote = notes.find(n => {
+            // 检查所有可能的字段
+            const fields = [
+              n.name,
+              n.path,
+              (n as any).filename,
+              (n as any).id,
+              n.sha
+            ].filter(Boolean)
+            
+            return fields.some(field => {
+              if (!field) return false
+              const cleanField = field.toString().replace(/\.md$/, '').replace(/^notes\//, '')
+              return cleanField === decodedNoteId || cleanField.includes(decodedNoteId)
+            })
+          })
+          
+          if (targetNote) {
+            console.log('通过字段搜索找到笔记:', targetNote)
+          }
+        }
+
+        // 如果仍然找不到，尝试直接从R2获取笔记信息（作为备用方案）
+        if (!targetNote) {
           console.log('尝试直接从R2获取笔记信息...')
           try {
             const r2Service = R2Service.getInstance()
@@ -144,6 +187,13 @@ const EditNotePage: React.FC = () => {
         }
 
         if (!targetNote) {
+          console.error('所有查找策略都失败了，无法找到笔记:', {
+            noteId,
+            decodedNoteId,
+            notesCount: notes.length,
+            noteNames: notes.map(n => n.name),
+            notePaths: notes.map(n => n.path)
+          })
           handleShowMessage('未找到指定的笔记', 'error')
           navigate('/')
           return
@@ -215,7 +265,7 @@ const EditNotePage: React.FC = () => {
     }
 
     loadNote()
-  }, [noteId, hasManagePermission, navigate]) // 移除 notes 和 loadNotes 依赖
+  }, [noteId, hasManagePermission, navigate, notes, loadNotes]) // 添加 notes 和 loadNotes 依赖
 
   // 添加标签
   const handleAddTag = () => {
