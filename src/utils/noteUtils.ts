@@ -89,9 +89,29 @@ export const parseNoteContent = (content: string, fileName: string) => {
       const key = line.substring(0, colonIndex).trim()
       const value = line.substring(colonIndex + 1).trim()
       if (key === 'created_at') {
-        createdDate = value.replace(/"/g, '').trim()
+        const dateStr = value.replace(/"/g, '').trim()
+        try {
+          const parsedDate = new Date(dateStr)
+          if (!isNaN(parsedDate.getTime())) {
+            createdDate = parsedDate.toISOString()
+          } else {
+            console.warn(`⚠️ 无效的创建时间格式: ${dateStr}`)
+          }
+        } catch (error) {
+          console.warn(`⚠️ 解析创建时间失败: ${dateStr}`, error)
+        }
       } else if (key === 'updated_at') {
-        updatedDate = value.replace(/"/g, '').trim()
+        const dateStr = value.replace(/"/g, '').trim()
+        try {
+          const parsedDate = new Date(dateStr)
+          if (!isNaN(parsedDate.getTime())) {
+            updatedDate = parsedDate.toISOString()
+          } else {
+            console.warn(`⚠️ 无效的更新时间格式: ${dateStr}`)
+          }
+        } catch (error) {
+          console.warn(`⚠️ 解析更新时间失败: ${dateStr}`, error)
+        }
       } else if (key === 'private') {
         isPrivate = value === 'true'
       } else if (key === 'tags') {

@@ -394,6 +394,7 @@ export const useNotes = () => {
   useEffect(() => {
     if (!isLoading && !isInitialLoadRef.current) {
       isInitialLoadRef.current = true
+      console.log('useNotes: 开始初始加载笔记...')
       loadNotes(true)
       checkBuildStatus()
     }
@@ -407,6 +408,7 @@ export const useNotes = () => {
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
         // 只有在登录状态真正改变时才重新加载
+        console.log('useNotes: 登录状态改变，重新加载笔记...')
         loadNotes(true)
       }
     }

@@ -14,6 +14,14 @@ const EditNotePage: React.FC = () => {
   const { hasManagePermission } = useGitHub()
   const { notes, loadNotes } = useNotes()
   
+  // 添加调试日志
+  console.log('EditNotePage 渲染:', { 
+    noteId, 
+    hasManagePermission: hasManagePermission(),
+    notesLength: notes.length,
+    currentPath: window.location.pathname
+  })
+  
   const [note, setNote] = useState<Note | null>(null)
   const [content, setContent] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -52,10 +60,58 @@ const EditNotePage: React.FC = () => {
         const decodedNoteId = decodeURIComponent(noteId)
         let targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
         
-        if (!targetNote) {
-          // 如果没找到，尝试重新加载笔记列表
+        // 如果笔记列表为空，先尝试加载笔记
+        if (notes.length === 0) {
+          console.log('笔记列表为空，开始加载笔记...')
           await loadNotes(true)
+          // 等待一下让状态更新
+          await new Promise(resolve => setTimeout(resolve, 100))
+          // 重新查找目标笔记
           targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
+        }
+        
+        if (!targetNote) {
+          // 如果还是没找到，尝试重新加载笔记列表
+          console.log('未找到目标笔记，重新加载笔记列表...')
+          await loadNotes(true)
+          // 等待一下让状态更新
+          await new Promise(resolve => setTimeout(resolve, 100))
+          targetNote = notes.find(n => n.name.replace(/\.md$/, '') === decodedNoteId)
+        }
+
+        if (!targetNote) {
+          // 如果仍然找不到，尝试直接从R2获取笔记信息
+          console.log('尝试直接从R2获取笔记信息...')
+          try {
+            const r2Service = R2Service.getInstance()
+            const notePath = `notes/${decodedNoteId}.md`
+            const noteContent = await r2Service.getFileContent(notePath)
+            
+            if (noteContent) {
+              // 创建一个临时的笔记对象
+              targetNote = {
+                sha: `temp-${decodedNoteId}`,
+                path: notePath,
+                name: `${decodedNoteId}.md`,
+                size: noteContent.length,
+                url: '',
+                git_url: '',
+                html_url: '',
+                download_url: '',
+                type: 'file',
+                content: noteContent,
+                fullContent: noteContent,
+                contentPreview: noteContent.substring(0, 100) + '...',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                isPrivate: false,
+                tags: []
+              } as Note
+              console.log('从R2创建临时笔记对象:', targetNote)
+            }
+          } catch (r2Error) {
+            console.error('从R2获取笔记失败:', r2Error)
+          }
         }
 
         if (!targetNote) {
@@ -64,6 +120,7 @@ const EditNotePage: React.FC = () => {
           return
         }
 
+        console.log('找到目标笔记:', targetNote)
         setNote(targetNote)
 
         // 获取完整内容
@@ -71,6 +128,7 @@ const EditNotePage: React.FC = () => {
         
         if (!fullContent && targetNote.path) {
           // 如果没有完整内容，从R2获取
+          console.log('从R2获取笔记内容...')
           const r2Service = R2Service.getInstance()
           const fetchedContent = await r2Service.getFileContent(targetNote.path)
           fullContent = fetchedContent || ''
@@ -240,6 +298,17 @@ const EditNotePage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-6">
+      {/* 调试信息 */}
+      <div className="mb-4 p-4 bg-yellow-100 dark:bg-yellow-900 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">调试信息</h3>
+        <p className="text-sm text-yellow-700 dark:text-yellow-300">
+          noteId: {noteId} | 
+          权限: {hasManagePermission() ? '有' : '无'} | 
+          笔记数量: {notes.length} | 
+          当前路径: {window.location.pathname}
+        </p>
+      </div>
+      
       {/* 消息提示 */}
       {message && (
         <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg border ${

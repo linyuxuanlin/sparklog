@@ -127,8 +127,19 @@ const WanderPage: React.FC = () => {
     
     // 然后跳转到编辑页面
     const timestamp = note.name.replace(/\.md$/, '')
-    console.log('编辑笔记:', { originalName: note.name, timestamp, encoded: encodeURIComponent(timestamp) })
-    navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
+    console.log('编辑笔记:', { 
+      originalName: note.name, 
+      timestamp, 
+      encoded: encodeURIComponent(timestamp),
+      currentPath: window.location.pathname,
+      targetPath: `/note/edit/${encodeURIComponent(timestamp)}`
+    })
+    
+    // 添加延迟，确保模态框关闭后再跳转
+    setTimeout(() => {
+      console.log('执行路由跳转到:', `/note/edit/${encodeURIComponent(timestamp)}`)
+      navigate(`/note/edit/${encodeURIComponent(timestamp)}`)
+    }, 100)
   }
 
   // 处理标签点击
