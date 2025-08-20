@@ -164,7 +164,18 @@ function parseNoteContent(content, filename) {
     } else if (inFrontmatter && line.startsWith('tags:')) {
       const tagsStr = line.split(':')[1].trim()
       if (tagsStr) {
-        tags = tagsStr.split(',').map(tag => tag.trim())
+        // 处理不同的标签格式
+        if (tagsStr.startsWith('[') && tagsStr.endsWith(']')) {
+          // YAML数组格式: [tag1, tag2, tag3]
+          const tagArray = tagsStr.slice(1, -1).split(',').map(tag => tag.trim()).filter(tag => tag)
+          tags = tagArray
+        } else if (tagsStr.includes(',')) {
+          // 逗号分隔格式: tag1, tag2, tag3
+          tags = tagsStr.split(',').map(tag => tag.trim()).filter(tag => tag)
+        } else if (tagsStr) {
+          // 单个标签
+          tags = [tagsStr]
+        }
       }
     }
   }
