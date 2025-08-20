@@ -5,8 +5,13 @@
  * 从 R2 获取笔记并生成静态内容
  */
 
-// 加载环境变量
-import 'dotenv/config'
+// 检测是否在 Cloudflare Pages 环境中
+const isCloudflarePages = process.env.CF_PAGES_URL || process.env.CF_PAGES_BRANCH || process.env.CF_PAGES_COMMIT_SHA
+
+// 只在本地开发环境中加载 .env 文件
+if (!isCloudflarePages) {
+  import('dotenv/config')
+}
 
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3'
 import fs from 'fs'
@@ -22,22 +27,45 @@ const R2_ACCESS_KEY_ID = process.env.VITE_R2_ACCESS_KEY_ID
 const R2_SECRET_ACCESS_KEY = process.env.VITE_R2_SECRET_ACCESS_KEY
 const R2_BUCKET_NAME = process.env.VITE_R2_BUCKET_NAME
 
-// 调试信息
 console.log('🔍 环境变量检查:')
 console.log('  VITE_R2_ACCOUNT_ID:', R2_ACCOUNT_ID ? '已设置' : '未设置')
 console.log('  VITE_R2_ACCESS_KEY_ID:', R2_ACCESS_KEY_ID ? '已设置' : '未设置')
 console.log('  VITE_R2_SECRET_ACCESS_KEY:', R2_SECRET_ACCESS_KEY ? '已设置' : '未设置')
 console.log('  VITE_R2_BUCKET_NAME:', R2_BUCKET_NAME ? '已设置' : '未设置')
+console.log('  环境:', isCloudflarePages ? 'Cloudflare Pages' : '本地开发')
 console.log('')
 
+// 检查环境变量
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
-  console.error('❌ R2 环境变量未配置')
-  console.error('请确保以下环境变量已设置:')
-  console.error('  - VITE_R2_ACCOUNT_ID')
-  console.error('  - VITE_R2_ACCESS_KEY_ID')
-  console.error('  - VITE_R2_SECRET_ACCESS_KEY')
-  console.error('  - VITE_R2_BUCKET_NAME')
-  process.exit(1)
+  if (isCloudflarePages) {
+    console.error('❌ Cloudflare Pages 环境中 R2 环境变量未配置')
+    console.error('请在 Cloudflare Pages 控制台中设置以下环境变量:')
+    console.error('  - VITE_R2_ACCOUNT_ID')
+    console.error('  - VITE_R2_ACCESS_KEY_ID')
+    console.error('  - VITE_R2_SECRET_ACCESS_KEY')
+    console.error('  - VITE_R2_BUCKET_NAME')
+    console.error('')
+    console.error('设置步骤:')
+    console.error('1. 登录 Cloudflare Dashboard')
+    console.error('2. 进入 Pages 项目设置')
+    console.error('3. 在 "Environment variables" 部分添加上述变量')
+    console.error('4. 重新部署项目')
+    console.error('')
+    console.error('⚠️  由于环境变量缺失，将跳过静态内容生成')
+    console.error('⚠️  网站将无法加载笔记内容')
+    
+    // 在 Cloudflare Pages 环境中，即使失败也要继续构建
+    // 这样可以避免整个构建失败
+    process.exit(0)
+  } else {
+    console.error('❌ R2 环境变量未配置')
+    console.error('请确保以下环境变量已设置:')
+    console.error('  - VITE_R2_ACCOUNT_ID')
+    console.error('  - VITE_R2_ACCESS_KEY_ID')
+    console.error('  - VITE_R2_SECRET_ACCESS_KEY')
+    console.error('  - VITE_R2_BUCKET_NAME')
+    process.exit(1)
+  }
 }
 
 // 初始化 S3 客户端（R2 兼容）
