@@ -15,15 +15,62 @@ if (!globalThis.fetch) {
   }
 }
 
+// 从文件名解析日期
+function parseDateFromFilename(filename) {
+  // 支持多种文件名格式：
+  // 1. 2024-08-05-13-30-58.md
+  // 2. 2024-08-05.md
+  // 3. 2024-08-05-13-30.md
+  // 4. 2024-08-05-13-30-45-123.md
+  
+  // 使用简单的字符串分割方法
+  const parts = filename.replace('.md', '').split('-')
+  
+  if (parts.length >= 3) {
+    const year = parseInt(parts[0])
+    const month = parseInt(parts[1]) - 1 // JavaScript 月份从 0 开始
+    const day = parseInt(parts[2])
+    
+    // 检查是否有时间部分
+    let hour = 0, minute = 0, second = 0, millisecond = 0
+    
+    if (parts.length >= 5) {
+      hour = parseInt(parts[3]) || 0
+      minute = parseInt(parts[4]) || 0
+    }
+    
+    if (parts.length >= 6) {
+      second = parseInt(parts[5]) || 0
+    }
+    
+    if (parts.length >= 7) {
+      millisecond = parseInt(parts[6]) || 0
+    }
+    
+    try {
+      const date = new Date(year, month, day, hour, minute, second, millisecond)
+      if (!isNaN(date.getTime())) {
+        return date.toISOString()
+      }
+    } catch (e) {
+      console.log(`⚠️ 解析日期失败: ${filename}`)
+    }
+  }
+  
+  // 如果无法从文件名解析，返回当前时间
+  return new Date().toISOString()
+}
+
 // 简单的内容解析函数
 function parseNoteContent(content, filename) {
   let title = filename.replace('.md', '')
   let contentPreview = ''
   let isPrivate = false
   let tags = []
-  let createdDate = null
-  let updatedDate = null
-
+  
+  // 从文件名解析日期
+  const filenameDate = parseDateFromFilename(filename)
+  
   // 解析 frontmatter
   if (content.startsWith('---')) {
     const endIndex = content.indexOf('---', 3)
@@ -51,14 +98,6 @@ function parseNoteContent(content, filename) {
           case 'private':
             isPrivate = value.toLowerCase() === 'true'
             break
-          case 'created':
-          case 'created_at':
-            createdDate = value
-            break
-          case 'updated':
-          case 'updated_at':
-            updatedDate = value
-            break
         }
       }
     }
@@ -73,8 +112,8 @@ function parseNoteContent(content, filename) {
     contentPreview,
     isPrivate,
     tags,
-    createdDate,
-    updatedDate
+    createdDate: filenameDate, // 使用文件名解析的日期
+    updatedDate: filenameDate  // 使用文件名解析的日期
   }
 }
 
@@ -139,14 +178,17 @@ async function generateRealNotes(owner, repo, token, outputDir) {
           return null
         }
         
+        // 显示日期解析信息
+        console.log(`📅 文件名: ${file.name} -> 解析日期: ${parsed.createdDate}`)
+        
         return {
           name: file.name,
           title: parsed.title,
           contentPreview: parsed.contentPreview,
           content: content,
           tags: parsed.tags,
-          created_at: parsed.createdDate || file.created_at || new Date().toISOString(),
-          updated_at: parsed.updatedDate || file.updated_at || new Date().toISOString(),
+          created_at: parsed.createdDate, // 使用文件名解析的日期
+          updated_at: parsed.updatedDate, // 使用文件名解析的日期
           isPrivate: parsed.isPrivate
         }
       } catch (error) {
