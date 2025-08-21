@@ -10,40 +10,14 @@ const __dirname = path.dirname(__filename)
 
 console.log('🔨 SparkLog 智能构建脚本启动...')
 
-// 检查是否在 Cloudflare Pages 环境中
-const isCloudflarePages = process.env.CF_PAGES === '1' || process.env.NODE_ENV === 'production'
-const hasGitHubConfig = process.env.VITE_GITHUB_TOKEN && process.env.VITE_REPO_OWNER && process.env.VITE_REPO_NAME
-
 try {
-  // 1. 构建静态笔记（仅在有GitHub配置时）
-  if (hasGitHubConfig) {
-    console.log('📝 第一步：构建静态笔记...')
-    execSync('tsx src/build/index.ts', { stdio: 'inherit' })
-  } else {
-    console.log('⚠️ 缺少GitHub配置，跳过静态笔记构建')
-    console.log('ℹ️ 将创建空的静态笔记目录...')
-    
-    // 创建空的静态笔记目录
-    const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
-    if (!fs.existsSync(staticNotesDir)) {
-      fs.mkdirSync(staticNotesDir, { recursive: true })
-    }
-    
-    // 创建空的索引文件
-    const indexFile = path.join(staticNotesDir, 'index.json')
-    fs.writeFileSync(indexFile, JSON.stringify({
-      notes: [],
-      totalCount: 0,
-      lastUpdated: new Date().toISOString(),
-      message: 'No GitHub configuration found - static notes disabled'
-    }, null, 2))
-    
-    console.log('✅ 已创建空的静态笔记目录')
-  }
+  // 1. 构建静态笔记
+  console.log('📝 第一步：构建静态笔记...')
+  execSync('tsx src/build/index.ts', { stdio: 'inherit' })
   
   // 2. 检查静态笔记是否生成
   const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
-  if (!fs.existsSync(staticNotesDir) || !fs.existsSync(path.join(staticNotesDir, 'index.json'))) {
+  if (!fs.existsSync(staticNotesDir)) {
     console.log('⚠️ 静态笔记构建失败，跳过后续步骤')
     process.exit(1)
   }
