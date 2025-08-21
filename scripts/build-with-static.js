@@ -10,6 +10,17 @@ const __dirname = path.dirname(__filename)
 
 console.log('🔨 SparkLog 智能构建脚本启动...')
 
+// 在 Cloudflare Pages 环境中运行诊断
+if (process.env.CF_PAGES === '1') {
+  console.log('🔍 检测到 Cloudflare Pages 环境，运行诊断...')
+  try {
+    execSync('node scripts/diagnose-env.js', { stdio: 'inherit' })
+  } catch (error) {
+    console.log('⚠️ 诊断脚本运行失败，继续构建...')
+  }
+  console.log('\n')
+}
+
 // 检查是否在 Cloudflare Pages 环境中
 const isCloudflarePages = process.env.CF_PAGES === '1' || process.env.NODE_ENV === 'production'
 const hasGitHubConfig = process.env.VITE_GITHUB_TOKEN && process.env.VITE_REPO_OWNER && process.env.VITE_REPO_NAME
@@ -22,6 +33,35 @@ console.log('VITE_GITHUB_TOKEN:', process.env.VITE_GITHUB_TOKEN ? '***已设置*
 console.log('VITE_REPO_OWNER:', process.env.VITE_REPO_OWNER || '未设置')
 console.log('VITE_REPO_NAME:', process.env.VITE_REPO_NAME || '未设置')
 console.log('hasGitHubConfig:', hasGitHubConfig)
+
+// 进一步诊断：显示所有环境变量
+console.log('🔍 所有环境变量诊断:')
+const envKeys = Object.keys(process.env).filter(key => 
+  key.startsWith('VITE_') || 
+  key.startsWith('GITHUB_') || 
+  key.startsWith('REPO_') ||
+  key === 'CF_PAGES' ||
+  key === 'NODE_ENV'
+)
+console.log('相关环境变量数量:', envKeys.length)
+envKeys.forEach(key => {
+  const value = process.env[key]
+  if (key.includes('TOKEN') || key.includes('PASSWORD')) {
+    console.log(`${key}: ${value ? '***已设置***' : '未设置'}`)
+  } else {
+    console.log(`${key}: ${value || '未设置'}`)
+  }
+})
+
+// 检查是否可能是环境变量名称问题
+const commonAlternatives = [
+  'GITHUB_TOKEN', 'REPO_OWNER', 'REPO_NAME', 'ADMIN_PASSWORD',
+  'VITE_GITHUB_OWNER', 'VITE_GITHUB_REPO', 'GITHUB_OWNER', 'GITHUB_REPO'
+]
+const foundAlternatives = commonAlternatives.filter(key => process.env[key])
+if (foundAlternatives.length > 0) {
+  console.log('🔍 发现可能的替代环境变量:', foundAlternatives)
+}
 
 try {
   // 1. 构建静态笔记（仅在有GitHub配置时）
