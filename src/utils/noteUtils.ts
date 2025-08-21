@@ -99,7 +99,10 @@ export const parseNoteContent = (content: string, fileName: string) => {
         const tagValue = value.replace(/"/g, '').trim()
         if (tagValue.startsWith('[') && tagValue.endsWith(']')) {
           // YAML数组格式: [tag1, tag2, tag3]
-          const tagArray = tagValue.slice(1, -1).split(',').map(tag => tag.trim()).filter(tag => tag)
+          const tagArray = tagValue.slice(1, -1).split(',').map(tag => {
+            // 清理每个标签，移除可能的引号和空格
+            return tag.trim().replace(/^["']|["']$/g, '')
+          }).filter(tag => tag)
           tags = tagArray
         } else if (tagValue.includes(',')) {
           // 逗号分隔格式: tag1, tag2, tag3
@@ -168,6 +171,5 @@ export const getAllTags = (notes: Note[]): string[] => {
 // 格式化标签为Front Matter字符串
 export const formatTagsForFrontMatter = (tags: string[]): string => {
   if (tags.length === 0) return '[]'
-  if (tags.length === 1) return tags[0]
   return `[${tags.join(', ')}]`
 } 

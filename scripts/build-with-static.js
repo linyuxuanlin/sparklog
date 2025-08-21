@@ -13,7 +13,7 @@ console.log('🔨 SparkLog 智能构建脚本启动...')
 try {
   // 1. 构建静态笔记
   console.log('📝 第一步：构建静态笔记...')
-  execSync('npm run build:static-notes', { stdio: 'inherit' })
+  execSync('tsx src/build/index.ts', { stdio: 'inherit' })
   
   // 2. 检查静态笔记是否生成
   const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
@@ -57,21 +57,17 @@ try {
     console.log('⚠️ 备份目录不存在，无法恢复静态笔记')
   }
   
-  // 同步到 public 目录（仅开发环境需要）
-  if (process.env.NODE_ENV === 'development' || process.env.SPARKLOG_DEV_SYNC === 'true') {
-    console.log('🔄 同步静态笔记到 public 目录（开发环境）...')
-    try {
-      const publicDir = path.resolve(process.cwd(), 'public/static-notes')
-      if (fs.existsSync(publicDir)) {
-        fs.rmSync(publicDir, { recursive: true, force: true })
-      }
-      fs.cpSync(staticNotesDir, publicDir, { recursive: true })
-      console.log('✅ 静态笔记已同步到 public 目录')
-    } catch (error) {
-      console.log('⚠️ 同步到 public 目录失败:', error.message)
+  // 同步到 public 目录（开发时需要，生产时也需要用于预览）
+  console.log('🔄 同步静态笔记到 public 目录...')
+  try {
+    const publicDir = path.resolve(process.cwd(), 'public/static-notes')
+    if (fs.existsSync(publicDir)) {
+      fs.rmSync(publicDir, { recursive: true, force: true })
     }
-  } else {
-    console.log('ℹ️ 生产环境构建，跳过 public 目录同步')
+    fs.cpSync(staticNotesDir, publicDir, { recursive: true })
+    console.log('✅ 静态笔记已同步到 public 目录')
+  } catch (error) {
+    console.log('⚠️ 同步到 public 目录失败:', error.message)
   }
   
   console.log('🎉 智能构建完成！')
