@@ -4,7 +4,7 @@ import { Filter, Tag, ChevronDown } from 'lucide-react'
 interface TagFilterProps {
   availableTags: string[]
   selectedTags: string[]
-  onTagsChange: (tags: string[]) => void
+  onTagsChange: (_tags: string[]) => void
   className?: string
 }
 

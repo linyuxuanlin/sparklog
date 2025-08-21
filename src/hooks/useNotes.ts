@@ -52,8 +52,8 @@ export const useNotes = () => {
           const parsed = parseNoteContent(content, file.name)
           
           // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
-          let created_at = parsed.createdDate || file.created_at
-          let updated_at = parsed.updatedDate || file.updated_at
+          const created_at = parsed.createdDate || file.created_at
+          const updated_at = parsed.updatedDate || file.updated_at
           
           return {
             ...file,
@@ -99,8 +99,8 @@ export const useNotes = () => {
             const parsed = parseNoteContent(content, file.name)
             
             // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
-            let created_at = parsed.createdDate || file.created_at
-            let updated_at = parsed.updatedDate || file.updated_at
+            const created_at = parsed.createdDate || file.created_at
+            const updated_at = parsed.updatedDate || file.updated_at
             
             return {
               ...file,
@@ -162,7 +162,7 @@ export const useNotes = () => {
         throw new Error('未配置默认仓库，请设置环境变量')
       }
       
-      let authData = {
+      const authData = {
         username: defaultConfig.owner,
         repo: defaultConfig.repo,
         accessToken: getDefaultGitHubToken()
@@ -228,8 +228,8 @@ export const useNotes = () => {
           const parsed = parseNoteContent(content, file.name)
           
           // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
-          let created_at = parsed.createdDate || file.created_at
-          let updated_at = parsed.updatedDate || file.updated_at
+          const created_at = parsed.createdDate || file.created_at
+          const updated_at = parsed.updatedDate || file.updated_at
           
           // 更新加载进度
           setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
@@ -372,7 +372,7 @@ export const useNotes = () => {
         throw new Error('未配置默认仓库')
       }
       
-      let authData = {
+      const authData = {
         username: defaultConfig.owner,
         repo: defaultConfig.repo,
         accessToken: getDefaultGitHubToken()

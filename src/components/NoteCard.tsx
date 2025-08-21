@@ -67,8 +67,8 @@ interface Note {
 
 interface NoteCardProps {
   note: Note
-  onOpen: (note: Note) => void
-  onTagClick?: (tag: string) => void
+  onOpen: (_note: Note) => void
+  onTagClick?: (_tag: string) => void
   defaultExpanded?: boolean
   hideCollapseButton?: boolean
 }

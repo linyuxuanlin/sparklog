@@ -42,8 +42,8 @@ export const encodeBase64Content = (content: string): string => {
 
 // 显示消息提示
 export const showMessage = (
-  setMessage: (text: string) => void,
-  setMessageType: (type: 'success' | 'error' | '') => void,
+  setMessage: (_text: string) => void,
+  setMessageType: (_type: 'success' | 'error' | '') => void,
   text: string,
   type: 'success' | 'error'
 ) => {

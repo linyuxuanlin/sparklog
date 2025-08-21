@@ -3,7 +3,7 @@ import { X, Plus, Tag } from 'lucide-react'
 
 interface TagManagerProps {
   tags: string[]
-  onChange: (tags: string[]) => void
+  onChange: (_tags: string[]) => void
   availableTags?: string[]
   placeholder?: string
   className?: string

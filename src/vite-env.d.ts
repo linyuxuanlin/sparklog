@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
-interface ImportMetaEnv {
+declare global {
+  /* eslint-disable-next-line no-unused-vars */
+  interface ImportMetaEnv {
   readonly VITE_REPO_OWNER?: string
   readonly VITE_REPO_NAME?: string
   readonly VITE_GITHUB_TOKEN?: string
@@ -14,8 +16,7 @@ interface ImportMetaEnv {
   readonly VITE_ADMIN_PASSWORD?: string
   readonly DEV?: boolean
   readonly MODE?: string
+  }
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-} 
+ 

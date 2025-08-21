@@ -48,9 +48,9 @@ interface NoteDetailModalProps {
   note: Note | null
   isOpen: boolean
   onClose: () => void
-  onEdit: (note: Note) => void
-  onDelete: (note: Note) => void
-  onConfirmDelete: (note: Note) => void
+  onEdit: (_note: Note) => void
+  onDelete: (_note: Note) => void
+  onConfirmDelete: (_note: Note) => void
   confirmingDeleteId: string | null
   deletingNoteId: string | null
 }

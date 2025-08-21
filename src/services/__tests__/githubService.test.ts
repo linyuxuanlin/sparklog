@@ -49,6 +49,9 @@ describe('GitHubService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: {
+          get: vi.fn((name: string) => name === 'ETag' ? 'etag123' : null)
+        },
         json: async () => []
       })
       
@@ -162,7 +165,10 @@ describe('GitHubService', () => {
     it('应该处理 404 错误（notes 目录不存在）', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 404
+        status: 404,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        }
       })
 
       const result = await service.getNotesFiles()
@@ -175,6 +181,9 @@ describe('GitHubService', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
+        headers: {
+          get: vi.fn((_name: string) => null)
+        },
         json: async () => ({ message: 'GitHub API 错误' })
       })
 
@@ -262,13 +271,17 @@ describe('GitHubService', () => {
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          headers: new Map([['ETag', 'etag1']]),
+          headers: {
+            get: vi.fn((name: string) => name === 'ETag' ? 'etag1' : null)
+          },
           json: async () => mockContent1
         })
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
-          headers: new Map([['ETag', 'etag2']]),
+          headers: {
+            get: vi.fn((name: string) => name === 'ETag' ? 'etag2' : null)
+          },
           json: async () => mockContent2
         })
 
@@ -299,7 +312,10 @@ describe('GitHubService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 404
+        status: 404,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        }
       })
 
       const result = await service.getBatchNotesContent(mockFiles)
@@ -329,6 +345,9 @@ describe('GitHubService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        },
         json: async () => mockContent
       })
 
@@ -350,7 +369,10 @@ describe('GitHubService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 404
+        status: 404,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        }
       })
 
       const result = await service.getSingleNoteContent(mockFile)
@@ -369,7 +391,10 @@ describe('GitHubService', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        status: 200
+        status: 200,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        }
       })
 
       const result = await service.deleteNote(mockNote)
@@ -401,6 +426,9 @@ describe('GitHubService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
+        headers: {
+          get: vi.fn((_name: string) => null)
+        },
         json: async () => ({ message: '文件不存在' })
       })
 
