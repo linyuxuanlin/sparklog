@@ -14,9 +14,6 @@ build/
 .env.test.local
 .env.production.local
 
-# Static notes backup
-.static-notes-backup
-
 # Logs
 npm-debug.log*
 yarn-debug.log*
@@ -110,4 +107,3 @@ $RECYCLE.BIN/
 # Local development
 .local/ 
 .claude/settings.local.json
-/public

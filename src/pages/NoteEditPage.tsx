@@ -408,14 +408,14 @@ const NoteEditPage: React.FC = () => {
        const updatedAt = currentTime
        
        const noteContent = `---
-created_at: ${createdAt}
-updated_at: ${updatedAt}
-private: ${isPrivate}
-tags: ${formatTagsForFrontMatter(tags)}
----
+ created_at: ${createdAt}
+ updated_at: ${updatedAt}
+ private: ${isPrivate}
+ tags: ${formatTagsForFrontMatter(tags)}
+ ---
 
-${content.trim()}
-`
+ ${content.trim()}
+ `
 
        // 如果是编辑模式，检查是否需要更新现有文件或创建新文件
        let sha = ''

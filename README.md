@@ -15,7 +15,6 @@
 
 - **纯静态部署**: 基于 React + Vite 构建，你可以把它托管在 Cloudflare Pages、Vercel 等平台，无需服务器。
 - **GitHub 仓库存储**: 所有笔记数据存储在 GitHub 仓库中，永远不会丢失。
-- **智能静态化**: 支持笔记内容静态化，减少 GitHub API 调用，提升加载速度。
 - **无后端依赖**: 直接使用 GitHub API，无需维护服务器和数据库。
 - **实时编辑**: 无需其他编辑器，只要有网，就可记录你的想法。
 - **权限控制**: 支持笔记公开 / 私密设置。
@@ -26,51 +25,34 @@
 
 ### 环境要求
 
-- Node.js 18+ 
-- npm 8+ (或 yarn/pnpm)
-- Git
+- Node.js 18+
+- npm/yarn/pnpm
 
-### 准备工作
+请首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于笔记文件的存放。
 
-1. **创建 GitHub 笔记仓库**
-   - 访问 [GitHub](https://github.com/new?name=sparklog-notes&private=true) 创建一个私有仓库
-   - 仓库名建议为 `sparklog-notes` 或其他你喜欢的名称
-   - 设置为**私有仓库**以保护笔记隐私
+然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），  
+获取的令牌格式例如：`ghp_xxxxxxxx`。
 
-2. **获取 GitHub 访问令牌**
-   - 访问 [GitHub Token 生成页面](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)
-   - 勾选 `repo` 权限（完整仓库访问权限）
-   - 生成令牌，格式如：`ghp_xxxxxxxx`
-   - **重要**: 妥善保存此令牌，页面关闭后无法再次查看
-
-### 方式一：本地开发
+### 一. 本地开发
 
 ```bash
-# 1. 克隆项目
+# 克隆项目
 git clone https://github.com/linyuxuanlin/sparklog.git
 cd sparklog
 
-# 2. 安装依赖
+# 安装依赖
 npm install
 
-# 3. 配置环境变量
-cp .env.example .env
+# 创建环境变量文件
+cp .env.example .env  # 复制环境变量模板
 
-# 4. 编辑 .env 文件，填入你的配置信息
-# VITE_REPO_OWNER=your-github-username
-# VITE_REPO_NAME=sparklog-notes
-# VITE_GITHUB_TOKEN=ghp_xxxxxxxx
-# VITE_ADMIN_PASSWORD=your-secure-password
+# 编辑.env文件，配置 GitHub 仓库信息
 
-# 5. 启动开发服务器
+# 启动开发服务器
 npm run dev
 ```
 
-项目将在 `http://localhost:3000` 启动。首次访问需要输入管理员密码。
-
-**💡 本地开发提示**: 运行 `npm run build:dev` 可以构建静态笔记并同步到 `public/` 目录，这样本地开发时也能体验静态笔记功能。
-
-### 方式二：部署到 Cloudflare Pages
+### 二、部署到 Cloudflare Pages
 
 1. **Fork 项目**
 
@@ -87,7 +69,7 @@ npm run dev
 3. **配置构建设置**
 
    - **Framework preset**: None
-   - **Build command**: `npm run build:static`
+   - **Build command**: `npm run build`
    - **Build output directory**: `dist`
    - **Root directory**: `/` (留空)
 
@@ -102,54 +84,9 @@ npm run dev
 
 5. **部署**
    - 点击"Save and Deploy"
-   - 等待构建完成（自动构建应用+编译静态笔记）
-   - 访问部署地址，输入管理员密码开始使用
-
-**✨ 静态化说明**: 
-- `build:static` 命令会同时生成应用和静态笔记文件
-- 静态笔记文件位于 `dist/static-notes/` 目录
-- Cloudflare Pages 部署时会自动包含静态笔记，提升访问速度
-
-### 使用指南
-
-#### 首次使用
-
-1. **设置管理员密码**: 访问应用后，输入你在环境变量中设置的管理员密码
-2. **创建第一篇笔记**: 点击"新建笔记"按钮开始记录想法
-3. **管理标签**: 使用标签管理器为笔记添加分类标签
-4. **设置权限**: 选择笔记是公开还是私密（私密笔记需要管理员密码查看）
-
-#### 可用脚本命令
-
-```bash
-# 开发相关
-npm run dev          # 启动开发服务器 (localhost:3000)
-npm run build        # 构建生产版本
-npm run build:static # 构建+静态化笔记一键完成 (本地和部署通用)
-npm run build:dev    # 开发环境构建+静态化
-npm run preview      # 预览构建结果
-
-# 测试相关
-npm run test         # 运行测试套件
-npm run lint         # 代码检查
-```
-
-#### 常见问题
-
-**Q: 无法访问 GitHub API？**
-- 检查网络连接和 GitHub Token 是否有效
-- 确认仓库权限设置（需要 `repo` 权限）
-- 查看浏览器控制台错误信息
-
-**Q: 管理员密码无效？**
-- 确认环境变量 `VITE_ADMIN_PASSWORD` 设置正确
-- 检查变量名拼写（必须以 `VITE_` 开头）
-- 重新构建项目：`npm run build`
-
-**Q: 笔记无法保存？**
-- 检查 GitHub Token 权限
-- 确认目标仓库存在且有写入权限
-- 查看网络请求是否成功
+   - 等待构建完成
+   - 访问你的部署地址，输入管理员密码
+   - 开始记录你的妙想。
 
 ## 🎯 功能特性
 
@@ -232,30 +169,9 @@ npm run lint         # 代码检查
    - 可以在 GitHub 上查看历史版本
    - 支持回滚到之前的版本
 
-### 智能静态化
-
-1. **混合加载模式**
-
-   - 优先加载静态化的笔记内容，提升访问速度
-   - 无静态内容的笔记自动回退到 GitHub API 加载
-   - 支持增量编译，只编译新增/修改的笔记
-
-2. **自动编译触发**
-
-   - 新增或修改笔记后自动触发静态编译
-   - 私有笔记不参与静态化，保持原有 API 方式
-   - 编译完成后用户下次访问即可看到静态内容
-
-3. **性能优化**
-
-   - 减少 GitHub API 调用次数，避免速率限制
-   - 静态内容支持浏览器缓存，提升用户体验
-   - 智能降级，确保功能可用性
-
 ## 📚 详细文档
 
 - **[部署指南](./docs/DEPLOYMENT.md)** - 详细的部署说明和故障排除
-- **[静态化部署](./docs/STATIC_DEPLOYMENT.md)** - 笔记静态化功能配置指南
 - **[架构原理](./docs/ARCHITECTURE.md)** - 技术架构和设计原理
 - **[开发指南](./docs/DEVELOPMENT.md)** - 开发环境搭建和贡献指南
 

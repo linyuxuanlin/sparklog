@@ -309,7 +309,7 @@ tags: 单个标签
 
     it('应该格式化单个标签', () => {
       const result = formatTagsForFrontMatter(['React'])
-      expect(result).toBe('[React]')
+      expect(result).toBe('React')
     })
 
     it('应该格式化多个标签', () => {

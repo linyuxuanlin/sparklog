@@ -4,7 +4,6 @@ import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 import { GitHubService } from '@/services/githubService'
-import { StaticNotesService } from '@/services/staticNotesService'
 
 export const useNotes = () => {
   const { isLoggedIn, getGitHubToken, isLoading } = useGitHub()
@@ -20,7 +19,6 @@ export const useNotes = () => {
   const [allMarkdownFiles, setAllMarkdownFiles] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isRateLimited, setIsRateLimited] = useState(false)
-  const [staticNotesCount, setStaticNotesCount] = useState(0)
   
   // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
@@ -140,8 +138,9 @@ export const useNotes = () => {
     }
   }, [isPreloading])
 
-  // 混合加载笔记：优先使用静态内容，回退到 GitHub API
-  const loadNotesHybrid = useCallback(async (forceRefresh = false, page = 1) => {
+  // 从GitHub仓库加载笔记（分页加载）
+  const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
+    // 如果正在加载且不是强制刷新，避免重复请求
     if (isLoadingNotes && !forceRefresh) {
       return
     }
@@ -151,11 +150,13 @@ export const useNotes = () => {
     setIsRateLimited(false)
     
     try {
+      // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
-      const staticNotesService = StaticNotesService.getInstance()
       
-      // 获取所有markdown文件列表
+      // 初始化GitHub服务
       const githubService = GitHubService.getInstance()
+      
+      // 设置认证信息
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
         throw new Error('未配置默认仓库，请设置环境变量')
@@ -167,6 +168,7 @@ export const useNotes = () => {
         accessToken: getDefaultGitHubToken()
       }
       
+      // 如果是管理员且已登录，使用GitHub Token
       if (currentLoginStatus) {
         const adminToken = getGitHubToken()
         if (adminToken) {
@@ -175,7 +177,12 @@ export const useNotes = () => {
       }
       
       githubService.setAuthData(authData)
+      
+      // 获取所有markdown文件列表
       const markdownFiles = await githubService.getNotesFiles()
+      console.log('获取到markdown文件:', markdownFiles.length, '个')
+      
+      // 保存所有markdown文件列表，用于预加载
       setAllMarkdownFiles(markdownFiles)
       
       // 分页处理
@@ -183,144 +190,71 @@ export const useNotes = () => {
       let pageSize: number
       
       if (page === 1) {
+        // 首次加载：加载前10篇
         startIndex = 0
         pageSize = 10
       } else {
-        startIndex = 10 + (page - 2) * 5
+        // 后续加载：每次加载5篇
+        startIndex = 10 + (page - 2) * 5 // 10 + (page-2)*5
         pageSize = 5
       }
       
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
       
-      setLoadingProgress({ current: 0, total: currentPageFiles.length })
-      setHasMoreNotes(endIndex < markdownFiles.length)
-      
-      // 尝试从静态内容获取笔记
-      console.log('🔍 开始混合加载，当前页面文件数量:', currentPageFiles.length)
-      
-      // 强制初始化静态笔记服务
-      try {
-        console.log('🔧 初始化静态笔记服务...')
-        await staticNotesService.testService()
-        const notesIndex = await staticNotesService.getNotesIndex()
-        if (notesIndex) {
-          console.log('✅ 静态笔记索引加载成功，包含笔记数量:', Object.keys(notesIndex.notes).length)
-        } else {
-          console.log('⚠️ 静态笔记索引加载失败')
-        }
-      } catch (error) {
-        console.warn('⚠️ 初始化静态笔记服务失败:', error)
-      }
-      
-      const staticNotesMap = await staticNotesService.getBatchStaticNotes(
-        currentPageFiles.map(file => file.name)
-      )
-      console.log('📊 静态笔记映射结果:', {
-        请求文件数: currentPageFiles.length,
-        获取到静态笔记数: staticNotesMap.size,
-        静态笔记文件名: Array.from(staticNotesMap.keys())
+      console.log('当前页文件:', {
+        startIndex,
+        endIndex,
+        pageSize,
+        currentPageFiles: currentPageFiles.length
       })
       
-      const notesWithContent: any[] = []
-      let staticCount = 0
+      setLoadingProgress({ current: 0, total: currentPageFiles.length })
       
-      for (let i = 0; i < currentPageFiles.length; i++) {
-        const file = currentPageFiles[i]
-        setLoadingProgress(prev => ({ ...prev, current: i + 1 }))
+      // 检查是否还有更多笔记
+      setHasMoreNotes(endIndex < markdownFiles.length)
+      
+      // 批量获取当前页的笔记内容
+      const batchContent = await githubService.getBatchNotesContent(currentPageFiles)
+      
+      // 处理批量获取的内容
+      const notesWithContent = currentPageFiles.map((file: any, index: number) => {
+        const contentData = batchContent[file.path]
         
-        // 检查是否有静态版本
-        const staticNote = staticNotesMap.get(file.name)
-        if (staticNote) {
-          // 使用静态内容
-          console.log('✅ 使用静态笔记:', file.name)
+        if (contentData) {
+          const content = decodeBase64Content(contentData.content)
           
-          // 如果静态笔记缺少时间字段，尝试从文件名或 GitHub 文件元数据中获取
-          let created_at = staticNote.createdDate
-          let updated_at = staticNote.updatedDate
+          // 解析笔记内容
+          const parsed = parseNoteContent(content, file.name)
           
-          if (!created_at || !updated_at) {
-            // 尝试从文件名解析时间（格式：YYYY-MM-DD-HH-MM-SS.md）
-            const timeMatch = file.name.match(/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/)
-            if (timeMatch) {
-              const timestamp = timeMatch[1].replace(/-/g, ':').replace(/(\d{2}):(\d{2}):(\d{2})$/, '$1:$2:$3')
-              const date = new Date(timestamp)
-              if (!isNaN(date.getTime())) {
-                if (!created_at) created_at = date.toISOString()
-                if (!updated_at) updated_at = date.toISOString()
-              }
-            }
-            
-            // 如果仍然没有时间，使用 GitHub 文件元数据
-            if (!created_at) created_at = file.created_at
-            if (!updated_at) updated_at = file.updated_at
-          }
+          // 优先使用从frontmatter解析的日期，如果没有则使用GitHub文件元数据
+          const created_at = parsed.createdDate || file.created_at
+          const updated_at = parsed.updatedDate || file.updated_at
           
-          notesWithContent.push({
+          // 更新加载进度
+          setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
+          
+          return {
             ...file,
-            contentPreview: staticNote.contentPreview,
-            fullContent: staticNote.content,
-            createdDate: created_at,
-            updatedDate: updated_at,
-            isPrivate: staticNote.isPrivate,
-            tags: staticNote.tags,
+            contentPreview: parsed.contentPreview,
+            fullContent: content,
+            createdDate: parsed.createdDate,
+            updatedDate: parsed.updatedDate,
+            isPrivate: parsed.isPrivate,
+            tags: parsed.tags,
             created_at: created_at,
-            updated_at: updated_at,
-            isStatic: true
-          })
-          staticCount++
-        } else {
-          console.log('⚠️ 未找到静态笔记，回退到 GitHub API:', file.name)
-          // 回退到 GitHub API
-          try {
-            const contentData = await githubService.getSingleNoteContent(file)
-            if (contentData) {
-              const content = decodeBase64Content(contentData.content)
-              const parsed = parseNoteContent(content, file.name)
-              
-              const created_at = parsed.createdDate || file.created_at
-              const updated_at = parsed.updatedDate || file.updated_at
-              
-              notesWithContent.push({
-                ...file,
-                contentPreview: parsed.contentPreview,
-                fullContent: content,
-                createdDate: parsed.createdDate,
-                updatedDate: parsed.updatedDate,
-                isPrivate: parsed.isPrivate,
-                tags: parsed.tags,
-                created_at: created_at,
-                updated_at: updated_at,
-                isStatic: false
-              })
-              
-              // 记录笔记更新，将在下次构建时重新编译
-              if (!parsed.isPrivate) {
-                staticNotesService.triggerNoteCompilation(file.name, {
-                  id: file.sha,
-                  title: parsed.title || file.name.replace('.md', ''),
-                  content: content,
-                  contentPreview: parsed.contentPreview,
-                  createdDate: created_at,
-                  updatedDate: updated_at,
-                  isPrivate: parsed.isPrivate,
-                  tags: parsed.tags
-                })
-              }
-            } else {
-              notesWithContent.push(file)
-            }
-          } catch (error) {
-            console.warn(`获取笔记 ${file.name} 内容失败:`, error)
-            notesWithContent.push(file)
+            updated_at: updated_at
           }
         }
-      }
+        
+        // 如果批量获取失败，返回原始文件信息
+        setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
+        return file
+      })
       
-      setStaticNotesCount(staticCount)
-      
-      // 过滤笔记
+      // 过滤笔记 - 根据登录状态显示笔记，并确保每个笔记都有有效的sha
       const visibleNotes = notesWithContent.filter(note => {
+        // 确保笔记有有效的sha
         if (!note.sha) {
           console.warn('发现没有sha的笔记:', note.name || note.path)
           return false
@@ -332,20 +266,25 @@ export const useNotes = () => {
         return true
       })
       
-      // 设置笔记列表
+      console.log('最终可见笔记:', visibleNotes.length, '个')
+      
+      // 如果是第一页或强制刷新，替换笔记列表；否则追加（去重）
       if (page === 1 || forceRefresh) {
         setNotes(visibleNotes)
         setCurrentPage(1)
+        // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
         }
       } else {
+        // 追加时去重，避免重复的笔记
         setNotes(prev => {
           const existingShas = new Set(prev.map(note => note.sha))
           const newNotes = visibleNotes.filter(note => !existingShas.has(note.sha))
           return [...prev, ...newNotes]
         })
         setCurrentPage(page)
+        // 预加载下一批笔记
         if (endIndex < markdownFiles.length) {
           preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
         }
@@ -355,23 +294,23 @@ export const useNotes = () => {
       setHasLoaded(true)
       
     } catch (error) {
-      console.error('混合加载笔记失败:', error)
-      setError(error instanceof Error ? error.message : '加载笔记失败')
+      console.error('加载笔记失败:', error)
+      const errorMessage = error instanceof Error ? error.message : '请重试'
       
-      // 检查是否为速率限制错误
-      if (error instanceof Error && error.message.includes('rate limit')) {
+      // 检测GitHub API速率限制错误
+      if (errorMessage.includes('API rate limit exceeded') || errorMessage.includes('403')) {
         setIsRateLimited(true)
+        setError('API 访问已达上限（每小时 5000 次），请稍作等待后刷新。')
+      } else if (errorMessage.includes('未配置默认仓库')) {
+        setError('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
+      } else {
+        setError(`加载笔记失败: ${errorMessage}`)
       }
       
       setIsLoadingNotes(false)
+      return
     }
-  }, [isLoadingNotes, setError, setIsRateLimited, isLoggedIn, getGitHubToken, setAllMarkdownFiles, setLoadingProgress, setHasMoreNotes, setNotes, setCurrentPage, setStaticNotesCount, setIsLoadingNotes, setHasLoaded, preloadNextBatch])
-
-  // 从GitHub仓库加载笔记（分页加载）- 现在使用混合加载策略
-  const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
-    console.log('🚀 开始加载笔记，使用混合加载策略...')
-    return loadNotesHybrid(forceRefresh, page)
-  }, [loadNotesHybrid])
+  }, [getGitHubToken, preloadNextBatch, isLoggedIn, isLoadingNotes])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -487,7 +426,6 @@ export const useNotes = () => {
     notes,
     isLoadingNotes,
     loadNotes,
-    loadNotesHybrid,
     loadMoreNotes,
     deleteNote,
     hasMoreNotes,
@@ -495,7 +433,6 @@ export const useNotes = () => {
     isPreloading,
     preloadedNotes,
     error,
-    isRateLimited,
-    staticNotesCount
+    isRateLimited
   }
 } 
