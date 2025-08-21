@@ -171,6 +171,5 @@ export const getAllTags = (notes: Note[]): string[] => {
 // 格式化标签为Front Matter字符串
 export const formatTagsForFrontMatter = (tags: string[]): string => {
   if (tags.length === 0) return '[]'
-  if (tags.length === 1) return tags[0]
   return `[${tags.join(', ')}]`
 } 

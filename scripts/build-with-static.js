@@ -14,15 +14,6 @@ console.log('🔨 SparkLog 智能构建脚本启动...')
 const isCloudflarePages = process.env.CF_PAGES === '1' || process.env.NODE_ENV === 'production'
 const hasGitHubConfig = process.env.VITE_GITHUB_TOKEN && process.env.VITE_REPO_OWNER && process.env.VITE_REPO_NAME
 
-// 显示环境信息
-console.log('🔍 环境检查:')
-console.log('CF_PAGES:', process.env.CF_PAGES)
-console.log('NODE_ENV:', process.env.NODE_ENV)
-console.log('VITE_GITHUB_TOKEN:', process.env.VITE_GITHUB_TOKEN ? '***已设置***' : '未设置')
-console.log('VITE_REPO_OWNER:', process.env.VITE_REPO_OWNER || '未设置')
-console.log('VITE_REPO_NAME:', process.env.VITE_REPO_NAME || '未设置')
-console.log('hasGitHubConfig:', hasGitHubConfig)
-
 try {
   // 1. 构建静态笔记（仅在有GitHub配置时）
   if (hasGitHubConfig) {
@@ -30,17 +21,6 @@ try {
     execSync('tsx src/build/index.ts', { stdio: 'inherit' })
   } else {
     console.log('⚠️ 缺少GitHub配置，跳过静态笔记构建')
-    
-    if (isCloudflarePages) {
-      console.log('📝 Cloudflare Pages 部署提示：')
-      console.log('   为启用完整笔记功能，请在 Cloudflare Pages 环境变量中设置：')
-      console.log('   - VITE_GITHUB_TOKEN: 你的GitHub令牌')
-      console.log('   - VITE_REPO_OWNER: 你的GitHub用户名')
-      console.log('   - VITE_REPO_NAME: 你的笔记仓库名')
-      console.log('   - VITE_ADMIN_PASSWORD: 管理员密码')
-      console.log('   配置后重新部署即可获取完整的笔记内容。')
-    }
-    
     console.log('ℹ️ 将创建空的静态笔记目录...')
     
     // 创建空的静态笔记目录
