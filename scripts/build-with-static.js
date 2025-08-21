@@ -10,16 +10,109 @@ const __dirname = path.dirname(__filename)
 
 console.log('🔨 SparkLog 智能构建脚本启动...')
 
+// 环境检测
+function detectEnvironment() {
+  const isCloudflarePages = process.env.CF_PAGES === '1'
+  const isProduction = process.env.NODE_ENV === 'production'
+  const hasGitHubConfig = process.env.VITE_GITHUB_TOKEN && 
+                          process.env.VITE_REPO_OWNER && 
+                          process.env.VITE_REPO_NAME
+  
+  console.log('🔍 环境检测:')
+  console.log(`   Cloudflare Pages: ${isCloudflarePages}`)
+  console.log(`   生产环境: ${isProduction}`)
+  console.log(`   GitHub配置完整: ${hasGitHubConfig}`)
+  
+  return { isCloudflarePages, isProduction, hasGitHubConfig }
+}
+
+// 执行静态笔记构建
+function buildStaticNotes() {
+  console.log('📝 第一步：构建静态笔记...')
+  
+  const { isCloudflarePages, hasGitHubConfig } = detectEnvironment()
+  
+  // 在Cloudflare Pages环境中且缺少GitHub配置时，跳过构建
+  if (isCloudflarePages && !hasGitHubConfig) {
+    console.log('☁️ Cloudflare Pages环境：GitHub配置不完整，跳过静态笔记构建')
+    createEmptyStaticNotes()
+    return
+  }
+  
+  try {
+    // 使用绝对路径执行tsx命令
+    const buildScriptPath = path.resolve(process.cwd(), 'src/build/index.ts')
+    console.log(`🔍 构建脚本路径: ${buildScriptPath}`)
+    
+    // 检查文件是否存在
+    if (!fs.existsSync(buildScriptPath)) {
+      throw new Error(`构建脚本不存在: ${buildScriptPath}`)
+    }
+    
+    // 使用npx tsx执行，确保在容器环境中能正确解析
+    const command = `npx tsx "${buildScriptPath}"`
+    console.log(`🔍 执行命令: ${command}`)
+    
+    execSync(command, { 
+      stdio: 'inherit',
+      cwd: process.cwd(),
+      env: { ...process.env }
+    })
+    
+  } catch (error) {
+    console.error('❌ 静态笔记构建失败:', error.message)
+    
+    // 在Cloudflare Pages环境中，如果构建失败则创建空目录
+    if (isCloudflarePages) {
+      console.log('☁️ Cloudflare Pages环境：创建空静态笔记目录作为降级处理')
+      createEmptyStaticNotes()
+    } else {
+      throw error
+    }
+  }
+}
+
+// 创建空的静态笔记目录
+function createEmptyStaticNotes() {
+  try {
+    const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
+    
+    // 确保目录存在
+    fs.mkdirSync(staticNotesDir, { recursive: true })
+    
+    // 创建空的index.json文件
+    const emptyIndex = {
+      notes: [],
+      totalCount: 0,
+      lastUpdated: new Date().toISOString(),
+      buildInfo: {
+        environment: 'cloudflare-pages',
+        message: '静态笔记构建已跳过，应用将在运行时动态加载笔记'
+      }
+    }
+    
+    fs.writeFileSync(
+      path.join(staticNotesDir, 'index.json'),
+      JSON.stringify(emptyIndex, null, 2)
+    )
+    
+    console.log('✅ 已创建空的静态笔记目录')
+    
+  } catch (error) {
+    console.error('❌ 创建空静态笔记目录失败:', error.message)
+    throw error
+  }
+}
+  
 try {
   // 1. 构建静态笔记
-  console.log('📝 第一步：构建静态笔记...')
-  execSync('tsx src/build/index.ts', { stdio: 'inherit' })
+  buildStaticNotes()
   
   // 2. 检查静态笔记是否生成
   const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
   if (!fs.existsSync(staticNotesDir)) {
-    console.log('⚠️ 静态笔记构建失败，跳过后续步骤')
-    process.exit(1)
+    console.log('⚠️ 静态笔记目录不存在，创建空目录')
+    createEmptyStaticNotes()
   }
   
   // 3. 备份静态笔记文件
@@ -77,5 +170,38 @@ try {
   
 } catch (error) {
   console.error('❌ 构建失败:', error.message)
-  process.exit(1)
+  
+  const { isCloudflarePages } = detectEnvironment()
+  
+  // 在Cloudflare Pages环境中，尝试优雅降级
+  if (isCloudflarePages) {
+    console.log('☁️ Cloudflare Pages环境：尝试降级构建...')
+    
+    try {
+      // 确保静态笔记目录存在
+      createEmptyStaticNotes()
+      
+      // 只构建应用，跳过静态笔记
+      console.log('🏗️ 降级模式：只构建应用...')
+      execSync('npm run build', { stdio: 'inherit' })
+      
+      console.log('🎉 降级构建完成！')
+      console.log('📁 应用构建位置：dist/')
+      console.log('⚠️ 注意：静态笔记功能将在运行时动态加载')
+      
+    } catch (fallbackError) {
+      console.error('❌ 降级构建也失败了:', fallbackError.message)
+      console.log('\n🔍 调试信息:')
+      console.log('   工作目录:', process.cwd())
+      console.log('   Node版本:', process.version)
+      console.log('   环境变量检查:')
+      console.log('   - CF_PAGES:', process.env.CF_PAGES)
+      console.log('   - NODE_ENV:', process.env.NODE_ENV)
+      console.log('   - VITE_GITHUB_TOKEN:', process.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置')
+      process.exit(1)
+    }
+  } else {
+    // 本地环境直接失败
+    process.exit(1)
+  }
 }
