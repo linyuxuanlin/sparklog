@@ -6,7 +6,7 @@ import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 import { GitHubService } from '@/services/githubService'
 
 export const useNotes = () => {
-  const { isConnected, isLoggedIn, getGitHubToken, isLoading } = useGitHub()
+  const { isLoggedIn, getGitHubToken, isLoading } = useGitHub()
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoadingNotes, setIsLoadingNotes] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -310,7 +310,7 @@ export const useNotes = () => {
       setIsLoadingNotes(false)
       return
     }
-  }, [isConnected, getGitHubToken, preloadNextBatch, isLoggedIn])
+  }, [getGitHubToken, preloadNextBatch, isLoggedIn, isLoadingNotes])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -365,7 +365,7 @@ export const useNotes = () => {
   }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
 
   // 删除笔记
-  const deleteNote = async (note: Note) => {
+  const deleteNote = useCallback(async (note: Note) => {
     try {
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
@@ -399,7 +399,7 @@ export const useNotes = () => {
       console.error('删除笔记失败:', error)
       throw error
     }
-  }
+  }, [getGitHubToken, isLoggedIn])
 
   // 优化后的初始化加载逻辑
   useEffect(() => {
@@ -420,7 +420,7 @@ export const useNotes = () => {
         loadNotes(true)
       }
     }
-  }, [isLoading, hasLoaded, loadNotes])
+  }, [isLoading, hasLoaded, loadNotes, isLoggedIn])
 
   return {
     notes,

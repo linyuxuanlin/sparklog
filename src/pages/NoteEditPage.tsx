@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Loader2, AlertCircle, Settings } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -30,129 +30,8 @@ const NoteEditPage: React.FC = () => {
   // 直接使用isLoggedIn，现在它已经是稳定的了
   const isLoggedInStable = isLoggedIn
 
-  // 权限检查
-  useEffect(() => {
-    console.log('NoteEditPage权限检查:', {
-      isLoggedIn: isLoggedInStable(),
-      isGitHubLoading,
-      isConnected
-    })
-    
-    // 等待GitHub状态加载完成后再检查权限
-    if (!isGitHubLoading && !isLoggedInStable()) {
-      console.log('权限检查失败，重定向到笔记页面')
-      navigate('/')
-      return
-    }
-  }, [isLoggedInStable, isGitHubLoading, navigate])
-
-  // 加载现有笔记
-  useEffect(() => {
-    console.log('编辑笔记useEffect调试:', {
-      isEditMode,
-      title,
-      decodedTitle: title ? decodeURIComponent(title) : null,
-      isLoggedIn: isLoggedInStable(),
-      shouldLoad: isEditMode && title && isLoggedInStable()
-    })
-    
-    if (isEditMode && title && isLoggedInStable()) {
-      const decodedTitle = decodeURIComponent(title)
-      console.log('开始加载笔记:', decodedTitle)
-      loadExistingNote(decodedTitle)
-    }
-  }, [isEditMode, title, isLoggedInStable])
-
-  // 监听窗口大小变化
-  useEffect(() => {
-    const handleResize = () => {
-      adjustTextareaSize()
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [])
-
-  // 组件挂载时初始化textarea尺寸
-  useEffect(() => {
-    if (textareaRef.current) {
-      // 延迟执行，确保DOM已完全渲染
-      setTimeout(adjustTextareaSize, 0)
-    }
-  }, [])
-
-  // 如果正在加载GitHub状态，显示加载界面
-  if (isGitHubLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600 dark:text-gray-400">正在检查权限...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // 检查环境变量是否已配置
-  const envConfigured = checkEnvVarsConfigured()
-  
-  // 如果环境变量未配置，显示配置提示
-  if (!envConfigured) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
-            <div className="flex items-center justify-center mb-4">
-              <AlertCircle className="w-8 h-8 text-orange-500 mr-3" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h2>
-            </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              环境变量未配置，请配置后前往设置查看是否生效。
-            </p>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigate('/settings')}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                前往设置
-              </button>
-              <button
-                onClick={() => navigate('/')}
-                className="w-full px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                返回首页
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // 如果未登录，显示权限不足界面
-  if (!isLoggedInStable()) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">权限不足</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">您需要登录管理员账户才能创建和编辑笔记。</p>
-            <button
-              onClick={() => navigate('/settings')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              前往设置页面登录
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const loadExistingNote = async (noteTitle: string) => {
+  // 加载现有笔记函数
+  const loadExistingNote = useCallback(async (noteTitle: string) => {
     console.log('loadExistingNote开始:', noteTitle)
     setIsLoading(true)
     
@@ -254,30 +133,25 @@ const NoteEditPage: React.FC = () => {
       }
       
       const contentData = await contentResponse.json()
-      // 使用新的工具函数正确处理UTF-8编码的Base64内容
-      const fullContent = decodeBase64Content(contentData.content)
+      const content = decodeBase64Content(contentData.content)
       
-      // 解析笔记内容
-      const lines = fullContent.split('\n')
-      let inFrontmatter = false
+      // 解析frontmatter
+      const lines = content.split('\n')
       let frontmatterEndIndex = -1
       let originalCreatedAt = ''
       let originalIsPrivate = false
       let originalTags: string[] = []
       
       for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim()
-        if (line === '---' && !inFrontmatter) {
-          inFrontmatter = true
-          continue
-        }
-        if (line === '---' && inFrontmatter) {
-          frontmatterEndIndex = i
-          break
-        }
-        
-        // 解析Frontmatter内容
-        if (inFrontmatter && line.includes(':')) {
+        const line = lines[i]
+        if (line === '---') {
+          if (frontmatterEndIndex === -1) {
+            frontmatterEndIndex = i
+          } else {
+            frontmatterEndIndex = i
+            break
+          }
+        } else if (frontmatterEndIndex !== -1 && line.includes(':')) {
           const colonIndex = line.indexOf(':')
           const key = line.substring(0, colonIndex).trim()
           const value = line.substring(colonIndex + 1).trim()
@@ -324,6 +198,128 @@ const NoteEditPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
+  }, [isLoggedInStable, getGitHubToken])
+
+  // 权限检查
+  useEffect(() => {
+    console.log('NoteEditPage权限检查:', {
+      isLoggedIn: isLoggedInStable(),
+      isGitHubLoading,
+      isConnected
+    })
+    
+    // 等待GitHub状态加载完成后再检查权限
+    if (!isGitHubLoading && !isLoggedInStable()) {
+      console.log('权限检查失败，重定向到笔记页面')
+      navigate('/')
+      return
+    }
+  }, [isLoggedInStable, isGitHubLoading, navigate, isConnected])
+
+  // 加载现有笔记
+  useEffect(() => {
+    console.log('编辑笔记useEffect调试:', {
+      isEditMode,
+      title,
+      decodedTitle: title ? decodeURIComponent(title) : null,
+      isLoggedIn: isLoggedInStable(),
+      shouldLoad: isEditMode && title && isLoggedInStable()
+    })
+    
+    if (isEditMode && title && isLoggedInStable()) {
+      const decodedTitle = decodeURIComponent(title)
+      console.log('开始加载笔记:', decodedTitle)
+      loadExistingNote(decodedTitle)
+    }
+  }, [isEditMode, title, isLoggedInStable, loadExistingNote])
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      adjustTextareaSize()
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  // 组件挂载时初始化textarea尺寸
+  useEffect(() => {
+    if (textareaRef.current) {
+      // 延迟执行，确保DOM已完全渲染
+      setTimeout(adjustTextareaSize, 0)
+    }
+  }, [])
+
+  // 如果正在加载GitHub状态，显示加载界面
+  if (isGitHubLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600 dark:text-gray-400">正在检查权限...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 检查环境变量是否已配置
+  const envConfigured = checkEnvVarsConfigured()
+  
+  // 如果环境变量未配置，显示配置提示
+  if (!envConfigured) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
+            <div className="flex items-center justify-center mb-4">
+              <AlertCircle className="w-8 h-8 text-orange-500 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">需要配置环境变量</h2>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              环境变量未配置，请配置后前往设置查看是否生效。
+            </p>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate('/settings')}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                前往设置
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                返回首页
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 如果未登录，显示权限不足界面
+  if (!isLoggedInStable()) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 max-w-md">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">权限不足</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">您需要登录管理员账户才能创建和编辑笔记。</p>
+            <button
+              onClick={() => navigate('/settings')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              前往设置页面登录
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const handleCancel = () => {

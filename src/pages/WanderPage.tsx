@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import { Plus, Shuffle, Settings, AlertCircle, Lock, Tag, X, RotateCcw } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
@@ -40,17 +40,17 @@ const WanderPage: React.FC = () => {
   }
 
   // 重新随机排列笔记
-  const reshuffleNotes = () => {
+  const reshuffleNotes = useCallback(() => {
     const tagFiltered = filterNotesByTags(notes, selectedTags)
     setShuffledNotes(shuffleArray(tagFiltered))
-  }
+  }, [notes, selectedTags])
 
   // 当笔记或标签筛选发生变化时，重新随机排列
   useEffect(() => {
     if (notes.length > 0) {
       reshuffleNotes()
     }
-  }, [notes, selectedTags])
+  }, [notes, selectedTags, reshuffleNotes])
 
   // 检查是否需要刷新笔记列表
   useEffect(() => {
