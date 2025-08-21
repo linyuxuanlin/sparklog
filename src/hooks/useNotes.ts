@@ -234,16 +234,38 @@ export const useNotes = () => {
         if (staticNote) {
           // 使用静态内容
           console.log('✅ 使用静态笔记:', file.name)
+          
+          // 如果静态笔记缺少时间字段，尝试从文件名或 GitHub 文件元数据中获取
+          let created_at = staticNote.createdDate
+          let updated_at = staticNote.updatedDate
+          
+          if (!created_at || !updated_at) {
+            // 尝试从文件名解析时间（格式：YYYY-MM-DD-HH-MM-SS.md）
+            const timeMatch = file.name.match(/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/)
+            if (timeMatch) {
+              const timestamp = timeMatch[1].replace(/-/g, ':').replace(/(\d{2}):(\d{2}):(\d{2})$/, '$1:$2:$3')
+              const date = new Date(timestamp)
+              if (!isNaN(date.getTime())) {
+                if (!created_at) created_at = date.toISOString()
+                if (!updated_at) updated_at = date.toISOString()
+              }
+            }
+            
+            // 如果仍然没有时间，使用 GitHub 文件元数据
+            if (!created_at) created_at = file.created_at
+            if (!updated_at) updated_at = file.updated_at
+          }
+          
           notesWithContent.push({
             ...file,
             contentPreview: staticNote.contentPreview,
             fullContent: staticNote.content,
-            createdDate: staticNote.createdDate,
-            updatedDate: staticNote.updatedDate,
+            createdDate: created_at,
+            updatedDate: updated_at,
             isPrivate: staticNote.isPrivate,
             tags: staticNote.tags,
-            created_at: staticNote.createdDate,
-            updated_at: staticNote.updatedDate,
+            created_at: created_at,
+            updated_at: updated_at,
             isStatic: true
           })
           staticCount++
