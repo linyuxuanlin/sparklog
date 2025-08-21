@@ -7,6 +7,15 @@ export interface RepoConfig {
   description: string
 }
 
+// 调试：打印环境变量状态（仅在开发模式下）
+if (import.meta.env.DEV) {
+  console.log('🔍 环境变量调试信息:')
+  console.log('VITE_GITHUB_TOKEN:', import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置')
+  console.log('VITE_REPO_OWNER:', import.meta.env.VITE_REPO_OWNER)
+  console.log('VITE_REPO_NAME:', import.meta.env.VITE_REPO_NAME)
+  console.log('VITE_ADMIN_PASSWORD:', import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置')
+}
+
 // 检测环境变量是否已配置
 export const checkEnvVarsConfigured = (): boolean => {
   const owner = import.meta.env.VITE_REPO_OWNER || 
@@ -24,8 +33,18 @@ export const checkEnvVarsConfigured = (): boolean => {
 
   const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD
 
-  // 检查必要的环境变量是否都已配置
-  return !!(owner && repo && token && adminPassword)
+  const result = !!(owner && repo && token && adminPassword)
+  
+  // 在生产环境中也显示配置状态，便于调试
+  if (!result) {
+    console.warn('⚠️ 环境变量配置不完整:')
+    console.warn('Owner:', owner ? '✅' : '❌')
+    console.warn('Repo:', repo ? '✅' : '❌')
+    console.warn('Token:', token ? '✅' : '❌')
+    console.warn('Admin Password:', adminPassword ? '✅' : '❌')
+  }
+  
+  return result
 }
 
 // 从环境变量获取仓库配置

@@ -14,14 +14,29 @@ console.log('🔨 SparkLog 智能构建脚本启动...')
 function detectEnvironment() {
   const isCloudflarePages = process.env.CF_PAGES === '1'
   const isProduction = process.env.NODE_ENV === 'production'
-  const hasGitHubConfig = process.env.VITE_GITHUB_TOKEN && 
-                          process.env.VITE_REPO_OWNER && 
-                          process.env.VITE_REPO_NAME
+  
+  // 支持多种环境变量格式，适配 Cloudflare Pages
+  const githubToken = process.env.VITE_GITHUB_TOKEN || 
+                      process.env.GITHUB_TOKEN
+  const repoOwner = process.env.VITE_REPO_OWNER || 
+                    process.env.VITE_GITHUB_OWNER ||
+                    process.env.REPO_OWNER ||
+                    process.env.GITHUB_OWNER
+  const repoName = process.env.VITE_REPO_NAME || 
+                   process.env.VITE_GITHUB_REPO ||
+                   process.env.REPO_NAME ||
+                   process.env.GITHUB_REPO
+  
+  const hasGitHubConfig = !!(githubToken && repoOwner && repoName)
   
   console.log('🔍 环境检测:')
   console.log(`   Cloudflare Pages: ${isCloudflarePages}`)
   console.log(`   生产环境: ${isProduction}`)
   console.log(`   GitHub配置完整: ${hasGitHubConfig}`)
+  console.log('🔍 环境变量详情:')
+  console.log(`   GitHub Token: ${githubToken ? '已设置' : '未设置'}`)
+  console.log(`   仓库所有者: ${repoOwner || '未设置'}`)
+  console.log(`   仓库名称: ${repoName || '未设置'}`)
   
   return { isCloudflarePages, isProduction, hasGitHubConfig }
 }
@@ -35,6 +50,15 @@ function buildStaticNotes() {
   // 在Cloudflare Pages环境中且缺少GitHub配置时，跳过构建
   if (isCloudflarePages && !hasGitHubConfig) {
     console.log('☁️ Cloudflare Pages环境：GitHub配置不完整，跳过静态笔记构建')
+    console.log('🔍 执行环境变量诊断...')
+    
+    // 执行环境变量诊断
+    try {
+      execSync('node scripts/env-check.js', { stdio: 'inherit' })
+    } catch (error) {
+      console.log('⚠️ 环境变量诊断失败:', error.message)
+    }
+    
     createEmptyStaticNotes()
     return
   }
