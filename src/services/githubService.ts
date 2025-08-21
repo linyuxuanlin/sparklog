@@ -79,7 +79,6 @@ export class GitHubService {
   // 清除缓存
   public clearCache(): void {
     this.cache.clear()
-    console.log('GitHub API 缓存已清除')
   }
 
   // 清除特定类型的缓存
@@ -99,7 +98,6 @@ export class GitHubService {
     }
 
     keysToDelete.forEach(key => this.cache.delete(key))
-    console.log(`已清除 ${type} 类型的缓存，共 ${keysToDelete.length} 项`)
   }
 
   // 获取notes目录下的所有文件
@@ -112,14 +110,11 @@ export class GitHubService {
     
     // 检查缓存
     if (this.isValidCache(cacheKey)) {
-      console.log('使用缓存的文件列表')
       return this.cache.get(cacheKey)!.data
     }
 
     const cached = this.cache.get(cacheKey)
     const apiUrl = `https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/notes`
-    
-    console.log('请求GitHub API获取文件列表:', apiUrl)
     
     const response = await fetch(apiUrl, {
       headers: this.getHeaders(cached?.etag)
@@ -127,7 +122,6 @@ export class GitHubService {
 
     // 如果返回304，说明内容未改变，使用缓存
     if (response.status === 304 && cached) {
-      console.log('文件列表未改变，使用缓存')
       // 更新缓存时间戳
       this.cache.set(cacheKey, { ...cached, timestamp: Date.now() })
       return cached.data
@@ -135,7 +129,6 @@ export class GitHubService {
 
     if (!response.ok) {
       if (response.status === 404) {
-        console.log('notes目录不存在，返回空列表')
         return []
       }
       
@@ -145,7 +138,6 @@ export class GitHubService {
     }
 
     const files = await response.json()
-    console.log('获取到文件列表:', files.length, '个文件')
 
     // 过滤出.md文件并按时间排序（新到旧）
     const markdownFiles = files
@@ -186,11 +178,10 @@ export class GitHubService {
       batches.push(batch)
     }
 
-    console.log(`将${files.length}个文件分成${batches.length}批处理，每批${batchSize}个`)
+
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex]
-      console.log(`处理第${batchIndex + 1}批，包含${batch.length}个文件`)
 
       // 并发处理当前批次
       const batchPromises = batch.map(async (file) => {
@@ -198,7 +189,6 @@ export class GitHubService {
           // 检查单个文件缓存
           const fileCacheKey = this.getCacheKey(`content-${file.sha}`)
           if (this.isValidCache(fileCacheKey)) {
-            console.log(`使用缓存的文件内容: ${file.name}`)
             return {
               path: file.path,
               content: this.cache.get(fileCacheKey)!.data
@@ -212,7 +202,6 @@ export class GitHubService {
 
           // 如果返回304，使用缓存
           if (contentResponse.status === 304 && cached) {
-            console.log(`文件内容未改变，使用缓存: ${file.name}`)
             this.cache.set(fileCacheKey, { ...cached, timestamp: Date.now() })
             return {
               path: file.path,
@@ -261,7 +250,6 @@ export class GitHubService {
       }
     }
 
-    console.log(`批量获取完成，成功获取${Object.keys(batchResponses).length}个文件内容`)
     return batchResponses
   }
 

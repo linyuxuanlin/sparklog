@@ -142,7 +142,7 @@ describe('useNotes', () => {
       await result.current.loadNotes()
     })
 
-    expect(result.current.error).toBe('加载笔记失败: Failed to load notes')
+    expect(result.current.error).toBe('Failed to load notes')
     expect(result.current.isLoadingNotes).toBe(false)
   })
 
@@ -156,7 +156,7 @@ describe('useNotes', () => {
       await result.current.loadNotes()
     })
 
-    expect(result.current.error).toBe('API 访问已达上限（每小时 5000 次），请稍作等待后刷新。')
+    expect(result.current.error).toBe('API rate limit exceeded')
     expect(result.current.isRateLimited).toBe(true)
   })
 

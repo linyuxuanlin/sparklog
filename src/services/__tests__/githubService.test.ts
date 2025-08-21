@@ -438,15 +438,13 @@ describe('GitHubService', () => {
 
   describe('缓存管理', () => {
     it('应该清除所有缓存', () => {
-      const consoleSpy = vi.spyOn(console, 'log')
       service.clearCache()
-      expect(consoleSpy).toHaveBeenCalledWith('GitHub API 缓存已清除')
+      // 缓存应该被清除，但不再有 console.log
     })
 
     it('应该清除特定类型的缓存', () => {
-      const consoleSpy = vi.spyOn(console, 'log')
       service.clearCacheByType('files')
-      expect(consoleSpy).toHaveBeenCalledWith('已清除 files 类型的缓存，共 0 项')
+      // 缓存应该被清除，但不再有 console.log
     })
   })
 })

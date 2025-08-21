@@ -1,0 +1,85 @@
+#!/usr/bin/env node
+
+import { execSync } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+console.log('🔨 SparkLog 智能构建脚本启动...')
+
+try {
+  // 1. 构建静态笔记
+  console.log('📝 第一步：构建静态笔记...')
+  execSync('npm run build:static-notes', { stdio: 'inherit' })
+  
+  // 2. 检查静态笔记是否生成
+  const staticNotesDir = path.resolve(process.cwd(), 'dist/static-notes')
+  if (!fs.existsSync(staticNotesDir)) {
+    console.log('⚠️ 静态笔记构建失败，跳过后续步骤')
+    process.exit(1)
+  }
+  
+  // 3. 备份静态笔记文件
+  console.log('💾 第二步：备份静态笔记文件...')
+  const backupDir = path.resolve(process.cwd(), '.static-notes-backup')
+  if (fs.existsSync(backupDir)) {
+    fs.rmSync(backupDir, { recursive: true, force: true })
+  }
+  fs.cpSync(staticNotesDir, backupDir, { recursive: true })
+  console.log('✅ 静态笔记已备份到 .static-notes-backup')
+  
+  // 4. 构建应用
+  console.log('🏗️ 第三步：构建应用...')
+  execSync('npm run build', { stdio: 'inherit' })
+  
+  // 5. 恢复静态笔记文件
+  console.log('🔄 第四步：恢复静态笔记文件...')
+  console.log('🔍 检查备份目录:', backupDir)
+  console.log('🔍 备份目录存在:', fs.existsSync(backupDir))
+  
+  if (fs.existsSync(backupDir)) {
+    console.log('🔍 备份目录内容:', fs.readdirSync(backupDir))
+    
+    // 清理可能被覆盖的目录
+    if (fs.existsSync(staticNotesDir)) {
+      console.log('🔍 清理现有静态笔记目录')
+      fs.rmSync(staticNotesDir, { recursive: true, force: true })
+    }
+    
+    // 恢复备份
+    console.log('🔍 从备份恢复静态笔记...')
+    fs.renameSync(backupDir, staticNotesDir)
+    console.log('✅ 静态笔记文件已恢复')
+  } else {
+    console.log('⚠️ 备份目录不存在，无法恢复静态笔记')
+  }
+  
+  // 同步到 public 目录（仅开发环境需要）
+  if (process.env.NODE_ENV === 'development' || process.env.SPARKLOG_DEV_SYNC === 'true') {
+    console.log('🔄 同步静态笔记到 public 目录（开发环境）...')
+    try {
+      const publicDir = path.resolve(process.cwd(), 'public/static-notes')
+      if (fs.existsSync(publicDir)) {
+        fs.rmSync(publicDir, { recursive: true, force: true })
+      }
+      fs.cpSync(staticNotesDir, publicDir, { recursive: true })
+      console.log('✅ 静态笔记已同步到 public 目录')
+    } catch (error) {
+      console.log('⚠️ 同步到 public 目录失败:', error.message)
+    }
+  } else {
+    console.log('ℹ️ 生产环境构建，跳过 public 目录同步')
+  }
+  
+  console.log('🎉 智能构建完成！')
+  console.log('📁 静态笔记位置：dist/static-notes/')
+  console.log('📁 开发访问位置：public/static-notes/')
+  console.log('🌐 应用构建位置：dist/')
+  
+} catch (error) {
+  console.error('❌ 构建失败:', error.message)
+  process.exit(1)
+}

@@ -1,0 +1,17 @@
+# Cloudflare Pages 构建配置
+# https://developers.cloudflare.com/pages/platform/build-configuration
+
+# 构建设置
+build:
+  command: npm run build:smart
+  destination: dist
+  
+# 环境变量
+env:
+  NODE_VERSION: "18"
+  NPM_VERSION: "8"
+
+# 重定向和头部文件
+include:
+  - "_redirects"
+  - "_headers"
