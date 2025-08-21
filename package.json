@@ -11,7 +11,7 @@
     "build:full": "npm run build:static-notes && npm run build",
     "build:with-static": "npm run build:static-notes && npm run build",
     "build:smart": "node scripts/build-with-static.js",
-    "build:cloudflare": "npm run build:static-simple && npm run build",
+    "build:cloudflare": "node scripts/build-cloudflare.cjs",
     "sync-static": "node scripts/sync-static-notes.js",
     "build:dev": "cross-env NODE_ENV=development SPARKLOG_DEV_SYNC=true node scripts/build-with-static.js",
     "build:prod": "cross-env NODE_ENV=production node scripts/build-with-static.js",
