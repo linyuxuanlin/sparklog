@@ -506,17 +506,15 @@ ${content.trim()}
          updated_at: updatedAt
        }
 
-       // 如果不是私密笔记，触发静态编译
-       if (!isPrivate) {
-         try {
-           console.log('开始静态编译...')
-           const staticService = StaticService.getInstance()
-           await staticService.compileSingleNote(savedFile, noteContent, authData)
-           console.log('静态编译完成')
-         } catch (staticError) {
-           console.error('静态编译失败:', staticError)
-           // 静态编译失败不影响主流程，只记录日志
-         }
+       // 解析笔记内容，根据实际的private状态决定是否编译静态文件
+       try {
+         console.log('开始静态编译...')
+         const staticService = StaticService.getInstance()
+         await staticService.compileSingleNote(savedFile, noteContent, authData)
+         console.log('静态编译完成')
+       } catch (staticError) {
+         console.error('静态编译失败:', staticError)
+         // 静态编译失败不影响主流程，只记录日志
        }
        
        showMessage('笔记保存成功！', 'success')
