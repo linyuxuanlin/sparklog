@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "compiledAt": "2025-08-22T16:30:28.092Z",
+  "compiledAt": "2025-08-22T16:37:09.107Z",
   "totalNotes": 20,
   "publicNotes": 40,
   "notes": {
@@ -303,13 +303,18 @@
         "测试标签4"
       ],
       "filename": "2025-08-06-16-27-15-060.md",
-      "compiledAt": "2025-08-22T16:30:28.088Z",
-      "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-06-16-27-15-060.md"
+      "compiledAt": "2025-08-22T16:37:09.104Z",
+      "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-06-16-27-15-060.md",
+      "contentStats": {
+        "lines": 10,
+        "characters": 267,
+        "words": 22
+      }
     }
   },
   "lastBuildStats": {
-    "compiledNotes": 0,
-    "skippedNotes": 20,
-    "buildTime": "2025-08-22T16:35:51.929Z"
+    "compiledNotes": 1,
+    "skippedNotes": 19,
+    "buildTime": "2025-08-22T16:37:09.107Z"
   }
 }
