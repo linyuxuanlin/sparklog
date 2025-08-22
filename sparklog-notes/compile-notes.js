@@ -228,13 +228,22 @@ function main() {
   // 查找所有 Markdown 文件
   function findMdFiles(dir) {
     const files = [];
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const notesDir = path.join(dir, 'notes');
     
+    // 检查 notes 文件夹是否存在
+    if (!fs.existsSync(notesDir) || !fs.statSync(notesDir).isDirectory()) {
+      console.log('⚠️ notes 文件夹不存在，跳过编译');
+      console.log('📁 期望路径:', notesDir);
+      return files;
+    }
+    
+    console.log('✅ 找到 notes 文件夹:', notesDir);
+    const entries = fs.readdirSync(notesDir, { withFileTypes: true });
+    
+    // 扁平结构：只处理 notes 文件夹下的 .md 文件，不递归搜索子文件夹
     for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isDirectory() && entry.name !== '.git' && entry.name !== 'node_modules' && entry.name !== 'target-repo') {
-        files.push(...findMdFiles(fullPath));
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      if (entry.isFile() && entry.name.endsWith('.md')) {
+        const fullPath = path.join(notesDir, entry.name);
         files.push(fullPath);
       }
     }
@@ -243,7 +252,15 @@ function main() {
   }
   
   const mdFiles = findMdFiles(currentDir);
-  console.log(`找到 ${mdFiles.length} 个 Markdown 文件`);
+  console.log(`📊 编译统计:`);
+  console.log(`   找到的 Markdown 文件: ${mdFiles.length} 个`);
+  
+  if (mdFiles.length === 0) {
+    console.log('⚠️ 没有找到 Markdown 文件，请确保:');
+    console.log('   1. notes 文件夹存在于当前目录');
+    console.log('   2. notes 文件夹中包含 .md 文件（扁平存放，无子文件夹）');
+    console.log('   3. 脚本在正确的笔记仓库目录中运行');
+  }
   
   // 编译所有笔记
   const compileStats = {};
@@ -255,7 +272,10 @@ function main() {
   // 生成索引文件
   generateIndex(outputDir, mdFiles, compileStats);
   
-  console.log('编译完成！');
+  console.log('✅ 笔记编译完成！');
+  console.log(`📁 输出目录: ${outputDir}`);
+  console.log(`📝 编译的笔记将保存在: ${outputDir}`);
+  console.log(`📋 所有笔记都扁平存放在 notes 文件夹下，无子文件夹结构`);
 }
 
 // 运行主函数
