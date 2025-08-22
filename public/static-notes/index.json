@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "compiledAt": "2025-08-22T16:04:27.640Z",
+  "compiledAt": "2025-08-22T16:30:28.092Z",
   "totalNotes": 20,
-  "publicNotes": 20,
+  "publicNotes": 40,
   "notes": {
     "2024-08-05-13-30-58-000.md": {
       "id": "2024-08-05-13-30-58-000",
@@ -16,7 +16,7 @@
         "生产力"
       ],
       "filename": "2024-08-05-13-30-58-000.md",
-      "compiledAt": "2025-08-22T16:11:33.131Z",
+      "compiledAt": "2025-08-22T16:30:28.077Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-13-30-58-000.md"
     },
     "2024-08-05-14-05-12-000.md": {
@@ -31,7 +31,7 @@
         "人际关系"
       ],
       "filename": "2024-08-05-14-05-12-000.md",
-      "compiledAt": "2025-08-22T16:11:33.132Z",
+      "compiledAt": "2025-08-22T16:30:28.078Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-14-05-12-000.md"
     },
     "2024-08-05-15-18-44-000.md": {
@@ -46,7 +46,7 @@
         "灵感"
       ],
       "filename": "2024-08-05-15-18-44-000.md",
-      "compiledAt": "2025-08-22T16:11:33.133Z",
+      "compiledAt": "2025-08-22T16:30:28.079Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-15-18-44-000.md"
     },
     "2024-08-05-16-45-27-000.md": {
@@ -61,7 +61,7 @@
         "睡眠"
       ],
       "filename": "2024-08-05-16-45-27-000.md",
-      "compiledAt": "2025-08-22T16:11:33.133Z",
+      "compiledAt": "2025-08-22T16:30:28.079Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-16-45-27-000.md"
     },
     "2024-08-05-17-22-33-000.md": {
@@ -76,7 +76,7 @@
         "价值"
       ],
       "filename": "2024-08-05-17-22-33-000.md",
-      "compiledAt": "2025-08-22T16:11:33.134Z",
+      "compiledAt": "2025-08-22T16:30:28.081Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-17-22-33-000.md"
     },
     "2024-08-05-18-50-18-000.md": {
@@ -91,7 +91,7 @@
         "生活方式"
       ],
       "filename": "2024-08-05-18-50-18-000.md",
-      "compiledAt": "2025-08-22T16:11:33.135Z",
+      "compiledAt": "2025-08-22T16:30:28.081Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-18-50-18-000.md"
     },
     "2024-08-05-19-35-42-000.md": {
@@ -106,7 +106,7 @@
         "体验"
       ],
       "filename": "2024-08-05-19-35-42-000.md",
-      "compiledAt": "2025-08-22T16:11:33.136Z",
+      "compiledAt": "2025-08-22T16:30:28.082Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-19-35-42-000.md"
     },
     "2024-08-05-20-10-55-000.md": {
@@ -121,7 +121,7 @@
         "学习方式"
       ],
       "filename": "2024-08-05-20-10-55-000.md",
-      "compiledAt": "2025-08-22T16:11:33.136Z",
+      "compiledAt": "2025-08-22T16:30:28.082Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-20-10-55-000.md"
     },
     "2024-08-05-21-25-09-000.md": {
@@ -136,7 +136,7 @@
         "社交媒体"
       ],
       "filename": "2024-08-05-21-25-09-000.md",
-      "compiledAt": "2025-08-22T16:11:33.137Z",
+      "compiledAt": "2025-08-22T16:30:28.083Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-21-25-09-000.md"
     },
     "2024-08-05-22-40-15-000.md": {
@@ -151,7 +151,7 @@
         "情感"
       ],
       "filename": "2024-08-05-22-40-15-000.md",
-      "compiledAt": "2025-08-22T16:11:33.137Z",
+      "compiledAt": "2025-08-22T16:30:28.084Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-22-40-15-000.md"
     },
     "2024-08-05-23-15-28-000.md": {
@@ -166,7 +166,7 @@
         "可持续"
       ],
       "filename": "2024-08-05-23-15-28-000.md",
-      "compiledAt": "2025-08-22T16:11:33.138Z",
+      "compiledAt": "2025-08-22T16:30:28.084Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-05-23-15-28-000.md"
     },
     "2024-08-06-08-20-47-000.md": {
@@ -181,7 +181,7 @@
         "选择"
       ],
       "filename": "2024-08-06-08-20-47-000.md",
-      "compiledAt": "2025-08-22T16:11:33.138Z",
+      "compiledAt": "2025-08-22T16:30:28.085Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-08-20-47-000.md"
     },
     "2024-08-06-09-45-33-000.md": {
@@ -196,7 +196,7 @@
         "创新"
       ],
       "filename": "2024-08-06-09-45-33-000.md",
-      "compiledAt": "2025-08-22T16:11:33.139Z",
+      "compiledAt": "2025-08-22T16:30:28.085Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-09-45-33-000.md"
     },
     "2024-08-06-10-30-12-000.md": {
@@ -211,7 +211,7 @@
         "知识"
       ],
       "filename": "2024-08-06-10-30-12-000.md",
-      "compiledAt": "2025-08-22T16:11:33.139Z",
+      "compiledAt": "2025-08-22T16:30:28.086Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-10-30-12-000.md"
     },
     "2024-08-06-11-55-20-000.md": {
@@ -226,7 +226,7 @@
         "思考"
       ],
       "filename": "2024-08-06-11-55-20-000.md",
-      "compiledAt": "2025-08-22T16:11:33.139Z",
+      "compiledAt": "2025-08-22T16:30:28.086Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-11-55-20-000.md"
     },
     "2024-08-06-12-15-45-000.md": {
@@ -241,7 +241,7 @@
         "伦理"
       ],
       "filename": "2024-08-06-12-15-45-000.md",
-      "compiledAt": "2025-08-22T16:11:33.140Z",
+      "compiledAt": "2025-08-22T16:30:28.087Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-12-15-45-000.md"
     },
     "2024-08-06-13-45-30-000.md": {
@@ -256,7 +256,7 @@
         "美学"
       ],
       "filename": "2024-08-06-13-45-30-000.md",
-      "compiledAt": "2025-08-22T16:11:33.140Z",
+      "compiledAt": "2025-08-22T16:30:28.087Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-13-45-30-000.md"
     },
     "2024-08-06-14-20-15-000.md": {
@@ -271,7 +271,7 @@
         "思考"
       ],
       "filename": "2024-08-06-14-20-15-000.md",
-      "compiledAt": "2025-08-22T16:11:33.141Z",
+      "compiledAt": "2025-08-22T16:30:28.088Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-14-20-15-000.md"
     },
     "2024-08-06-15-30-00-000.md": {
@@ -286,7 +286,7 @@
         "创意"
       ],
       "filename": "2024-08-06-15-30-00-000.md",
-      "compiledAt": "2025-08-22T16:11:33.141Z",
+      "compiledAt": "2025-08-22T16:30:28.088Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2024-08-06-15-30-00-000.md"
     },
     "2025-08-06-16-27-15-060.md": {
@@ -303,13 +303,13 @@
         "测试标签4"
       ],
       "filename": "2025-08-06-16-27-15-060.md",
-      "compiledAt": "2025-08-22T16:11:33.142Z",
+      "compiledAt": "2025-08-22T16:30:28.088Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-06-16-27-15-060.md"
     }
   },
   "lastBuildStats": {
     "compiledNotes": 0,
-    "skippedNotes": 0,
-    "buildTime": "2025-08-22T16:11:33.144Z"
+    "skippedNotes": 20,
+    "buildTime": "2025-08-22T16:35:51.929Z"
   }
 }
