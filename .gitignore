@@ -107,4 +107,3 @@ $RECYCLE.BIN/
 # Local development
 .local/ 
 .claude/settings.local.json
-/public/static-notes
