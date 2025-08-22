@@ -24,6 +24,12 @@ export const useNotes = () => {
   // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
   const lastLoginStatusRef = useRef(loginStatus)
+  const loadNotesRef = useRef(loadNotes)
+  
+  // 更新 loadNotes ref
+  useEffect(() => {
+    loadNotesRef.current = loadNotes
+  }, [loadNotes])
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -244,6 +250,7 @@ export const useNotes = () => {
       }
       
       // 初始化GitHub服务
+      console.log('🔗 开始 GitHub API 调用...')
       const githubService = GitHubService.getInstance()
       
       // 设置认证信息
@@ -486,22 +493,27 @@ export const useNotes = () => {
     if (!isLoading && !isInitialLoadRef.current) {
       console.log('🚀 开始初始化加载笔记 (非强制刷新)')
       isInitialLoadRef.current = true
-      loadNotes(false) // 改为 false，这样才会尝试静态文件
+      loadNotesRef.current(false) // 使用 ref，避免依赖变化
     }
-  }, [isLoading, loadNotes])
+  }, [isLoading])
 
   // 优化后的登录状态监听
   useEffect(() => {
     if (!isLoading && hasLoaded) {
       const currentStatus = isLoggedIn()
       if (currentStatus !== lastLoginStatusRef.current) {
+        console.log('👤 登录状态变化:', { 
+          from: lastLoginStatusRef.current, 
+          to: currentStatus,
+          action: '尝试静态文件重新加载'
+        })
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
-        // 只有在登录状态真正改变时才重新加载
-        loadNotes(true)
+        // 登录状态变化时也优先尝试静态文件
+        loadNotesRef.current(false) // 使用 ref，优先静态文件
       }
     }
-  }, [isLoading, hasLoaded, loadNotes, isLoggedIn])
+  }, [isLoading, hasLoaded, isLoggedIn])
 
   return {
     notes,
