@@ -25,61 +25,97 @@ export const useNotes = () => {
   const isInitialLoadRef = useRef(false)
   const lastLoginStatusRef = useRef(loginStatus)
   const loadNotesRef = useRef<((_forceRefresh?: boolean, _page?: number) => Promise<void>) | null>(null)
-
+  
+  // 添加请求去重机制
+  const [isLoadingIndex, setIsLoadingIndex] = useState(false)
+  const indexRequestRef = useRef<Promise<boolean> | null>(null)
+  
   // 从静态文件加载笔记
   const loadNotesFromStatic = useCallback(async (): Promise<boolean> => {
-    try {
-      console.log('📥 尝试从静态文件加载笔记...')
-      const staticService = StaticService.getInstance()
-      const staticIndex = await staticService.getStaticIndex()
-      
-      if (staticIndex && staticIndex.notes) {
-        console.log(`✅ 静态文件加载成功，获取到 ${Object.keys(staticIndex.notes).length} 篇笔记`)
-        
-        // 转换静态数据为笔记格式
-        const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
-          ...note,
-          id: note.sha,
-          name: note.filename,
-          sha: note.sha,
-          path: note.path,
-          created_at: note.createdDate,
-          updated_at: note.updatedDate,
-          fullContent: '', // 静态索引不包含完整内容
-          type: 'file'
-        }))
-        
-        // 根据登录状态过滤笔记
-        const currentLoginStatus = isLoggedIn()
-        const filteredNotes = staticNotes.filter((note: any) => {
-          if (!currentLoginStatus) {
-            return !note.isPrivate // 未登录只显示公开笔记
-          }
-          return true // 已登录显示所有笔记
-        })
-        
-        // 按时间排序（新到旧）
-        filteredNotes.sort((a, b) => {
-          return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-        })
-        
-        // 分页处理：首次加载前10篇
-        const firstPageNotes = filteredNotes.slice(0, 10)
-        setNotes(firstPageNotes)
-        setHasMoreNotes(filteredNotes.length > 10)
-        setCurrentPage(1)
-        
-        console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
-        return true
-      } else {
-        console.log('⚠️ 静态文件为空或未找到')
-        return false
-      }
-    } catch (error) {
-      console.error('❌ 静态文件加载失败:', error)
-      return false
+    // 如果正在加载索引，返回现有的请求
+    if (isLoadingIndex && indexRequestRef.current) {
+      console.log('🔄 索引正在加载中，等待现有请求完成...')
+      return indexRequestRef.current
     }
-  }, [isLoggedIn])
+    
+    // 如果已经有请求在进行中，直接返回该请求
+    if (indexRequestRef.current) {
+      console.log('🔄 索引请求已在进行中，复用现有请求...')
+      return indexRequestRef.current
+    }
+    
+    console.log('📥 尝试从静态文件加载笔记...')
+    setIsLoadingIndex(true)
+    
+    try {
+      const staticService = StaticService.getInstance()
+      
+      // 创建请求函数，返回 Promise<boolean>
+      const request = (async (): Promise<boolean> => {
+        try {
+          const staticIndex = await staticService.getStaticIndex()
+          
+          if (staticIndex && staticIndex.notes) {
+            console.log(`✅ 静态文件加载成功，获取到 ${Object.keys(staticIndex.notes).length} 篇笔记`)
+            
+            // 转换静态数据为笔记格式
+            const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
+              ...note,
+              id: note.sha,
+              name: note.filename,
+              sha: note.sha,
+              path: note.path,
+              created_at: note.createdDate,
+              updated_at: note.updatedDate,
+              fullContent: '', // 静态索引不包含完整内容
+              type: 'file'
+            }))
+            
+            // 根据登录状态过滤笔记
+            const currentLoginStatus = isLoggedIn()
+            const filteredNotes = staticNotes.filter((note: any) => {
+              if (!currentLoginStatus) {
+                return !note.isPrivate // 未登录只显示公开笔记
+              }
+              return true // 已登录显示所有笔记
+            })
+            
+            // 按时间排序（新到旧）
+            filteredNotes.sort((a, b) => {
+              return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+            })
+            
+            // 分页处理：首次加载前10篇
+            const firstPageNotes = filteredNotes.slice(0, 10)
+            setNotes(firstPageNotes)
+            setHasMoreNotes(filteredNotes.length > 10)
+            setCurrentPage(1)
+            
+            console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
+            return true
+          } else {
+            console.log('⚠️ 静态文件为空或未找到')
+            return false
+          }
+        } catch (error) {
+          console.error('❌ 静态文件加载失败:', error)
+          return false
+        }
+      })()
+      
+      // 保存请求引用，供后续调用复用
+      indexRequestRef.current = request
+      
+      // 等待请求完成
+      const result = await request
+      return result
+      
+    } finally {
+      setIsLoadingIndex(false)
+      // 清除请求引用
+      indexRequestRef.current = null
+    }
+  }, [isLoggedIn, isLoadingIndex])
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
