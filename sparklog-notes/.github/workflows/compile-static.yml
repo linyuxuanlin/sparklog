@@ -1,0 +1,58 @@
+name: 编译静态笔记
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - '**/*.md'
+  workflow_dispatch:
+
+env:
+  TARGET_REPO: linyuxuanlin/sparklog
+  NOTES_PATH: sparklog-notes
+  STATIC_PATH: public/static-notes
+
+jobs:
+  compile-static:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出笔记仓库
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2  # 获取前一次提交来比较变化
+
+    - name: 设置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: 检出目标仓库
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ env.TARGET_REPO }}
+        token: ${{ secrets.TARGET_REPO_TOKEN }}
+        path: target-repo
+        
+    - name: 安装依赖
+      run: |
+        npm init -y
+        npm install js-yaml
+
+    - name: 编译静态文件
+      run: node compile-notes.js
+      env:
+        GITHUB_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
+
+    - name: 推送到目标仓库
+      run: |
+        cd target-repo
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add public/static-notes/
+        if git diff --staged --quiet; then
+          echo "没有变化，跳过提交"
+        else
+          git commit -m "更新静态笔记文件 $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+        fi
