@@ -113,7 +113,7 @@ function compileNote(mdFilePath, outputDir) {
   // 跳过私密笔记
   if (parsed.isPrivate) {
     console.log(`跳过私密笔记: ${fileName}`);
-    return;
+    return { skipped: true, reason: 'private' };
   }
   
   const staticFilePath = path.join(outputDir, `${fileName}.json`);
@@ -121,7 +121,7 @@ function compileNote(mdFilePath, outputDir) {
   // 检查是否需要更新
   if (!shouldUpdateStaticFile(mdFilePath, staticFilePath)) {
     console.log(`跳过未修改的笔记: ${fileName}`);
-    return;
+    return { skipped: true, reason: 'no-changes' };
   }
   
   const staticNoteData = {
@@ -144,12 +144,16 @@ function compileNote(mdFilePath, outputDir) {
   // 写入静态文件
   fs.writeFileSync(staticFilePath, JSON.stringify(staticNoteData, null, 2));
   console.log(`已编译: ${fileName} -> ${fileName}.json`);
+  
+  return { skipped: false, compiled: true };
 }
 
 // 生成索引文件
-function generateIndex(outputDir, mdFiles) {
+function generateIndex(outputDir, mdFiles, compileStats) {
   const staticNotes = {};
   let publicNotesCount = 0;
+  let totalCompiledNotes = 0;
+  let totalSkippedNotes = 0;
   
   // 读取所有已编译的静态文件
   const jsonFiles = fs.readdirSync(outputDir).filter(f => f.endsWith('.json') && f !== 'index.json');
@@ -161,22 +165,58 @@ function generateIndex(outputDir, mdFiles) {
         const { content, ...noteWithoutContent } = staticData;
         staticNotes[staticData.filename] = noteWithoutContent;
         publicNotesCount++;
+        
+        // 统计编译状态
+        if (compileStats[jsonFile.replace('.json', '')]) {
+          if (compileStats[jsonFile.replace('.json', '')].skipped) {
+            totalSkippedNotes++;
+          } else {
+            totalCompiledNotes++;
+          }
+        }
       }
     } catch (error) {
       console.error(`读取静态文件失败: ${jsonFile}`, error);
     }
   }
   
+  // 只有当有笔记被重新编译时，才更新索引的 compiledAt
+  const shouldUpdateIndex = totalCompiledNotes > 0;
+  const currentIndexPath = path.join(outputDir, 'index.json');
+  let existingCompiledAt = new Date().toISOString();
+  
+  if (fs.existsSync(currentIndexPath) && !shouldUpdateIndex) {
+    try {
+      const existingIndex = JSON.parse(fs.readFileSync(currentIndexPath, 'utf8'));
+      existingCompiledAt = existingIndex.compiledAt || existingCompiledAt;
+    } catch (error) {
+      console.warn('读取现有索引文件失败，将使用当前时间');
+    }
+  }
+  
   const indexData = {
     version: '1.0.0',
-    compiledAt: new Date().toISOString(),
+    compiledAt: shouldUpdateIndex ? new Date().toISOString() : existingCompiledAt,
     totalNotes: mdFiles.length,
     publicNotes: publicNotesCount,
-    notes: staticNotes
+    notes: staticNotes,
+    // 添加编译统计信息
+    lastBuildStats: {
+      compiledNotes: totalCompiledNotes,
+      skippedNotes: totalSkippedNotes,
+      buildTime: new Date().toISOString()
+    }
   };
   
   fs.writeFileSync(path.join(outputDir, 'index.json'), JSON.stringify(indexData, null, 2));
-  console.log(`已生成索引文件，包含 ${publicNotesCount} 个公开笔记`);
+  
+  if (shouldUpdateIndex) {
+    console.log(`已更新索引文件，包含 ${publicNotesCount} 个公开笔记`);
+    console.log(`本次构建: 编译 ${totalCompiledNotes} 个笔记，跳过 ${totalSkippedNotes} 个笔记`);
+  } else {
+    console.log(`索引文件无需更新，所有笔记都是最新的`);
+    console.log(`当前状态: 总笔记 ${publicNotesCount} 个，跳过 ${totalSkippedNotes} 个笔记`);
+  }
 }
 
 // 主函数
@@ -206,12 +246,14 @@ function main() {
   console.log(`找到 ${mdFiles.length} 个 Markdown 文件`);
   
   // 编译所有笔记
+  const compileStats = {};
   for (const mdFile of mdFiles) {
-    compileNote(mdFile, outputDir);
+    const result = compileNote(mdFile, outputDir);
+    compileStats[path.basename(mdFile, '.md')] = result;
   }
   
   // 生成索引文件
-  generateIndex(outputDir, mdFiles);
+  generateIndex(outputDir, mdFiles, compileStats);
   
   console.log('编译完成！');
 }
