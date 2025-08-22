@@ -4,6 +4,7 @@ import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 import { GitHubService } from '@/services/githubService'
+import { StaticService } from '@/services/staticService'
 
 export const useNotes = () => {
   const { isLoggedIn, getGitHubToken, isLoading } = useGitHub()
@@ -138,6 +139,66 @@ export const useNotes = () => {
     }
   }, [isPreloading])
 
+  // 尝试从静态文件加载笔记
+  const loadNotesFromStatic = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log('尝试从静态文件加载笔记...')
+      const staticService = StaticService.getInstance()
+      const staticIndex = await staticService.getStaticIndex()
+      
+      if (!staticIndex) {
+        console.log('静态索引文件不存在，回退到 GitHub API')
+        return false
+      }
+
+      console.log('静态索引加载成功:', {
+        totalNotes: staticIndex.totalNotes,
+        publicNotes: staticIndex.publicNotes,
+        compiledAt: staticIndex.compiledAt
+      })
+
+      // 检查静态文件是否过期（超过 1 小时）
+      const compiledTime = new Date(staticIndex.compiledAt).getTime()
+      const now = new Date().getTime()
+      const hourInMs = 60 * 60 * 1000
+      
+      if (now - compiledTime > hourInMs) {
+        console.log('静态文件已过期，回退到 GitHub API')
+        return false
+      }
+
+      // 转换静态数据为笔记格式
+      const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
+        ...note,
+        id: note.sha,
+        name: note.filename,
+        sha: note.sha,
+        path: note.path,
+        created_at: note.createdDate,
+        updated_at: note.updatedDate,
+        fullContent: '', // 静态索引不包含完整内容
+        type: 'file'
+      }))
+
+      // 按时间排序（新到旧）
+      staticNotes.sort((a, b) => {
+        return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+      })
+
+      // 分页处理：首次加载前10篇
+      const firstPageNotes = staticNotes.slice(0, 10)
+      setNotes(firstPageNotes)
+      setHasMoreNotes(staticNotes.length > 10)
+      setCurrentPage(1)
+      
+      console.log('从静态文件加载完成:', firstPageNotes.length, '个笔记')
+      return true
+    } catch (error) {
+      console.error('从静态文件加载失败:', error)
+      return false
+    }
+  }, [])
+
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
     // 如果正在加载且不是强制刷新，避免重复请求
@@ -152,6 +213,16 @@ export const useNotes = () => {
     try {
       // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
+      
+      // 如果是首次加载且未登录，优先尝试静态文件
+      if (page === 1 && !currentLoginStatus && !forceRefresh) {
+        const staticLoadSuccess = await loadNotesFromStatic()
+        if (staticLoadSuccess) {
+          setIsLoadingNotes(false)
+          setHasLoaded(true)
+          return
+        }
+      }
       
       // 初始化GitHub服务
       const githubService = GitHubService.getInstance()
@@ -310,7 +381,7 @@ export const useNotes = () => {
       setIsLoadingNotes(false)
       return
     }
-  }, [getGitHubToken, preloadNextBatch, isLoggedIn, isLoadingNotes])
+  }, [getGitHubToken, preloadNextBatch, isLoggedIn, isLoadingNotes, loadNotesFromStatic])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {

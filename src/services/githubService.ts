@@ -1,4 +1,5 @@
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
+import { StaticService } from './staticService'
 
 interface GitHubFile {
   name: string
@@ -310,6 +311,24 @@ export class GitHubService {
     if (!response.ok) {
       const errorData = await response.json()
       throw new Error(`删除失败: ${errorData.message || response.statusText}`)
+    }
+
+    // 删除对应的静态文件
+    if (!note.isPrivate) {
+      try {
+        console.log('删除静态文件...')
+        const staticService = StaticService.getInstance()
+        const authData = {
+          username: this.authData.username,
+          repo: this.authData.repo,
+          accessToken: this.authData.accessToken
+        }
+        await staticService.deleteStaticNote(note.name || note.path.split('/').pop(), authData)
+        console.log('静态文件删除完成')
+      } catch (staticError) {
+        console.error('删除静态文件失败:', staticError)
+        // 静态文件删除失败不影响主流程
+      }
     }
 
     return true

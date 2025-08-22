@@ -7,6 +7,7 @@ import { decodeBase64Content, encodeBase64Content, formatTagsForFrontMatter, get
 import { checkEnvVarsConfigured } from '@/config/env'
 import TagManager from '@/components/TagManager'
 import { useNotes } from '@/hooks/useNotes'
+import { StaticService } from '@/services/staticService'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
@@ -492,6 +493,29 @@ ${content.trim()}
            }
          } catch (error) {
            console.warn('删除原始文件时出错:', error)
+         }
+       }
+       
+       // 获取保存后的文件信息
+       const savedResponse = await response.json()
+       const savedFile = {
+         name: fileName,
+         path: filePath,
+         sha: savedResponse.content?.sha || sha,
+         created_at: createdAt,
+         updated_at: updatedAt
+       }
+
+       // 如果不是私密笔记，触发静态编译
+       if (!isPrivate) {
+         try {
+           console.log('开始静态编译...')
+           const staticService = StaticService.getInstance()
+           await staticService.compileSingleNote(savedFile, noteContent, authData)
+           console.log('静态编译完成')
+         } catch (staticError) {
+           console.error('静态编译失败:', staticError)
+           // 静态编译失败不影响主流程，只记录日志
          }
        }
        

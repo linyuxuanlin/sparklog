@@ -3,6 +3,7 @@ import { X, Edit, Trash2, Share, Check, Github, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { Note } from '@/types/Note'
 import { useGitHub } from '@/hooks/useGitHub'
+import { StaticService } from '@/services/staticService'
 
 // 过滤front matter的函数
 const removeFrontMatter = (content: string): string => {
@@ -69,6 +70,45 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
   const [isVisible, setIsVisible] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [animationPhase, setAnimationPhase] = useState<'entering' | 'entered' | 'exiting' | 'exited'>('exited')
+  const [fullContent, setFullContent] = useState<string | null>(null)
+  const [isLoadingContent, setIsLoadingContent] = useState(false)
+
+  // 加载完整内容
+  useEffect(() => {
+    if (!note || !isOpen) {
+      setFullContent(null)
+      return
+    }
+
+    // 如果已有完整内容，直接使用
+    if (note.fullContent || note.content) {
+      setFullContent(note.fullContent || note.content || '')
+      return
+    }
+
+    // 尝试从静态文件加载
+    const loadStaticContent = async () => {
+      setIsLoadingContent(true)
+      try {
+        const staticService = StaticService.getInstance()
+        const staticNote = await staticService.getStaticNote(note.name?.replace(/\.md$/, '') || note.path?.split('/').pop()?.replace(/\.md$/, '') || '')
+        
+        if (staticNote) {
+          setFullContent(staticNote.content)
+        } else {
+          // 静态文件不存在，使用预览内容
+          setFullContent(note.contentPreview || '')
+        }
+      } catch (error) {
+        console.error('加载静态内容失败:', error)
+        setFullContent(note.contentPreview || '')
+      } finally {
+        setIsLoadingContent(false)
+      }
+    }
+
+    loadStaticContent()
+  }, [note, isOpen])
 
   // 处理动画状态
   useEffect(() => {
@@ -245,14 +285,15 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
             
                          {/* 卡片内容 - 只显示笔记内容 */}
              <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)] scrollbar-hide">
-                                 {note.fullContent ? (
-                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
-                     <MarkdownRenderer content={removeFrontMatter(note.fullContent)} />
-                   </div>
-                 ) : note.content ? (
-                   <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
-                     <MarkdownRenderer content={removeFrontMatter(note.content)} />
-                   </div>
+               {isLoadingContent ? (
+                 <div className="text-center py-12">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                   <div className="text-gray-500 dark:text-gray-400">加载笔记内容中...</div>
+                 </div>
+               ) : fullContent ? (
+                 <div className="prose prose-gray dark:prose-invert max-w-none prose-2xl prose-p:my-0">
+                   <MarkdownRenderer content={removeFrontMatter(fullContent)} />
+                 </div>
                ) : (
                  <div className="text-center py-12">
                    <div className="text-gray-500 dark:text-gray-400">
