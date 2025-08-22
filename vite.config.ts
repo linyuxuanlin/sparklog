@@ -17,6 +17,7 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  publicDir: 'public', // 确保 public 目录被正确处理
   build: {
     outDir: 'dist',
     sourcemap: false,

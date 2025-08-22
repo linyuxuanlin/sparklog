@@ -142,16 +142,16 @@ export const useNotes = () => {
   // 尝试从静态文件加载笔记
   const loadNotesFromStatic = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('尝试从静态文件加载笔记...')
+      console.log('🚀 尝试从静态文件加载笔记...')
       const staticService = StaticService.getInstance()
       const staticIndex = await staticService.getStaticIndex()
       
       if (!staticIndex) {
-        console.log('静态索引文件不存在，回退到 GitHub API')
+        console.log('⚠️ 静态索引文件不存在，回退到 GitHub API')
         return false
       }
 
-      console.log('静态索引加载成功:', {
+      console.log('📊 静态索引加载成功:', {
         totalNotes: staticIndex.totalNotes,
         publicNotes: staticIndex.publicNotes,
         compiledAt: staticIndex.compiledAt
@@ -163,7 +163,7 @@ export const useNotes = () => {
       const hourInMs = 60 * 60 * 1000
       
       if (now - compiledTime > hourInMs) {
-        console.log('静态文件已过期，回退到 GitHub API')
+        console.log('⏰ 静态文件已过期，回退到 GitHub API')
         return false
       }
 
@@ -200,10 +200,10 @@ export const useNotes = () => {
       setHasMoreNotes(filteredNotes.length > 10)
       setCurrentPage(1)
       
-      console.log('从静态文件加载完成:', firstPageNotes.length, '个笔记')
+      console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
       return true
     } catch (error) {
-      console.error('从静态文件加载失败:', error)
+      console.error('❌ 从静态文件加载失败:', error)
       return false
     }
   }, [isLoggedIn])
@@ -260,7 +260,6 @@ export const useNotes = () => {
       
       // 获取所有markdown文件列表
       const markdownFiles = await githubService.getNotesFiles()
-      console.log('获取到markdown文件:', markdownFiles.length, '个')
       
       // 保存所有markdown文件列表，用于预加载
       setAllMarkdownFiles(markdownFiles)
@@ -281,13 +280,6 @@ export const useNotes = () => {
       
       const endIndex = startIndex + pageSize
       const currentPageFiles = markdownFiles.slice(startIndex, endIndex)
-      
-      console.log('当前页文件:', {
-        startIndex,
-        endIndex,
-        pageSize,
-        currentPageFiles: currentPageFiles.length
-      })
       
       setLoadingProgress({ current: 0, total: currentPageFiles.length })
       
@@ -336,7 +328,6 @@ export const useNotes = () => {
       const visibleNotes = notesWithContent.filter(note => {
         // 确保笔记有有效的sha
         if (!note.sha) {
-          console.warn('发现没有sha的笔记:', note.name || note.path)
           return false
         }
         
@@ -345,8 +336,6 @@ export const useNotes = () => {
         }
         return true
       })
-      
-      console.log('最终可见笔记:', visibleNotes.length, '个')
       
       // 如果是第一页或强制刷新，替换笔记列表；否则追加（去重）
       if (page === 1 || forceRefresh) {

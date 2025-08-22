@@ -319,21 +319,36 @@ export class StaticService {
    */
   async getStaticIndex(): Promise<StaticIndexData | null> {
     try {
+      console.log('🔍 开始尝试加载静态索引文件...')
+      
       // 检查环境
       if (typeof window === 'undefined' || typeof fetch === 'undefined') {
-        console.log('静态索引加载需要浏览器环境')
+        console.log('❌ 静态文件加载需要浏览器环境')
         return null
       }
 
-      const response = await fetch('/static-notes/index.json')
+      const indexUrl = '/static-notes/index.json'
+      console.log('📂 尝试访问:', indexUrl)
+      
+      const response = await fetch(indexUrl)
+      console.log('📡 响应状态:', response.status, response.statusText)
       
       if (!response.ok) {
+        console.log('❌ 静态索引文件访问失败:', response.status)
         return null
       }
 
-      return await response.json()
+      const data = await response.json()
+      console.log('✅ 静态索引加载成功:', {
+        version: data.version,
+        compiledAt: data.compiledAt,
+        totalNotes: data.totalNotes,
+        publicNotes: data.publicNotes
+      })
+      
+      return data
     } catch (error) {
-      console.error('获取静态索引失败:', error)
+      console.error('❌ 获取静态索引失败:', error)
       return null
     }
   }
