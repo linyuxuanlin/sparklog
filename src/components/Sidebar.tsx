@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Settings, BookOpen, Shuffle } from 'lucide-react'
-import { useGitHub } from '@/hooks/useGitHub'
 
 interface SidebarProps {
   onClose?: () => void
@@ -9,7 +8,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
-  const { isLoggedIn, isConnected } = useGitHub()
 
   const menuItems = [
     { icon: BookOpen, label: '所有想法', path: '/' },
