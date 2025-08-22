@@ -180,15 +180,24 @@ export const useNotes = () => {
         type: 'file'
       }))
 
+      // 根据登录状态过滤笔记
+      const currentLoginStatus = isLoggedIn()
+      const filteredNotes = staticNotes.filter((note: any) => {
+        if (!currentLoginStatus) {
+          return !note.isPrivate // 未登录只显示公开笔记
+        }
+        return true // 已登录显示所有笔记
+      })
+
       // 按时间排序（新到旧）
-      staticNotes.sort((a, b) => {
+      filteredNotes.sort((a, b) => {
         return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
       })
 
       // 分页处理：首次加载前10篇
-      const firstPageNotes = staticNotes.slice(0, 10)
+      const firstPageNotes = filteredNotes.slice(0, 10)
       setNotes(firstPageNotes)
-      setHasMoreNotes(staticNotes.length > 10)
+      setHasMoreNotes(filteredNotes.length > 10)
       setCurrentPage(1)
       
       console.log('从静态文件加载完成:', firstPageNotes.length, '个笔记')
@@ -197,7 +206,7 @@ export const useNotes = () => {
       console.error('从静态文件加载失败:', error)
       return false
     }
-  }, [])
+  }, [isLoggedIn])
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
@@ -214,8 +223,8 @@ export const useNotes = () => {
       // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
       
-      // 如果是首次加载且未登录，优先尝试静态文件
-      if (page === 1 && !currentLoginStatus && !forceRefresh) {
+      // 优先尝试从静态文件加载（适用于所有用户）
+      if (page === 1 && !forceRefresh) {
         const staticLoadSuccess = await loadNotesFromStatic()
         if (staticLoadSuccess) {
           setIsLoadingNotes(false)
