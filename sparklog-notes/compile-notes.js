@@ -87,42 +87,77 @@ function getFileModifiedTime(filePath) {
 // 检查静态文件是否需要更新
 function shouldUpdateStaticFile(mdFilePath, staticFilePath) {
   if (!fs.existsSync(staticFilePath)) {
+    console.log(`📝 静态文件不存在，需要创建: ${path.basename(mdFilePath)}`);
     return true; // 静态文件不存在，需要创建
   }
   
-  const mdModified = getFileModifiedTime(mdFilePath);
-  
   try {
-    const staticContent = JSON.parse(fs.readFileSync(staticFilePath, 'utf8'));
-    const staticModified = staticContent.compiledAt || '1970-01-01T00:00:00.000Z';
+    // 读取当前 Markdown 文件内容
+    const currentContent = fs.readFileSync(mdFilePath, 'utf8');
     
-    return new Date(mdModified) > new Date(staticModified);
+    // 读取现有的静态文件内容
+    const staticContent = JSON.parse(fs.readFileSync(staticFilePath, 'utf8'));
+    const previousContent = staticContent.content || '';
+    
+    // 比较内容是否发生变化
+    const contentChanged = currentContent !== previousContent;
+    
+    if (contentChanged) {
+      console.log(`🔄 笔记内容已修改，需要重新编译: ${path.basename(mdFilePath)}`);
+      console.log(`   内容变化: 检测到差异`);
+      
+      // 可选：显示具体的差异信息
+      const currentLines = currentContent.split('\n').length;
+      const previousLines = previousContent.split('\n').length;
+      const currentChars = currentContent.length;
+      const previousChars = previousContent.length;
+      
+      console.log(`   行数变化: ${previousLines} → ${currentLines} 行`);
+      console.log(`   字符变化: ${previousChars} → ${currentChars} 字符`);
+    } else {
+      console.log(`✅ 笔记内容未变化，跳过编译: ${path.basename(mdFilePath)}`);
+    }
+    
+    return contentChanged;
   } catch (error) {
+    console.log(`⚠️ 静态文件损坏或读取失败，需要重新生成: ${path.basename(mdFilePath)}`);
+    console.log(`   错误信息: ${error.message}`);
     return true; // 静态文件损坏，需要重新生成
   }
 }
 
 // 编译单个笔记
 function compileNote(mdFilePath, outputDir) {
-  console.log(`处理文件: ${mdFilePath}`);
+  const fileName = path.basename(mdFilePath);
+  console.log(`\n📝 处理文件: ${fileName}`);
   
   const content = fs.readFileSync(mdFilePath, 'utf8');
-  const fileName = path.basename(mdFilePath);
   const parsed = parseNoteContent(content, fileName);
   
   // 跳过私密笔记
   if (parsed.isPrivate) {
-    console.log(`跳过私密笔记: ${fileName}`);
-    return { skipped: true, reason: 'private' };
+    console.log(`   ⏭️  跳过私密笔记: ${fileName}`);
+    return { skipped: true, reason: 'private', fileName };
   }
   
   const staticFilePath = path.join(outputDir, `${fileName}.json`);
   
   // 检查是否需要更新
   if (!shouldUpdateStaticFile(mdFilePath, staticFilePath)) {
-    console.log(`跳过未修改的笔记: ${fileName}`);
-    return { skipped: true, reason: 'no-changes' };
+    console.log(`   ✅ 跳过未变化的笔记: ${fileName}`);
+    return { skipped: true, reason: 'no-changes', fileName };
   }
+  
+  console.log(`   🔨 开始编译笔记: ${fileName}`);
+  
+  // 计算内容统计信息
+  const contentStats = {
+    lines: content.split('\n').length,
+    characters: content.length,
+    words: content.split(/\s+/).filter(word => word.length > 0).length
+  };
+  
+  console.log(`   📊 内容统计: ${contentStats.lines} 行, ${contentStats.characters} 字符, ${contentStats.words} 单词`);
   
   const staticNoteData = {
     id: path.basename(mdFilePath, '.md'),
@@ -135,7 +170,9 @@ function compileNote(mdFilePath, outputDir) {
     tags: parsed.tags,
     filename: fileName,
     compiledAt: new Date().toISOString(),
-    path: mdFilePath
+    path: mdFilePath,
+    // 添加内容统计信息
+    contentStats: contentStats
   };
   
   // 确保输出目录存在
@@ -143,9 +180,15 @@ function compileNote(mdFilePath, outputDir) {
   
   // 写入静态文件
   fs.writeFileSync(staticFilePath, JSON.stringify(staticNoteData, null, 2));
-  console.log(`已编译: ${fileName} -> ${fileName}.json`);
+  console.log(`   ✅ 已编译: ${fileName} -> ${fileName}.json`);
   
-  return { skipped: false, compiled: true };
+  return { 
+    skipped: false, 
+    compiled: true, 
+    fileName, 
+    reason: 'compiled',
+    contentStats: contentStats
+  };
 }
 
 // 生成索引文件
@@ -221,9 +264,15 @@ function generateIndex(outputDir, mdFiles, compileStats) {
 
 // 主函数
 function main() {
+  const startTime = Date.now();
   const currentDir = process.cwd();
   const targetRepoDir = path.join(currentDir, 'target-repo');
   const outputDir = path.join(targetRepoDir, 'public', 'static-notes');
+  
+  console.log('🚀 开始增量编译笔记...');
+  console.log(`📁 当前工作目录: ${currentDir}`);
+  console.log(`📁 目标仓库目录: ${targetRepoDir}`);
+  console.log(`📁 输出目录: ${outputDir}`);
   
   // 查找所有 Markdown 文件
   function findMdFiles(dir) {
@@ -260,22 +309,51 @@ function main() {
     console.log('   1. notes 文件夹存在于当前目录');
     console.log('   2. notes 文件夹中包含 .md 文件（扁平存放，无子文件夹）');
     console.log('   3. 脚本在正确的笔记仓库目录中运行');
+    return;
   }
   
   // 编译所有笔记
   const compileStats = {};
+  let totalCompiled = 0;
+  let totalSkipped = 0;
+  
+  console.log('\n🔨 开始编译笔记...');
   for (const mdFile of mdFiles) {
     const result = compileNote(mdFile, outputDir);
     compileStats[path.basename(mdFile, '.md')] = result;
+    
+    if (result.skipped) {
+      totalSkipped++;
+    } else {
+      totalCompiled++;
+    }
   }
   
   // 生成索引文件
+  console.log('\n📋 生成索引文件...');
   generateIndex(outputDir, mdFiles, compileStats);
   
-  console.log('✅ 笔记编译完成！');
+  const endTime = Date.now();
+  const buildDuration = ((endTime - startTime) / 1000).toFixed(2);
+  
+  console.log('\n🎉 笔记编译完成！');
+  console.log(`⏱️  构建耗时: ${buildDuration} 秒`);
   console.log(`📁 输出目录: ${outputDir}`);
+  console.log(`📊 最终统计:`);
+  console.log(`   总笔记数: ${mdFiles.length}`);
+  console.log(`   本次编译: ${totalCompiled} 个`);
+  console.log(`   本次跳过: ${totalSkipped} 个`);
+  console.log(`   跳过原因: 内容未变化或已是最新版本`);
   console.log(`📝 编译的笔记将保存在: ${outputDir}`);
   console.log(`📋 所有笔记都扁平存放在 notes 文件夹下，无子文件夹结构`);
+  
+  // 性能建议
+  if (totalSkipped > 0) {
+    console.log(`💡 性能提示: 跳过了 ${totalSkipped} 个内容未变化的笔记，节省了编译时间`);
+  }
+  if (totalCompiled === 0) {
+    console.log(`💡 性能提示: 所有笔记内容都是最新的，无需重新编译`);
+  }
 }
 
 // 运行主函数
