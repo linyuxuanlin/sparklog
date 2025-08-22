@@ -11,12 +11,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation()
   const { isLoggedIn, isConnected } = useGitHub()
 
-  console.log('Sidebar调试:', {
-    isLoggedIn: isLoggedIn(),
-    isConnected,
-    menuItems: '不包含新建笔记'
-  })
-
   const menuItems = [
     { icon: BookOpen, label: '所有想法', path: '/' },
     { icon: Shuffle, label: '漫游', path: '/wander' },

@@ -13,10 +13,6 @@ export const useGitHub = () => {
   useEffect(() => {
     // 检查管理员身份验证状态
     const auth = localStorage.getItem('sparklog_admin_auth')
-    console.log('useGitHub调试信息:', {
-      hasAuth: !!auth,
-      authData: auth ? JSON.parse(auth) : null
-    })
     
     if (auth) {
       const authData: AdminAuth = JSON.parse(auth)

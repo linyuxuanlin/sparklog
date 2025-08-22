@@ -210,8 +210,11 @@ export const useNotes = () => {
 
   // 从GitHub仓库加载笔记（分页加载）
   const loadNotes = useCallback(async (forceRefresh = false, page = 1) => {
+    console.log('🔄 loadNotes 被调用:', { forceRefresh, page })
+    
     // 如果正在加载且不是强制刷新，避免重复请求
     if (isLoadingNotes && !forceRefresh) {
+      console.log('⚠️ 跳过重复加载')
       return
     }
     
@@ -222,15 +225,22 @@ export const useNotes = () => {
     try {
       // 获取当前登录状态
       const currentLoginStatus = isLoggedIn()
+      console.log('👤 当前登录状态:', currentLoginStatus)
       
       // 优先尝试从静态文件加载（适用于所有用户）
       if (page === 1 && !forceRefresh) {
+        console.log('📥 尝试静态文件加载 (page=1, forceRefresh=false)')
         const staticLoadSuccess = await loadNotesFromStatic()
         if (staticLoadSuccess) {
           setIsLoadingNotes(false)
           setHasLoaded(true)
+          console.log('✅ 静态文件加载成功，退出')
           return
+        } else {
+          console.log('❌ 静态文件加载失败，继续 GitHub API')
         }
+      } else {
+        console.log('⏭️ 跳过静态文件加载:', { page, forceRefresh })
       }
       
       // 初始化GitHub服务
@@ -472,9 +482,11 @@ export const useNotes = () => {
 
   // 优化后的初始化加载逻辑
   useEffect(() => {
+    console.log('🏁 useNotes useEffect 触发:', { isLoading, isInitialLoadRef: isInitialLoadRef.current })
     if (!isLoading && !isInitialLoadRef.current) {
+      console.log('🚀 开始初始化加载笔记 (非强制刷新)')
       isInitialLoadRef.current = true
-      loadNotes(true)
+      loadNotes(false) // 改为 false，这样才会尝试静态文件
     }
   }, [isLoading, loadNotes])
 
