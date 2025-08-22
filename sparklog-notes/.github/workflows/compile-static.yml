@@ -1,10 +1,11 @@
 name: 编译静态笔记
 
+# 触发条件：
+# - 任何推送到 main 分支的提交（包括代码更新、文档修改等）
+# - 手动触发 (workflow_dispatch)
 on:
   push:
     branches: [ main ]
-    paths: 
-      - '**/*.md'
   workflow_dispatch:
 
 env:
@@ -53,6 +54,6 @@ jobs:
         if git diff --staged --quiet; then
           echo "没有变化，跳过提交"
         else
-          git commit -m "更新静态笔记文件 $(date '+%Y-%m-%d %H:%M:%S')"
+          git commit -m "🤖 自动更新静态笔记 - $(date '+%Y-%m-%d %H:%M:%S')"
           git push
         fi
