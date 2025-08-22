@@ -24,12 +24,7 @@ export const useNotes = () => {
   // 使用ref来避免重复加载
   const isInitialLoadRef = useRef(false)
   const lastLoginStatusRef = useRef(loginStatus)
-  const loadNotesRef = useRef(loadNotes)
-  
-  // 更新 loadNotes ref
-  useEffect(() => {
-    loadNotesRef.current = loadNotes
-  }, [loadNotes])
+  const loadNotesRef = useRef<((forceRefresh?: boolean, page?: number) => Promise<void>) | null>(null)
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {
@@ -145,71 +140,57 @@ export const useNotes = () => {
     }
   }, [isPreloading])
 
-  // 尝试从静态文件加载笔记
+  // 从静态文件加载笔记
   const loadNotesFromStatic = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('🚀 尝试从静态文件加载笔记...')
+      console.log('📥 尝试从静态文件加载笔记...')
       const staticService = StaticService.getInstance()
       const staticIndex = await staticService.getStaticIndex()
       
-      if (!staticIndex) {
-        console.log('⚠️ 静态索引文件不存在，回退到 GitHub API')
+      if (staticIndex && staticIndex.notes) {
+        console.log(`✅ 静态文件加载成功，获取到 ${Object.keys(staticIndex.notes).length} 篇笔记`)
+        
+        // 转换静态数据为笔记格式
+        const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
+          ...note,
+          id: note.sha,
+          name: note.filename,
+          sha: note.sha,
+          path: note.path,
+          created_at: note.createdDate,
+          updated_at: note.updatedDate,
+          fullContent: '', // 静态索引不包含完整内容
+          type: 'file'
+        }))
+        
+        // 根据登录状态过滤笔记
+        const currentLoginStatus = isLoggedIn()
+        const filteredNotes = staticNotes.filter((note: any) => {
+          if (!currentLoginStatus) {
+            return !note.isPrivate // 未登录只显示公开笔记
+          }
+          return true // 已登录显示所有笔记
+        })
+        
+        // 按时间排序（新到旧）
+        filteredNotes.sort((a, b) => {
+          return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+        })
+        
+        // 分页处理：首次加载前10篇
+        const firstPageNotes = filteredNotes.slice(0, 10)
+        setNotes(firstPageNotes)
+        setHasMoreNotes(filteredNotes.length > 10)
+        setCurrentPage(1)
+        
+        console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
+        return true
+      } else {
+        console.log('⚠️ 静态文件为空或未找到')
         return false
       }
-
-      console.log('📊 静态索引加载成功:', {
-        totalNotes: staticIndex.totalNotes,
-        publicNotes: staticIndex.publicNotes,
-        compiledAt: staticIndex.compiledAt
-      })
-
-      // 检查静态文件是否过期（超过 1 小时）
-      const compiledTime = new Date(staticIndex.compiledAt).getTime()
-      const now = new Date().getTime()
-      const hourInMs = 60 * 60 * 1000
-      
-      if (now - compiledTime > hourInMs) {
-        console.log('⏰ 静态文件已过期，回退到 GitHub API')
-        return false
-      }
-
-      // 转换静态数据为笔记格式
-      const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
-        ...note,
-        id: note.sha,
-        name: note.filename,
-        sha: note.sha,
-        path: note.path,
-        created_at: note.createdDate,
-        updated_at: note.updatedDate,
-        fullContent: '', // 静态索引不包含完整内容
-        type: 'file'
-      }))
-
-      // 根据登录状态过滤笔记
-      const currentLoginStatus = isLoggedIn()
-      const filteredNotes = staticNotes.filter((note: any) => {
-        if (!currentLoginStatus) {
-          return !note.isPrivate // 未登录只显示公开笔记
-        }
-        return true // 已登录显示所有笔记
-      })
-
-      // 按时间排序（新到旧）
-      filteredNotes.sort((a, b) => {
-        return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
-      })
-
-      // 分页处理：首次加载前10篇
-      const firstPageNotes = filteredNotes.slice(0, 10)
-      setNotes(firstPageNotes)
-      setHasMoreNotes(filteredNotes.length > 10)
-      setCurrentPage(1)
-      
-      console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
-      return true
     } catch (error) {
-      console.error('❌ 从静态文件加载失败:', error)
+      console.error('❌ 静态文件加载失败:', error)
       return false
     }
   }, [isLoggedIn])
@@ -320,9 +301,6 @@ export const useNotes = () => {
           const created_at = parsed.createdDate || file.created_at
           const updated_at = parsed.updatedDate || file.updated_at
           
-          // 更新加载进度
-          setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
-          
           return {
             ...file,
             contentPreview: parsed.contentPreview,
@@ -336,67 +314,70 @@ export const useNotes = () => {
           }
         }
         
-        // 如果批量获取失败，返回原始文件信息
-        setLoadingProgress(prev => ({ ...prev, current: index + 1 }))
         return file
       })
       
-      // 过滤笔记 - 根据登录状态显示笔记，并确保每个笔记都有有效的sha
+      // 过滤笔记 - 根据登录状态显示笔记
       const visibleNotes = notesWithContent.filter(note => {
-        // 确保笔记有有效的sha
-        if (!note.sha) {
-          return false
-        }
-        
         if (!currentLoginStatus) {
           return !note.isPrivate
         }
         return true
       })
       
-      // 如果是第一页或强制刷新，替换笔记列表；否则追加（去重）
-      if (page === 1 || forceRefresh) {
+      // 更新状态
+      if (page === 1) {
         setNotes(visibleNotes)
         setCurrentPage(1)
-        // 预加载下一批笔记
-        if (endIndex < markdownFiles.length) {
-          preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
-        }
       } else {
-        // 追加时去重，避免重复的笔记
-        setNotes(prev => {
-          const existingShas = new Set(prev.map(note => note.sha))
-          const newNotes = visibleNotes.filter(note => !existingShas.has(note.sha))
-          return [...prev, ...newNotes]
-        })
+        setNotes(prev => [...prev, ...visibleNotes])
         setCurrentPage(page)
-        // 预加载下一批笔记
-        if (endIndex < markdownFiles.length) {
-          preloadNextBatch(markdownFiles, endIndex, authData, currentLoginStatus)
-        }
       }
       
-      setIsLoadingNotes(false)
       setHasLoaded(true)
+      setError(null)
       
-    } catch (error) {
-      console.error('加载笔记失败:', error)
-      const errorMessage = error instanceof Error ? error.message : '请重试'
+      console.log(`✅ 成功加载 ${visibleNotes.length} 篇笔记 (第${page}页)`)
       
-      // 检测GitHub API速率限制错误
-      if (errorMessage.includes('API rate limit exceeded') || errorMessage.includes('403')) {
-        setIsRateLimited(true)
-        setError('API 访问已达上限（每小时 5000 次），请稍作等待后刷新。')
-      } else if (errorMessage.includes('未配置默认仓库')) {
-        setError('网站未配置默认仓库，请联系管理员或连接GitHub查看笔记')
+      // 预加载下一批笔记
+      if (endIndex < markdownFiles.length) {
+        const nextStartIndex = endIndex
+        const authDataForPreload = {
+          username: defaultConfig.owner,
+          repo: defaultConfig.repo,
+          accessToken: getDefaultGitHubToken()
+        }
+        const currentLoginStatus = isLoggedIn()
+        if (currentLoginStatus) {
+          const adminToken = getGitHubToken()
+          if (adminToken) {
+            authDataForPreload.accessToken = adminToken
+          }
+        }
+        preloadNextBatch(markdownFiles, nextStartIndex, authDataForPreload, currentLoginStatus)
       } else {
-        setError(`加载笔记失败: ${errorMessage}`)
+        setHasMoreNotes(false)
       }
       
+    } catch (error: any) {
+      console.error('❌ 加载笔记失败:', error)
+      
+      if (error.message?.includes('rate limit')) {
+        setIsRateLimited(true)
+        setError('GitHub API 速率限制，请稍后再试')
+      } else {
+        setError(error.message || '加载笔记失败')
+      }
+    } finally {
       setIsLoadingNotes(false)
-      return
+      setLoadingProgress({ current: 0, total: 0 })
     }
-  }, [getGitHubToken, preloadNextBatch, isLoggedIn, isLoadingNotes, loadNotesFromStatic])
+  }, [isLoadingNotes, isLoggedIn, getGitHubToken, loadNotesFromStatic, preloadNextBatch])
+
+  // 更新 loadNotes ref
+  useEffect(() => {
+    loadNotesRef.current = loadNotes
+  }, [loadNotes])
 
   // 加载更多笔记
   const loadMoreNotes = useCallback(() => {
@@ -444,11 +425,13 @@ export const useNotes = () => {
           setHasMoreNotes(false)
         }
       } else {
-        // 如果没有预加载的笔记，正常加载
-        loadNotes(false, currentPage + 1)
+        // 如果没有预加载的笔记，使用 ref 调用
+        if (loadNotesRef.current) {
+          loadNotesRef.current(false, currentPage + 1)
+        }
       }
     }
-  }, [loadNotes, isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
+  }, [isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
 
   // 删除笔记
   const deleteNote = useCallback(async (note: Note) => {
@@ -493,7 +476,9 @@ export const useNotes = () => {
     if (!isLoading && !isInitialLoadRef.current) {
       console.log('🚀 开始初始化加载笔记 (非强制刷新)')
       isInitialLoadRef.current = true
-      loadNotesRef.current(false) // 使用 ref，避免依赖变化
+      if (loadNotesRef.current) {
+        loadNotesRef.current(false) // 使用 ref，避免依赖变化
+      }
     }
   }, [isLoading])
 
@@ -510,7 +495,9 @@ export const useNotes = () => {
         lastLoginStatusRef.current = currentStatus
         setLoginStatus(currentStatus)
         // 登录状态变化时也优先尝试静态文件
-        loadNotesRef.current(false) // 使用 ref，优先静态文件
+        if (loadNotesRef.current) {
+          loadNotesRef.current(false) // 使用 ref，优先静态文件
+        }
       }
     }
   }, [isLoading, hasLoaded, isLoggedIn])
