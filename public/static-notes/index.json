@@ -409,17 +409,17 @@
     "2025-08-23-12-06-27-066.md": {
       "id": "2025-08-23-12-06-27-066",
       "title": "2025-08-23-12-06-27-066",
-      "contentPreview": "测试",
+      "contentPreview": "测试123",
       "createdDate": "2025-08-23T12:06:27.066Z",
-      "updatedDate": "2025-08-23T12:06:27.066Z",
+      "updatedDate": "2025-08-23T12:43:12.648Z",
       "isPrivate": false,
       "tags": [],
       "filename": "2025-08-23-12-06-27-066.md",
-      "compiledAt": "2025-08-23T12:06:48.555Z",
+      "compiledAt": "2025-08-23T12:43:32.374Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-23-12-06-27-066.md",
       "contentStats": {
         "lines": 9,
-        "characters": 110,
+        "characters": 113,
         "words": 11
       }
     }
@@ -427,6 +427,6 @@
   "lastBuildStats": {
     "compiledNotes": 0,
     "skippedNotes": 0,
-    "buildTime": "2025-08-23T12:06:48.557Z"
+    "buildTime": "2025-08-23T12:43:32.376Z"
   }
 }
