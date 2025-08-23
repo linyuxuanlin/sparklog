@@ -60,9 +60,9 @@ function parseNoteContent(content, fileName) {
     ? lines.slice(frontmatterEndIndex + 1) 
     : lines;
   
-  // 生成内容预览
+  // 生成内容预览（移除200字符限制）
   const previewText = contentLines.join('\n').trim();
-  contentPreview = previewText.substring(0, 200) + (previewText.length > 200 ? '...' : '');
+  contentPreview = previewText;
   
   return {
     title: fileName.replace(/\.md$/, ''),
