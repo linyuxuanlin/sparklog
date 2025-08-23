@@ -32,8 +32,8 @@ const mockNote: Note = {
   html_url: 'https://github.com/testuser/testrepo/blob/main/notes/test-note.md',
   download_url: 'https://raw.githubusercontent.com/testuser/testrepo/main/notes/test-note.md',
   type: 'file',
-  content: 'SGVsbG8gV29ybGQ=', // Base64 for "Hello World"
-  encoding: 'base64',
+  content: '这是笔记的完整内容', // 直接使用中文文本，不使用 base64 编码
+  encoding: 'utf-8', // 改为 utf-8 编码
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-02T00:00:00Z',
   contentPreview: '这是笔记的预览内容',
@@ -69,7 +69,7 @@ describe('NoteCard', () => {
       />
     )
 
-    expect(screen.getByText('这是笔记的预览内容')).toBeInTheDocument()
+    expect(screen.getByText('这是笔记的完整内容')).toBeInTheDocument()
     expect(screen.getByText('技术')).toBeInTheDocument()
     expect(screen.getByText('笔记')).toBeInTheDocument()
     expect(screen.getByText('测试')).toBeInTheDocument()
@@ -128,7 +128,7 @@ describe('NoteCard', () => {
     )
 
     // 卡片没有特定的 role，直接点击卡片容器
-    const card = screen.getByText('这是笔记的预览内容').closest('.card')
+    const card = screen.getByText('这是笔记的完整内容').closest('.card')
     fireEvent.click(card!)
 
     expect(mockOnOpen).toHaveBeenCalledWith(mockNote)

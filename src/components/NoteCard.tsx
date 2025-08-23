@@ -302,6 +302,47 @@ const NoteCard: React.FC<NoteCardProps> = ({
     }
   }, [windowWidth, isExpanded, note.contentPreview])
 
+  // 计算标签组的显示模式和宽度
+  const calculateTagDisplayMode = () => {
+    if (!note.tags || note.tags.length === 0) {
+      return { mode: 'none', width: 0, needsScroll: false }
+    }
+    
+    // 计算标签组需要的总宽度
+    const tagCount = note.tags.length
+    const tagWidth = 50 // 每个标签的预估宽度
+    const gapWidth = (tagCount - 1) * 4 // gap-1 = 4px
+    const totalTagWidth = tagCount * tagWidth + gapWidth
+    
+    // 获取容器宽度
+    const containerWidth = containerRef.current?.offsetWidth || 0
+    const timeAreaWidth = 120 // 时间区域的预估宽度
+    const buttonWidth = showButtonText ? 80 : 40 // 按钮区域的预估宽度
+    const margin = 16 // 边距
+    
+    // 计算标签组可用的最大宽度
+    const availableWidth = containerWidth - timeAreaWidth - buttonWidth - margin
+    
+    // 确保有一个最小宽度（至少能显示一个标签）
+    const minTagWidth = Math.max(tagWidth + 20, windowWidth < 640 ? 60 : 80)
+    const maxAllowedWidth = Math.max(availableWidth, minTagWidth)
+    
+    if (totalTagWidth <= maxAllowedWidth) {
+      // 空间充足，显示所有标签，使用自然宽度
+      return { mode: 'full', width: 'auto', needsScroll: false }
+    } else {
+      // 空间不足，使用滚动模式
+      // 计算一个合适的宽度，确保至少能显示1.5个标签
+      const reasonableWidth = Math.min(
+        Math.max(maxAllowedWidth, minTagWidth),
+        Math.max(windowWidth * 0.3, windowWidth < 640 ? 120 : 160)
+      )
+      return { mode: 'scroll', width: reasonableWidth, needsScroll: true }
+    }
+  }
+
+  const tagDisplayInfo = calculateTagDisplayMode()
+
   return (
     <div 
       className="card p-4 sm:p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg"
@@ -340,15 +381,14 @@ const NoteCard: React.FC<NoteCardProps> = ({
         <div 
           className="relative flex-shrink-0"
           style={{
-            width: note.tags && note.tags.length > 0 
-              ? Math.min(
-                  Math.max(note.tags.length * 50, 50), 
-                  Math.max(windowWidth * 0.25, windowWidth < 640 ? 100 : 120)
-                ) 
-              : 0
+            width: tagDisplayInfo.mode === 'none' ? 0 : tagDisplayInfo.width
           }}
         >
-          <div ref={tagScrollRef} className="flex gap-1 overflow-x-auto scrollbar-hide relative" style={{ width: '100%' }}>
+          <div 
+            ref={tagScrollRef} 
+            className={`flex gap-1 ${tagDisplayInfo.needsScroll ? 'overflow-x-auto scrollbar-hide' : 'overflow-visible'} relative`} 
+            style={{ width: tagDisplayInfo.needsScroll ? '100%' : 'auto' }}
+          >
            {note.tags && note.tags.length > 0 && (
              note.tags.map((tag, index) => (
                <span
@@ -365,12 +405,12 @@ const NoteCard: React.FC<NoteCardProps> = ({
              ))
            )}
           </div>
-          {/* 左渐隐遮罩 */}
-          {canScrollLeft && (
+          {/* 左渐隐遮罩 - 只在需要滚动时显示 */}
+          {tagDisplayInfo.needsScroll && canScrollLeft && (
             <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white dark:from-gray-800 to-transparent pointer-events-none z-10" />
           )}
-          {/* 右渐隐遮罩 */}
-          {canScrollRight && (
+          {/* 右渐隐遮罩 - 只在需要滚动时显示 */}
+          {tagDisplayInfo.needsScroll && canScrollRight && (
             <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white dark:from-gray-800 to-transparent pointer-events-none z-10" />
           )}
         </div>
