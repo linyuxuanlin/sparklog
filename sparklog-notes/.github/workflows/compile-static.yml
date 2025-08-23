@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  TARGET_REPO: linyuxuanlin/sparklog
+  TARGET_REPO: ${{ secrets.TARGET_REPO || 'linyuxuanlin/sparklog' }}  # 优先使用 Secret，否则使用默认值
   NOTES_PATH: sparklog-notes
   STATIC_PATH: public/static-notes
 
