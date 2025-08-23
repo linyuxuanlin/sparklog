@@ -166,10 +166,10 @@ const TimeDisplay: React.FC<{ note: Note }> = ({ note }) => {
   }
   
   return (
-    <div className="flex items-center">
-      <Calendar className="w-4 h-4 mr-1" />
+    <div className="flex items-center flex-shrink-0 min-w-0">
+      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
       <span 
-        className="cursor-help hover:text-gray-700 dark:hover:text-gray-200 transition-colors whitespace-nowrap"
+        className="cursor-help hover:text-gray-700 dark:hover:text-gray-200 transition-colors whitespace-nowrap text-xs sm:text-sm truncate"
         title={getTooltipContent()}
       >
         {formatTimeDisplay(displayTime)}
@@ -264,12 +264,13 @@ const NoteCard: React.FC<NoteCardProps> = ({
         // 获取各个区域的宽度
         const containerWidth = container.offsetWidth
         const tagAreaWidth = tagContainer.parentElement?.offsetWidth || 0
-        const timeAreaElement = container.children[2] as HTMLElement // 第三个子元素是时间区域
+        const timeAreaElement = container.children[1] as HTMLElement // 第二个子元素是时间区域
         const timeAreaWidth = timeAreaElement?.offsetWidth || 0
         
-        // 按钮区域的预估宽度
-        const buttonWithTextWidth = 80 // 约5rem，包含文字时的估算宽度
-        const buttonMargin = 24 // 左右各12px的margin
+        // 按钮区域的预估宽度 (在移动端使用更小的尺寸)
+        const isMobile = windowWidth < 640
+        const buttonWithTextWidth = isMobile ? 60 : 80 // 移动端减少宽度需求
+        const buttonMargin = isMobile ? 8 : 16 // 移动端减少margin
         
         // 计算总的非按钮占用空间
         const nonButtonSpace = tagAreaWidth + timeAreaWidth + buttonMargin
@@ -277,8 +278,8 @@ const NoteCard: React.FC<NoteCardProps> = ({
         // 计算按钮可用空间
         const availableForButton = containerWidth - nonButtonSpace
         
-        // 判断是否应该显示文字：可用空间是否足够容纳带文字的按钮
-        const shouldShowText = availableForButton >= buttonWithTextWidth
+        // 判断是否应该显示文字：可用空间是否足够容纳带文字的按钮，并且在桌面端
+        const shouldShowText = availableForButton >= buttonWithTextWidth && !isMobile
         setShowButtonText(shouldShowText)
       }
     }
@@ -303,7 +304,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
 
   return (
     <div 
-      className="card p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg"
+      className="card p-4 sm:p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-lg"
       onClick={() => onOpen(note)}
     >
              <div className="flex items-start justify-between">
@@ -334,13 +335,16 @@ const NoteCard: React.FC<NoteCardProps> = ({
        </div>
       
              {/* 底部信息栏：标签、时间、状态 */}
-       <div ref={containerRef} className="flex items-center justify-between mt-0">
+       <div ref={containerRef} className="flex items-center justify-between mt-0 min-w-0">
                  {/* 第一组：标签显示 - 动态宽度，支持横向滚动，带渐隐效果 */}
         <div 
-          className="relative"
+          className="relative flex-shrink-0"
           style={{
             width: note.tags && note.tags.length > 0 
-              ? Math.min(Math.max(note.tags.length * 60, 60), Math.max(windowWidth * 0.3, 120)) 
+              ? Math.min(
+                  Math.max(note.tags.length * 50, 50), 
+                  Math.max(windowWidth * 0.25, windowWidth < 640 ? 100 : 120)
+                ) 
               : 0
           }}
         >
@@ -353,10 +357,10 @@ const NoteCard: React.FC<NoteCardProps> = ({
                    e.stopPropagation()
                    onTagClick?.(tag)
                  }}
-                 className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex-shrink-0"
+                 className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors flex-shrink-0"
                >
-                 <Tag className="w-3 h-3 mr-1 flex-shrink-0" />
-                 <span className="truncate">{tag}</span>
+                 <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1 flex-shrink-0" />
+                 <span className="truncate max-w-[3rem] sm:max-w-none">{tag}</span>
                </span>
              ))
            )}
@@ -372,27 +376,27 @@ const NoteCard: React.FC<NoteCardProps> = ({
         </div>
          
          {/* 第二组：时间显示、公开状态和全文/收起按钮 - 在右侧，按钮紧贴时间 */}
-         <div className="flex flex-row items-center gap-1 sm:gap-2 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
+         <div className="flex flex-row items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap min-w-0 ml-2">
             {/* 全文/收起按钮 - 放在时间显示的左侧 */}
             {note.contentPreview && showExpandButton && !hideCollapseButton && (
-              <div className="flex-shrink-0 min-w-0 mr-2">
+              <div className="flex-shrink-0 min-w-0 mr-1 sm:mr-2">
                 <span 
                   ref={buttonRef}
                   onClick={(e) => {
                     e.stopPropagation()
                     setIsExpanded(!isExpanded)
                   }}
-                  className={`inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium cursor-pointer px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 h-7 ${showButtonText ? 'gap-1.5 min-w-[3.5rem]' : 'min-w-[2.5rem]'}`}
+                  className={`inline-flex items-center justify-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-xs sm:text-sm font-medium cursor-pointer px-2 sm:px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200 h-6 sm:h-7 ${showButtonText && windowWidth >= 640 ? 'gap-1 sm:gap-1.5 min-w-[2.5rem] sm:min-w-[3.5rem]' : 'min-w-[2rem] sm:min-w-[2.5rem]'}`}
                 >
                   {isExpanded ? (
                     <>
-                      <ChevronUp className="w-4 h-4" />
-                      {showButtonText && <span>收起</span>}
+                      <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                      {showButtonText && windowWidth >= 640 && <span className="hidden sm:inline">收起</span>}
                     </>
                   ) : (
                     <>
-                      <ChevronDown className="w-4 h-4" />
-                      {showButtonText && <span>全文</span>}
+                      <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                      {showButtonText && windowWidth >= 640 && <span className="hidden sm:inline">全文</span>}
                     </>
                   )}
                 </span>
@@ -400,16 +404,16 @@ const NoteCard: React.FC<NoteCardProps> = ({
             )}
             <TimeDisplay note={note} />
             {isLoggedIn() && (
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1 flex-shrink-0 min-w-0">
                 {note.isPrivate ? (
                   <>
-                    <Globe className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    <span className="text-red-600 dark:text-red-400">私密</span>
+                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                    <span className="text-red-600 dark:text-red-400 text-xs sm:text-sm hidden sm:inline">私密</span>
                   </>
                 ) : (
                   <>
-                    <Globe className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    <span className="text-green-600 dark:text-green-400">公开</span>
+                    <Globe className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                    <span className="text-green-600 dark:text-green-400 text-xs sm:text-sm hidden sm:inline">公开</span>
                   </>
                 )}
               </div>
