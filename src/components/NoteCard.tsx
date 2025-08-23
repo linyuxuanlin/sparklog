@@ -315,7 +315,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                                {isExpanded ? (
                   <div>
                     <MarkdownRenderer 
-                      content={removeFrontMatter(note.fullContent || note.content || note.contentPreview)}
+                      content={removeFrontMatter(note.content || note.contentPreview)}
                       preview={false}
                     />
                   </div>
@@ -323,7 +323,7 @@ const NoteCard: React.FC<NoteCardProps> = ({
                   <div>
                     <div ref={contentRef} className="line-clamp-3">
                       <MarkdownRenderer 
-                        content={note.contentPreview}
+                        content={removeFrontMatter(note.content || note.contentPreview)}
                         preview={true}
                       />
                     </div>
