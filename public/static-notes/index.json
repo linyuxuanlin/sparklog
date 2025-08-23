@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "compiledAt": "2025-08-23T08:25:22.634Z",
-  "totalNotes": 20,
-  "publicNotes": 20,
+  "totalNotes": 21,
+  "publicNotes": 21,
   "notes": {
     "2024-08-05-13-30-58-000.md": {
       "id": "2024-08-05-13-30-58-000",
@@ -405,11 +405,28 @@
         "characters": 267,
         "words": 22
       }
+    },
+    "2025-08-23-12-06-27-066.md": {
+      "id": "2025-08-23-12-06-27-066",
+      "title": "2025-08-23-12-06-27-066",
+      "contentPreview": "测试",
+      "createdDate": "2025-08-23T12:06:27.066Z",
+      "updatedDate": "2025-08-23T12:06:27.066Z",
+      "isPrivate": false,
+      "tags": [],
+      "filename": "2025-08-23-12-06-27-066.md",
+      "compiledAt": "2025-08-23T12:06:48.555Z",
+      "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-23-12-06-27-066.md",
+      "contentStats": {
+        "lines": 9,
+        "characters": 110,
+        "words": 11
+      }
     }
   },
   "lastBuildStats": {
     "compiledNotes": 0,
     "skippedNotes": 0,
-    "buildTime": "2025-08-23T08:25:22.634Z"
+    "buildTime": "2025-08-23T12:06:48.557Z"
   }
 }
