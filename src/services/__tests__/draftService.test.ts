@@ -171,6 +171,10 @@ describe('DraftService', () => {
 
   describe('静态文件检查', () => {
     it('应该能检查静态文件是否已更新', async () => {
+      // 模拟生产环境
+      const originalDev = import.meta.env.DEV
+      Object.defineProperty(import.meta.env, 'DEV', { value: false })
+      
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({
@@ -182,9 +186,16 @@ describe('DraftService', () => {
       
       const result = await draftService.checkStaticFileUpdated('note1', Date.now() - 1000)
       expect(result).toBe(true)
+      
+      // 恢复原始环境
+      Object.defineProperty(import.meta.env, 'DEV', { value: originalDev })
     })
 
     it('应该能检查静态文件是否已删除', async () => {
+      // 模拟生产环境
+      const originalDev = import.meta.env.DEV
+      Object.defineProperty(import.meta.env, 'DEV', { value: false })
+      
       const mockResponse = {
         ok: false,
         status: 404
@@ -194,6 +205,9 @@ describe('DraftService', () => {
       
       const result = await draftService.checkStaticFileDeleted('note1')
       expect(result).toBe(true)
+      
+      // 恢复原始环境
+      Object.defineProperty(import.meta.env, 'DEV', { value: originalDev })
     })
   })
 

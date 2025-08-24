@@ -217,6 +217,12 @@ export class DraftService {
    */
   async checkStaticFileUpdated(noteId: string, draftTimestamp: number): Promise<boolean> {
     try {
+      // 在开发环境中，静态文件不存在于本地服务器，直接返回false保持草稿状态
+      if (import.meta.env.DEV) {
+        console.log(`🔧 开发环境，跳过静态文件检查: ${noteId}`)
+        return false
+      }
+
       // 检查静态文件是否存在且更新时间晚于草稿时间
       const response = await fetch(`/static-notes/${noteId}.md.json?t=${Date.now()}`)
       if (!response.ok) {
@@ -239,6 +245,12 @@ export class DraftService {
    */
   async checkStaticFileDeleted(noteId: string): Promise<boolean> {
     try {
+      // 在开发环境中，静态文件不存在于本地服务器，直接返回false保持草稿状态
+      if (import.meta.env.DEV) {
+        console.log(`🔧 开发环境，跳过静态文件删除检查: ${noteId}`)
+        return false
+      }
+
       const response = await fetch(`/static-notes/${noteId}.md.json?t=${Date.now()}`)
       return !response.ok // 如果返回404等错误，说明文件已删除
     } catch (error) {
