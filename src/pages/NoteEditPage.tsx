@@ -28,6 +28,20 @@ const NoteEditPage: React.FC = () => {
   const [originalCreatedAt, setOriginalCreatedAt] = useState<string>('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+  // 自动调整textarea高度
+  const adjustTextareaSize = useCallback(() => {
+    if (textareaRef.current) {
+      // 重置高度以获取自然尺寸
+      textareaRef.current.style.height = 'auto'
+      
+      // 调整高度
+      const scrollHeight = textareaRef.current.scrollHeight
+      const maxHeight = window.innerHeight * 0.6 // 60vh
+      const newHeight = Math.min(scrollHeight, maxHeight)
+      textareaRef.current.style.height = `${newHeight}px`
+    }
+  }, [])
+
   // 直接使用isLoggedIn，现在它已经是稳定的了
   const isLoggedInStable = isLoggedIn
 
@@ -44,20 +58,18 @@ const NoteEditPage: React.FC = () => {
       }
       
       let authData: any = null
-      let selectedRepo: string | null = null
       
       // 基础配置使用环境变量
       authData = {
         username: defaultConfig.owner,
+        repo: defaultConfig.repo,
         accessToken: getDefaultGitHubToken()
       }
-      selectedRepo = defaultConfig.repo
       
       console.log('loadExistingNote配置:', {
         noteTitle,
         defaultConfig,
-        authData,
-        selectedRepo
+        authData
       })
       
       // 如果是管理员且已登录，使用GitHub Token
@@ -71,7 +83,7 @@ const NoteEditPage: React.FC = () => {
       
       // 查找笔记文件
       const listTimestamp = Date.now()
-      const response = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/notes?t=${listTimestamp}`, {
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${authData.repo}/contents/notes?t=${listTimestamp}`, {
         headers: {
           'Authorization': `token ${authData.accessToken}`,
           'Accept': 'application/vnd.github.v3+json'
@@ -191,7 +203,7 @@ const NoteEditPage: React.FC = () => {
       const extractedContent = contentLines.join('\n')
       setContent(extractedContent.trim())
       // 内容加载完成后调整尺寸
-      setTimeout(adjustTextareaSize, 100)
+      setTimeout(() => adjustTextareaSize(), 100)
       
     } catch (error) {
       console.error('加载笔记失败:', error)
@@ -199,7 +211,7 @@ const NoteEditPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoggedInStable, getGitHubToken])
+  }, [isLoggedInStable, getGitHubToken, adjustTextareaSize])
 
   // 权限检查
   useEffect(() => {
@@ -244,7 +256,7 @@ const NoteEditPage: React.FC = () => {
     return () => {
       window.removeEventListener('resize', handleResize)
     }
-  }, [])
+  }, [adjustTextareaSize])
 
   // 组件挂载时初始化textarea尺寸
   useEffect(() => {
@@ -252,7 +264,7 @@ const NoteEditPage: React.FC = () => {
       // 延迟执行，确保DOM已完全渲染
       setTimeout(adjustTextareaSize, 0)
     }
-  }, [])
+  }, [adjustTextareaSize])
 
   // 如果正在加载GitHub状态，显示加载界面
   if (isGitHubLoading) {
@@ -327,20 +339,6 @@ const NoteEditPage: React.FC = () => {
     navigate('/')
   }
 
-  // 自动调整textarea高度
-  const adjustTextareaSize = () => {
-    if (textareaRef.current) {
-      // 重置高度以获取自然尺寸
-      textareaRef.current.style.height = 'auto'
-      
-      // 调整高度
-      const scrollHeight = textareaRef.current.scrollHeight
-      const maxHeight = window.innerHeight * 0.6 // 60vh
-      const newHeight = Math.min(scrollHeight, maxHeight)
-      textareaRef.current.style.height = `${newHeight}px`
-    }
-  }
-
   // 处理内容变化
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value)
@@ -374,14 +372,13 @@ const NoteEditPage: React.FC = () => {
       }
       
       let authData: any = null
-      let selectedRepo: string | null = null
       
       // 基础配置使用环境变量
       authData = {
         username: defaultConfig.owner,
+        repo: defaultConfig.repo,
         accessToken: getDefaultGitHubToken()
       }
-      selectedRepo = defaultConfig.repo
       
       // 如果是管理员且已登录，使用GitHub Token
       if (isLoggedInStable()) {
@@ -454,7 +451,7 @@ ${content.trim()}
          requestBody.sha = sha
        }
 
-       const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${selectedRepo}/contents/${filePath}`, {
+       const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${authData.repo}/contents/${filePath}`, {
          method: 'PUT',
          headers: {
            'Authorization': `token ${authData.accessToken}`,
@@ -473,7 +470,7 @@ ${content.trim()}
        if (shouldDeleteOriginal && originalFile) {
          try {
            console.log('删除原始文件:', originalFile.path)
-           const deleteResponse = await fetch(`https://api.github.com/repos/${authData.username}/${selectedRepo}/contents/${originalFile.path}`, {
+           const deleteResponse = await fetch(`https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${originalFile.path}`, {
              method: 'DELETE',
              headers: {
                'Authorization': `token ${authData.accessToken}`,
