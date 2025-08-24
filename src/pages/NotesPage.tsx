@@ -30,8 +30,8 @@ const NotesPage: React.FC = () => {
   // 检查是否需要刷新笔记列表
   useEffect(() => {
     if (location.state?.shouldRefresh) {
-      console.log('🔄 检测到需要刷新笔记列表，优先尝试静态文件')
-      loadNotes(false) // 改为 false，优先静态文件
+      console.log('🔄 检测到需要刷新笔记列表，强制刷新以显示草稿版本')
+      loadNotes(true) // 改为 true，强制刷新以显示草稿版本
       // 清除state，避免重复刷新
       navigate(location.pathname, { replace: true, state: {} })
     }

@@ -3,17 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Save, Loader2, AlertCircle, Settings } from 'lucide-react'
 import { useGitHub } from '@/hooks/useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
-import { decodeBase64Content, encodeBase64Content, formatTagsForFrontMatter, getAllTags } from '@/utils/noteUtils'
+import { decodeBase64Content, formatTagsForFrontMatter, getAllTags } from '@/utils/noteUtils'
 import { checkEnvVarsConfigured } from '@/config/env'
 import TagManager from '@/components/TagManager'
 import { useNotes } from '@/hooks/useNotes'
-import { StaticService } from '@/services/staticService'
 
 const NoteEditPage: React.FC = () => {
   const { id, title } = useParams()
   const navigate = useNavigate()
   const { isConnected, isLoading: isGitHubLoading, isLoggedIn, getGitHubToken } = useGitHub()
-  const { notes } = useNotes()
+  const { notes, createNote, updateNote } = useNotes()
   const isNewNote = id === 'new'
   const isEditMode = title !== undefined
   
@@ -365,47 +364,16 @@ const NoteEditPage: React.FC = () => {
     setIsSaving(true)
     
     try {
-      // 获取默认仓库配置
-      const defaultConfig = getDefaultRepoConfig()
-      if (!defaultConfig) {
-        throw new Error('未配置默认仓库')
-      }
+      // 创建笔记文件名（使用时间戳）
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').replace('Z', '')
+      const fileName = `${timestamp}.md`
       
-      let authData: any = null
+      // 创建笔记内容
+      const currentTime = new Date().toISOString()
+      const createdAt = isEditMode && originalCreatedAt ? originalCreatedAt : currentTime
+      const updatedAt = currentTime
       
-      // 基础配置使用环境变量
-      authData = {
-        username: defaultConfig.owner,
-        repo: defaultConfig.repo,
-        accessToken: getDefaultGitHubToken()
-      }
-      
-      // 如果是管理员且已登录，使用GitHub Token
-      if (isLoggedInStable()) {
-        const adminToken = getGitHubToken()
-        if (adminToken) {
-          authData.accessToken = adminToken
-          console.log('管理员模式，使用GitHub Token保存笔记')
-        }
-      }
-      
-             // 创建笔记文件名（使用时间戳）
-       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '-').replace('Z', '')
-       const fileName = `${timestamp}.md`
-       let filePath = `notes/${fileName}`
-       
-       // 如果是编辑模式，使用原始文件路径
-       if (isEditMode && originalFile) {
-         filePath = originalFile.path
-         console.log('编辑模式，使用原始文件路径:', filePath)
-       }
-       
-       // 创建笔记内容
-       const currentTime = new Date().toISOString()
-       const createdAt = isEditMode && originalCreatedAt ? originalCreatedAt : currentTime
-       const updatedAt = currentTime
-       
-       const noteContent = `---
+      const noteContent = `---
 created_at: ${createdAt}
 updated_at: ${updatedAt}
 private: ${isPrivate}
@@ -415,110 +383,18 @@ tags: ${formatTagsForFrontMatter(tags)}
 ${content.trim()}
 `
 
-       // 如果是编辑模式，检查是否需要更新现有文件或创建新文件
-       let sha = ''
-       let shouldDeleteOriginal = false
-       
-       if (isEditMode && originalFile) {
-         // 检查是否使用原始文件路径
-         const isUsingOriginalPath = filePath === originalFile.path
-         
-         console.log('文件路径比较:', {
-           originalPath: originalFile.path,
-           newPath: filePath,
-           isUsingOriginal: isUsingOriginalPath
-         })
-         
-         if (isUsingOriginalPath) {
-           // 使用原始文件路径，更新现有文件
-           sha = originalFile.sha
-           console.log('编辑模式，更新现有文件，SHA:', sha)
-         } else {
-           // 使用新文件路径，创建新文件，稍后删除旧文件
-           console.log('编辑模式，创建新文件，稍后删除旧文件')
-           shouldDeleteOriginal = true
-         }
-       }
-
-       // 调用GitHub API保存笔记
-       const requestBody: any = {
-         message: `${isNewNote ? '创建' : '更新'}笔记: ${timestamp}`,
-         content: encodeBase64Content(noteContent), // 使用新的工具函数进行Base64编码
-         branch: 'main'
-       }
-       
-       if (sha) {
-         requestBody.sha = sha
-       }
-
-       const response = await fetch(`https://api.github.com/repos/${authData.username || 'user'}/${authData.repo}/contents/${filePath}`, {
-         method: 'PUT',
-         headers: {
-           'Authorization': `token ${authData.accessToken}`,
-           'Accept': 'application/vnd.github.v3+json',
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify(requestBody)
-       })
+      if (isEditMode && originalFile) {
+        // 编辑模式：使用 updateNote，传递文件名（不包含路径）
+        const fileName = originalFile.path.replace('notes/', '')
+        await updateNote(fileName, noteContent, originalFile.sha)
+      } else {
+        // 新建模式：使用 createNote
+        await createNote(fileName, noteContent)
+      }
       
-             if (!response.ok) {
-         const errorData = await response.json()
-         throw new Error(`保存失败: ${errorData.message || response.statusText}`)
-       }
-       
-       // 如果文件名改变了，删除原始文件
-       if (shouldDeleteOriginal && originalFile) {
-         try {
-           console.log('删除原始文件:', originalFile.path)
-           const deleteResponse = await fetch(`https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${originalFile.path}`, {
-             method: 'DELETE',
-             headers: {
-               'Authorization': `token ${authData.accessToken}`,
-               'Accept': 'application/vnd.github.v3+json',
-               'Content-Type': 'application/json'
-             },
-             body: JSON.stringify({
-               message: `删除旧文件: ${originalFile.path}`,
-               sha: originalFile.sha
-             })
-           })
-           
-           if (!deleteResponse.ok) {
-             console.warn('删除原始文件失败:', deleteResponse.statusText)
-           } else {
-             console.log('原始文件删除成功')
-           }
-         } catch (error) {
-           console.warn('删除原始文件时出错:', error)
-         }
-       }
-       
-       // 获取保存后的文件信息
-       const savedResponse = await response.json()
-       const savedFile = {
-         name: fileName,
-         path: filePath,
-         sha: savedResponse.content?.sha || sha,
-         created_at: createdAt,
-         updated_at: updatedAt
-       }
-
-       // 如果不是私密笔记，触发静态编译
-       if (!isPrivate) {
-         try {
-           console.log('开始静态编译...')
-           const staticService = StaticService.getInstance()
-           await staticService.compileSingleNote(savedFile, noteContent, authData)
-           console.log('静态编译完成')
-         } catch (staticError) {
-           console.error('静态编译失败:', staticError)
-           // 静态编译失败不影响主流程，只记录日志
-         }
-       }
-       
-       showMessage('笔记保存成功！', 'success')
-       // 立即刷新，不等待
-       navigate('/', { state: { shouldRefresh: true } })
+      showMessage('笔记保存成功！', 'success')
+      // 立即刷新，不等待
+      navigate('/', { state: { shouldRefresh: true } })
     } catch (error) {
       console.error('保存笔记失败:', error)
       showMessage(`保存失败: ${error instanceof Error ? error.message : '请重试'}`, 'error')
