@@ -1,5 +1,6 @@
 import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
 import { StaticService } from './staticService'
+import { DraftService } from './draftService'
 
 interface GitHubFile {
   name: string
@@ -289,48 +290,157 @@ export class GitHubService {
     return null
   }
 
-  // 删除笔记
-  async deleteNote(note: any): Promise<boolean> {
+  // 创建新笔记（支持草稿）
+  async createNote(fileName: string, content: string, saveAsDraft = true): Promise<any> {
     if (!this.authData) {
       throw new Error('未配置认证信息')
     }
 
-    const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${note.path}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `token ${this.authData.accessToken}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: `删除笔记: ${note.name}`,
-        sha: note.sha
+    const noteId = fileName.replace(/\.md$/, '')
+    
+    // 如果启用草稿，先保存为草稿
+    if (saveAsDraft) {
+      const draftService = DraftService.getInstance()
+      draftService.saveDraft(noteId, content, 'create')
+      console.log(`📝 笔记已保存为草稿: ${noteId}`)
+    }
+
+    // 后台推送到GitHub
+    try {
+      const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/notes/${fileName}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${this.authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `新增笔记: ${fileName}`,
+          content: btoa(unescape(encodeURIComponent(content))),
+          branch: 'main'
+        })
       })
-    })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`删除失败: ${errorData.message || response.statusText}`)
-    }
-
-    // 删除对应的静态文件
-    if (!note.isPrivate) {
-      try {
-        console.log('删除静态文件...')
-        const staticService = StaticService.getInstance()
-        const authData = {
-          username: this.authData.username,
-          repo: this.authData.repo,
-          accessToken: this.authData.accessToken
-        }
-        await staticService.deleteStaticNote(note.name || note.path.split('/').pop(), authData)
-        console.log('静态文件删除完成')
-      } catch (staticError) {
-        console.error('删除静态文件失败:', staticError)
-        // 静态文件删除失败不影响主流程
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`创建笔记失败: ${errorData.message || response.statusText}`)
       }
+
+      const result = await response.json()
+      console.log(`✅ 笔记已推送到GitHub: ${fileName}`)
+      
+      return result
+    } catch (error) {
+      console.error('推送笔记到GitHub失败:', error)
+      throw error
+    }
+  }
+
+  // 更新笔记（支持草稿）
+  async updateNote(fileName: string, content: string, sha: string, saveAsDraft = true): Promise<any> {
+    if (!this.authData) {
+      throw new Error('未配置认证信息')
     }
 
-    return true
+    const noteId = fileName.replace(/\.md$/, '')
+    
+    // 如果启用草稿，先保存为草稿
+    if (saveAsDraft) {
+      const draftService = DraftService.getInstance()
+      draftService.saveDraft(noteId, content, 'update', sha)
+      console.log(`📝 笔记修改已保存为草稿: ${noteId}`)
+    }
+
+    // 后台推送到GitHub
+    try {
+      const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/notes/${fileName}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${this.authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `更新笔记: ${fileName}`,
+          content: btoa(unescape(encodeURIComponent(content))),
+          sha: sha,
+          branch: 'main'
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`更新笔记失败: ${errorData.message || response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log(`✅ 笔记更新已推送到GitHub: ${fileName}`)
+      
+      return result
+    } catch (error) {
+      console.error('推送笔记更新到GitHub失败:', error)
+      throw error
+    }
+  }
+  // 删除笔记（支持草稿）
+  async deleteNote(note: any, saveAsDraft = true): Promise<boolean> {
+    if (!this.authData) {
+      throw new Error('未配置认证信息')
+    }
+
+    const noteId = note.name?.replace(/\.md$/, '') || note.id
+    
+    // 如果启用草稿，先标记为删除草稿
+    if (saveAsDraft) {
+      const draftService = DraftService.getInstance()
+      draftService.saveDraft(noteId, '', 'delete', note.sha)
+      console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
+    }
+
+    // 后台推送删除到GitHub
+    try {
+      const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${note.path}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `token ${this.authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `删除笔记: ${note.name}`,
+          sha: note.sha
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`删除失败: ${errorData.message || response.statusText}`)
+      }
+
+      console.log(`✅ 笔记删除已推送到GitHub: ${noteId}`)
+
+      // 删除对应的静态文件
+      if (!note.isPrivate) {
+        try {
+          console.log('删除静态文件...')
+          const staticService = StaticService.getInstance()
+          const authData = {
+            username: this.authData.username,
+            repo: this.authData.repo,
+            accessToken: this.authData.accessToken
+          }
+          await staticService.deleteStaticNote(note.name || note.path.split('/').pop(), authData)
+          console.log('静态文件删除完成')
+        } catch (staticError) {
+          console.error('删除静态文件失败:', staticError)
+          // 静态文件删除失败不影响主流程
+        }
+      }
+
+      return true
+    } catch (error) {
+      console.error('推送笔记删除到GitHub失败:', error)
+      throw error
+    }
   }
 } 

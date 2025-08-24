@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Globe, Calendar, Tag, ChevronDown, ChevronUp } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/hooks/useGitHub'
+import { Note } from '@/types/Note'
 
 // 过滤front matter的函数
 const removeFrontMatter = (content: string): string => {
@@ -41,28 +42,6 @@ const removeFrontMatter = (content: string): string => {
   })
   
   return filteredLines.join('\n').trim()
-}
-
-interface Note {
-  name: string
-  path: string
-  sha: string
-  size: number
-  url: string
-  git_url: string
-  html_url: string
-  download_url: string
-  type: string
-  content?: string
-  encoding?: string
-  created_at?: string
-  updated_at?: string
-  contentPreview?: string
-  fullContent?: string
-  createdDate?: string
-  updatedDate?: string
-  isPrivate?: boolean
-  tags?: string[]
 }
 
 interface NoteCardProps {

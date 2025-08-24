@@ -1,4 +1,6 @@
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
+import { DraftService } from './draftService'
+import { Note } from '@/types/Note'
 
 interface StaticNoteData {
   id: string
@@ -315,7 +317,7 @@ export class StaticService {
   }
 
   /**
-   * 获取静态笔记索引
+   * 获取静态笔记索引（支持草稿合并）
    */
   async getStaticIndex(): Promise<StaticIndexData | null> {
     try {
@@ -350,6 +352,49 @@ export class StaticService {
     } catch (error) {
       console.error('❌ 获取静态索引失败:', error)
       return null
+    }
+  }
+
+  /**
+   * 获取混合笔记数据（静态 + 草稿）
+   */
+  async getMergedNotes(): Promise<Note[]> {
+    try {
+      console.log('🔄 开始获取混合笔记数据（静态 + 草稿）...')
+      
+      // 获取静态索引
+      const staticIndex = await this.getStaticIndex()
+      if (!staticIndex || !staticIndex.notes) {
+        console.log('⚠️ 静态索引为空，仅使用草稿数据')
+        const draftService = DraftService.getInstance()
+        return draftService.getAllDrafts().map(draft => ({ ...draft, isDraft: false }))
+      }
+
+      // 转换静态数据为笔记格式
+      const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
+        ...note,
+        id: note.sha,
+        name: note.filename,
+        sha: note.sha,
+        path: note.path,
+        created_at: note.createdDate,
+        updated_at: note.updatedDate,
+        fullContent: '', // 静态索引不包含完整内容
+        type: 'file'
+      }))
+
+      console.log(`📊 静态笔记数量: ${staticNotes.length}`)
+
+      // 使用草稿服务合并数据
+      const draftService = DraftService.getInstance()
+      const mergedNotes = await draftService.mergeWithStaticData(staticNotes)
+      
+      console.log(`📊 合并后笔记数量: ${mergedNotes.length}`)
+      
+      return mergedNotes
+    } catch (error) {
+      console.error('❌ 获取混合笔记数据失败:', error)
+      return []
     }
   }
 }

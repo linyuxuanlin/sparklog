@@ -30,7 +30,7 @@ export const useNotes = () => {
   const [isLoadingIndex, setIsLoadingIndex] = useState(false)
   const indexRequestRef = useRef<Promise<boolean> | null>(null)
   
-  // 从静态文件加载笔记
+  // 从静态文件加载笔记（支持草稿合并）
   const loadNotesFromStatic = useCallback(async (): Promise<boolean> => {
     // 如果正在加载索引，返回现有的请求
     if (isLoadingIndex && indexRequestRef.current) {
@@ -44,7 +44,7 @@ export const useNotes = () => {
       return indexRequestRef.current
     }
     
-    console.log('📥 尝试从静态文件加载笔记...')
+    console.log('📥 尝试从静态文件加载笔记（支持草稿合并）...')
     setIsLoadingIndex(true)
     
     try {
@@ -53,27 +53,15 @@ export const useNotes = () => {
       // 创建请求函数，返回 Promise<boolean>
       const request = (async (): Promise<boolean> => {
         try {
-          const staticIndex = await staticService.getStaticIndex()
+          // 使用新的混合数据获取方法
+          const mergedNotes = await staticService.getMergedNotes()
           
-          if (staticIndex && staticIndex.notes) {
-            console.log(`✅ 静态文件加载成功，获取到 ${Object.keys(staticIndex.notes).length} 篇笔记`)
-            
-            // 转换静态数据为笔记格式
-            const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
-              ...note,
-              id: note.sha,
-              name: note.filename,
-              sha: note.sha,
-              path: note.path,
-              created_at: note.createdDate,
-              updated_at: note.updatedDate,
-              fullContent: '', // 静态索引不包含完整内容
-              type: 'file'
-            }))
+          if (mergedNotes && mergedNotes.length > 0) {
+            console.log(`✅ 混合数据加载成功，获取到 ${mergedNotes.length} 篇笔记`)
             
             // 根据登录状态过滤笔记
             const currentLoginStatus = isLoggedIn()
-            const filteredNotes = staticNotes.filter((note: any) => {
+            const filteredNotes = mergedNotes.filter((note: any) => {
               if (!currentLoginStatus) {
                 return !note.isPrivate // 未登录只显示公开笔记
               }
@@ -82,7 +70,9 @@ export const useNotes = () => {
             
             // 按时间排序（新到旧）
             filteredNotes.sort((a, b) => {
-              return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime()
+              const timeA = new Date(a.createdDate || a.created_at || '1970-01-01').getTime()
+              const timeB = new Date(b.createdDate || b.created_at || '1970-01-01').getTime()
+              return timeB - timeA
             })
             
             // 分页处理：首次加载前10篇
@@ -91,14 +81,14 @@ export const useNotes = () => {
             setHasMoreNotes(filteredNotes.length > 10)
             setCurrentPage(1)
             
-            console.log('✅ 从静态文件加载完成:', firstPageNotes.length, '个笔记')
+            console.log('✅ 从混合数据加载完成:', firstPageNotes.length, '个笔记')
             return true
           } else {
-            console.log('⚠️ 静态文件为空或未找到')
+            console.log('⚠️ 混合数据为空或未找到')
             return false
           }
         } catch (error) {
-          console.error('❌ 静态文件加载失败:', error)
+          console.error('❌ 混合数据加载失败:', error)
           return false
         }
       })()
@@ -469,7 +459,88 @@ export const useNotes = () => {
     }
   }, [isLoadingNotes, hasMoreNotes, currentPage, preloadedNotes, allMarkdownFiles, preloadNextBatch, isLoggedIn, getGitHubToken])
 
-  // 删除笔记
+  // 创建新笔记
+  const createNote = useCallback(async (fileName: string, content: string) => {
+    try {
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库')
+      }
+      
+      const authData = {
+        username: defaultConfig.owner,
+        repo: defaultConfig.repo,
+        accessToken: getDefaultGitHubToken()
+      }
+      
+      const currentLoginStatus = isLoggedIn()
+      
+      if (currentLoginStatus) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData.accessToken = adminToken
+        }
+      }
+      
+      // 使用GitHub服务创建笔记（默认启用草稿）
+      const githubService = GitHubService.getInstance()
+      githubService.setAuthData(authData)
+      
+      await githubService.createNote(fileName, content, true)
+      
+      // 立即刷新笔记列表（会显示草稿版本）
+      if (loadNotesRef.current) {
+        loadNotesRef.current(true, 1)
+      }
+      
+      return true
+    } catch (error) {
+      console.error('创建笔记失败:', error)
+      throw error
+    }
+  }, [getGitHubToken, isLoggedIn])
+
+  // 更新笔记
+  const updateNote = useCallback(async (fileName: string, content: string, sha: string) => {
+    try {
+      const defaultConfig = getDefaultRepoConfig()
+      if (!defaultConfig) {
+        throw new Error('未配置默认仓库')
+      }
+      
+      const authData = {
+        username: defaultConfig.owner,
+        repo: defaultConfig.repo,
+        accessToken: getDefaultGitHubToken()
+      }
+      
+      const currentLoginStatus = isLoggedIn()
+      
+      if (currentLoginStatus) {
+        const adminToken = getGitHubToken()
+        if (adminToken) {
+          authData.accessToken = adminToken
+        }
+      }
+      
+      // 使用GitHub服务更新笔记（默认启用草稿）
+      const githubService = GitHubService.getInstance()
+      githubService.setAuthData(authData)
+      
+      await githubService.updateNote(fileName, content, sha, true)
+      
+      // 立即刷新笔记列表（会显示草稿版本）
+      if (loadNotesRef.current) {
+        loadNotesRef.current(true, 1)
+      }
+      
+      return true
+    } catch (error) {
+      console.error('更新笔记失败:', error)
+      throw error
+    }
+  }, [getGitHubToken, isLoggedIn])
+  // 删除笔记（支持草稿）
   const deleteNote = useCallback(async (note: Note) => {
     try {
       const defaultConfig = getDefaultRepoConfig()
@@ -492,13 +563,17 @@ export const useNotes = () => {
         }
       }
       
-      // 使用GitHub服务删除笔记
+      // 使用GitHub服务删除笔记（默认启用草稿）
       const githubService = GitHubService.getInstance()
       githubService.setAuthData(authData)
       
-      await githubService.deleteNote(note)
+      await githubService.deleteNote(note, true)
       
-      setNotes(prev => prev.filter(n => n.sha !== note.sha))
+      // 立即刷新笔记列表（会隐藏被删除的笔记）
+      if (loadNotesRef.current) {
+        loadNotesRef.current(true, 1)
+      }
+      
       return true
     } catch (error) {
       console.error('删除笔记失败:', error)
@@ -543,6 +618,8 @@ export const useNotes = () => {
     isLoadingNotes,
     loadNotes,
     loadMoreNotes,
+    createNote,
+    updateNote,
     deleteNote,
     hasMoreNotes,
     loadingProgress,
