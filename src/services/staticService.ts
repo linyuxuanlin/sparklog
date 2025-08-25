@@ -15,6 +15,11 @@ interface StaticNoteData {
   compiledAt: string
   sha: string
   path: string
+  // GitHub 元数据
+  url?: string
+  git_url?: string
+  html_url?: string
+  download_url?: string
 }
 
 interface StaticIndexData {
@@ -66,7 +71,12 @@ export class StaticService {
         filename: noteFile.name,
         compiledAt: new Date().toISOString(),
         sha: noteFile.sha,
-        path: noteFile.path
+        path: noteFile.path,
+        // GitHub 元数据
+        url: noteFile.url,
+        git_url: noteFile.git_url,
+        html_url: noteFile.html_url,
+        download_url: noteFile.download_url
       }
 
       // 保存到 public/static-notes/
@@ -116,7 +126,12 @@ export class StaticService {
           filename: file.name,
           compiledAt: new Date().toISOString(),
           sha: file.sha,
-          path: file.path
+          path: file.path,
+          // GitHub 元数据
+          url: file.url,
+          git_url: file.git_url,
+          html_url: file.html_url,
+          download_url: file.download_url
         }
 
         // 保存单个笔记文件

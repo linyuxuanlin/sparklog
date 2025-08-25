@@ -7,9 +7,13 @@ interface GitHubFile {
   path: string
   sha: string
   url: string
+  git_url: string
+  html_url: string
+  download_url: string
   created_at: string
   updated_at: string
   type: string
+  size?: number
 }
 
 interface GitHubContentResponse {
@@ -301,7 +305,10 @@ export class GitHubService {
     // 如果启用草稿，先保存为草稿
     if (saveAsDraft) {
       const draftService = DraftService.getInstance()
-      draftService.saveDraft(noteId, content, 'create')
+      draftService.saveDraft(noteId, content, 'create', undefined, { 
+        username: this.authData.username, 
+        repo: this.authData.repo 
+      })
       console.log(`📝 笔记已保存为草稿: ${noteId}`)
     }
 
@@ -347,7 +354,10 @@ export class GitHubService {
     // 如果启用草稿，先保存为草稿
     if (saveAsDraft) {
       const draftService = DraftService.getInstance()
-      draftService.saveDraft(noteId, content, 'update', sha)
+      draftService.saveDraft(noteId, content, 'update', sha, { 
+        username: this.authData.username, 
+        repo: this.authData.repo 
+      })
       console.log(`📝 笔记修改已保存为草稿: ${noteId}`)
     }
 
@@ -394,7 +404,10 @@ export class GitHubService {
     // 如果启用草稿，先标记为删除草稿
     if (saveAsDraft) {
       const draftService = DraftService.getInstance()
-      draftService.saveDraft(noteId, '', 'delete', originalSha)
+      draftService.saveDraft(noteId, '', 'delete', originalSha, { 
+        username: this.authData.username, 
+        repo: this.authData.repo 
+      })
       console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
     }
 

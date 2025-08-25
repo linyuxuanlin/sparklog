@@ -2,6 +2,21 @@ import { Note } from '@/types/Note'
 import { parseNoteContent } from '@/utils/noteUtils'
 import { isDevelopment } from '@/config/env'
 
+// 构造GitHub URL的工具函数
+const constructGitHubUrls = (noteId: string, authData?: { username: string; repo: string }) => {
+  if (!authData) return {}
+  
+  const { username, repo } = authData
+  const notePath = `notes/${noteId}.md`
+  
+  return {
+    url: `https://api.github.com/repos/${username}/${repo}/contents/${notePath}`,
+    git_url: `https://api.github.com/repos/${username}/${repo}/git/blobs/`, // 需要实际的blob sha
+    html_url: `https://github.com/${username}/${repo}/blob/main/${notePath}`,
+    download_url: `https://raw.githubusercontent.com/${username}/${repo}/main/${notePath}`
+  }
+}
+
 interface DraftNote extends Partial<Note> {
   id: string
   sha: string
@@ -51,12 +66,21 @@ export class DraftService {
   /**
    * 保存草稿笔记
    */
-  saveDraft(noteId: string, content: string, operation: 'create' | 'update' | 'delete', originalSha?: string): void {
+  saveDraft(
+    noteId: string, 
+    content: string, 
+    operation: 'create' | 'update' | 'delete', 
+    originalSha?: string,
+    authData?: { username: string; repo: string }
+  ): void {
     try {
       const timestamp = Date.now()
       
       // 解析笔记内容
       const parsed = parseNoteContent(content, `${noteId}.md`)
+      
+      // 构造GitHub URLs
+      const githubUrls = constructGitHubUrls(noteId, authData)
       
       const draftNote: DraftNote = {
         id: noteId,
@@ -76,7 +100,9 @@ export class DraftService {
         isDraft: true,
         operation,
         originalSha,
-        draftTimestamp: timestamp
+        draftTimestamp: timestamp,
+        // GitHub URLs
+        ...githubUrls
       }
 
       // 保存草稿内容
