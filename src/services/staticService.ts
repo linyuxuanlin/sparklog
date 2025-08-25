@@ -171,7 +171,9 @@ export class StaticService {
     authData: { username: string; repo: string; accessToken: string }
   ): Promise<void> {
     try {
-      const staticFileName = `${filename}.md.json`
+      // 确保文件名格式正确：去掉.md后缀，再加上.md.json
+      const baseFileName = filename.replace(/\.md$/, '')
+      const staticFileName = `${baseFileName}.md.json`
       await this.deleteStaticFile(staticFileName, authData)
       console.log(`静态文件删除完成: ${staticFileName}`)
     } catch (error) {
