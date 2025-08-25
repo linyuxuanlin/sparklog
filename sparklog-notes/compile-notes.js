@@ -338,13 +338,21 @@ function main() {
     const jsonFiles = fs.readdirSync(outputDir).filter(f => f.endsWith('.json') && f !== 'index.json');
     const mdFileNames = mdFiles.map(f => path.basename(f, '.md'));
     
+    console.log(`   📋 找到 ${jsonFiles.length} 个JSON文件，${mdFileNames.length} 个MD文件`);
+    console.log(`   📋 MD文件列表: ${mdFileNames.slice(0, 3).join(', ')}${mdFileNames.length > 3 ? '...' : ''}`);
+    
     for (const jsonFile of jsonFiles) {
-      const mdFileName = jsonFile.replace('.md.json', '');
-      if (!mdFileNames.includes(mdFileName)) {
+      // JSON文件格式: filename.md.json，需要转换回对应的MD文件名
+      const mdFileName = jsonFile.replace('.json', ''); // 去掉.json后缀，得到filename.md
+      const baseFileName = mdFileName.replace('.md', ''); // 去掉.md后缀，得到基础文件名
+      
+      console.log(`   🔍 检查: ${jsonFile} -> ${baseFileName} (存在: ${mdFileNames.includes(baseFileName)})`);
+      
+      if (!mdFileNames.includes(baseFileName)) {
         const jsonFilePath = path.join(outputDir, jsonFile);
         try {
           fs.unlinkSync(jsonFilePath);
-          console.log(`   🗑️  删除孤儿JSON文件: ${jsonFile}`);
+          console.log(`   🗑️  删除孤儿JSON文件: ${jsonFile} (对应源文件: ${mdFileName})`);
           cleanedFiles++;
         } catch (error) {
           console.error(`   ❌ 删除孤儿JSON文件失败: ${jsonFile}`, error.message);
