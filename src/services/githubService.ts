@@ -392,6 +392,34 @@ export class GitHubService {
       throw error
     }
   }
+  
+  /**
+   * 将绝对路径转换为GitHub API需要的相对路径
+   * 例如: /home/runner/work/sparklog-notes/sparklog-notes/notes/file.md -> notes/file.md
+   */
+  private convertToRelativePath(absolutePath: string): string {
+    // 如果已经是相对路径，直接返回
+    if (!absolutePath.startsWith('/')) {
+      return absolutePath
+    }
+    
+    // 查找notes目录的位置
+    const notesIndex = absolutePath.lastIndexOf('/notes/')
+    if (notesIndex !== -1) {
+      // 从notes/开始截取（去掉开头的斜杠）
+      return absolutePath.substring(notesIndex + 1)
+    }
+    
+    // 如果没找到notes目录，尝试从文件名提取
+    const fileName = absolutePath.split('/').pop()
+    if (fileName && fileName.endsWith('.md')) {
+      return `notes/${fileName}`
+    }
+    
+    // 兜底：返回原路径（去掉开头斜杠）
+    return absolutePath.startsWith('/') ? absolutePath.substring(1) : absolutePath
+  }
+  
   // 删除笔记（支持草稿）
   async deleteNote(note: any, saveAsDraft = true): Promise<boolean> {
     if (!this.authData) {
@@ -399,7 +427,33 @@ export class GitHubService {
     }
 
     const noteId = note.name?.replace(/\.md$/, '') || note.id
-    const originalSha = note.sha // 保存原始SHA，避免被草稿服务修改
+    let originalSha = note.sha // 保存原始SHA，避免被草稿服务修改
+    
+    // 如果没有SHA，需要先获取文件的当前SHA
+    if (!originalSha) {
+      console.log('⚠️ 缺少SHA，需要先获取文件信息...')
+      try {
+        const relativePath = this.convertToRelativePath(note.path)
+        const fileInfoResponse = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${relativePath}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `token ${this.authData.accessToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        })
+        
+        if (fileInfoResponse.ok) {
+          const fileInfo = await fileInfoResponse.json()
+          originalSha = fileInfo.sha
+          console.log(`✅ 获取到SHA: ${originalSha}`)
+        } else {
+          throw new Error(`无法获取文件信息: ${fileInfoResponse.status} ${fileInfoResponse.statusText}`)
+        }
+      } catch (error) {
+        console.error('获取文件SHA失败:', error)
+        throw new Error(`删除失败: 无法获取文件SHA - ${error instanceof Error ? error.message : String(error)}`)
+      }
+    }
     
     // 如果启用草稿，先标记为删除草稿
     if (saveAsDraft) {
@@ -413,7 +467,11 @@ export class GitHubService {
 
     // 后台推送删除到GitHub
     try {
-      const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${note.path}`, {
+      // 将绝对路径转换为相对路径
+      const relativePath = this.convertToRelativePath(note.path)
+      console.log(`🔄 路径转换: ${note.path} -> ${relativePath}`)
+      
+      const response = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${relativePath}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `token ${this.authData.accessToken}`,
