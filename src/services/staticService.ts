@@ -171,7 +171,7 @@ export class StaticService {
     authData: { username: string; repo: string; accessToken: string }
   ): Promise<void> {
     try {
-      const staticFileName = `${filename}.json`
+      const staticFileName = `${filename}.md.json`
       await this.deleteStaticFile(staticFileName, authData)
       console.log(`静态文件删除完成: ${staticFileName}`)
     } catch (error) {
@@ -325,10 +325,18 @@ export class StaticService {
         return null
       }
 
-      const staticFileName = `${filename}.json`
+      const staticFileName = `${filename}.md.json`
       const response = await fetch(`/static-notes/${staticFileName}`)
       
       if (!response.ok) {
+        console.log(`静态笔记文件不存在: ${staticFileName} (${response.status})`)
+        return null
+      }
+
+      // 检查响应类型是否为JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn(`静态笔记响应不是JSON格式: ${staticFileName}, Content-Type: ${contentType}`)
         return null
       }
 
@@ -360,6 +368,13 @@ export class StaticService {
       
       if (!response.ok) {
         console.log('❌ 静态索引文件访问失败:', response.status)
+        return null
+      }
+
+      // 检查响应类型是否为JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn(`❌ 静态索引响应不是JSON格式, Content-Type: ${contentType}`)
         return null
       }
 
