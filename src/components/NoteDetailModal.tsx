@@ -238,7 +238,19 @@ const NoteDetailModal: React.FC<NoteDetailModalProps> = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
-                      title="在GitHub查看"
+                      title={note.html_url ? "在GitHub查看" : "GitHub链接不可用"}
+                      onClick={(e) => {
+                        console.log('GitHub链接点击:', { 
+                          html_url: note.html_url, 
+                          note_name: note.name,
+                          note_keys: Object.keys(note),
+                          full_note: note 
+                        })
+                        if (!note.html_url) {
+                          e.preventDefault()
+                          console.warn('html_url为空，阻止跳转')
+                        }
+                      }}
                     >
                       <Github className="w-5 h-5" />
                     </a>

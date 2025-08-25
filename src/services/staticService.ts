@@ -394,17 +394,29 @@ export class StaticService {
       }
 
       // 转换静态数据为笔记格式
-      const staticNotes = Object.values(staticIndex.notes).map((note: any) => ({
-        ...note,
-        id: note.sha,
-        name: note.filename,
-        sha: note.sha,
-        path: note.path,
-        created_at: note.createdDate,
-        updated_at: note.updatedDate,
-        fullContent: '', // 静态索引不包含完整内容
-        type: 'file'
-      }))
+      const staticNotes = Object.values(staticIndex.notes).map((note: any) => {
+        const convertedNote = {
+          ...note,
+          id: note.sha,
+          name: note.filename,
+          sha: note.sha,
+          path: note.path,
+          created_at: note.createdDate,
+          updated_at: note.updatedDate,
+          fullContent: '', // 静态索引不包含完整内容
+          type: 'file'
+        }
+        
+        console.log('🔍 静态笔记转换:', {
+          filename: note.filename,
+          has_html_url: !!note.html_url,
+          html_url: note.html_url,
+          original_keys: Object.keys(note),
+          converted_keys: Object.keys(convertedNote)
+        })
+        
+        return convertedNote
+      })
 
       console.log(`📊 静态笔记数量: ${staticNotes.length}`)
 
