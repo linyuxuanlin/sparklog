@@ -443,17 +443,17 @@
     "2025-08-25-15-27-51-495.md": {
       "id": "2025-08-25-15-27-51-495",
       "title": "2025-08-25-15-27-51-495",
-      "contentPreview": "新文件",
+      "contentPreview": "新文件2",
       "createdDate": "2025-08-25T15:27:51.495Z",
       "updatedDate": "2025-08-25T15:27:51.495Z",
       "isPrivate": false,
       "tags": [],
       "filename": "2025-08-25-15-27-51-495.md",
-      "compiledAt": "2025-08-25T15:28:06.544Z",
+      "compiledAt": "2025-08-25T15:37:08.424Z",
       "path": "/home/runner/work/sparklog-notes/sparklog-notes/notes/2025-08-25-15-27-51-495.md",
       "contentStats": {
         "lines": 9,
-        "characters": 111,
+        "characters": 112,
         "words": 11
       }
     }
@@ -461,6 +461,6 @@
   "lastBuildStats": {
     "compiledNotes": 0,
     "skippedNotes": 0,
-    "buildTime": "2025-08-25T15:28:06.547Z"
+    "buildTime": "2025-08-25T15:37:08.427Z"
   }
 }
