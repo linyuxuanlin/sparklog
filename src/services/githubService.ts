@@ -389,11 +389,12 @@ export class GitHubService {
     }
 
     const noteId = note.name?.replace(/\.md$/, '') || note.id
+    const originalSha = note.sha // 保存原始SHA，避免被草稿服务修改
     
     // 如果启用草稿，先标记为删除草稿
     if (saveAsDraft) {
       const draftService = DraftService.getInstance()
-      draftService.saveDraft(noteId, '', 'delete', note.sha)
+      draftService.saveDraft(noteId, '', 'delete', originalSha)
       console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
     }
 
@@ -408,7 +409,7 @@ export class GitHubService {
         },
         body: JSON.stringify({
           message: `删除笔记: ${note.name}`,
-          sha: note.sha
+          sha: originalSha // 使用原始SHA，而不是可能被草稿服务修改的note.sha
         })
       })
 
