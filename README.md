@@ -1,40 +1,78 @@
 <div align="center">
   <img src="public/sparklog-favicon.svg" alt="SparkLog Logo" width="120" height="120">
   
-  **SparkLog** 是一个优雅免维护的想法记录应用，不错过你的每一个奇思妙想。
+  # SparkLog 妙想笔记
+  
+  基于GitHub的免费个人笔记应用，不错过你的每一个奇思妙想
   
   [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
-  [![Vite](https://img.shields.io/badge/vite-5.0-646CFF)](https://vitejs.dev)
   [![React](https://img.shields.io/badge/react-18.2-61DAFB)](https://reactjs.org)
   
-  [演示站点](https://sparklog.wiki-power.com/) · [快速开始](#-快速开始) · [功能特性](#-功能特性) · [详细文档](#-详细文档)
+  [在线演示](https://sparklog.wiki-power.com/) · [快速部署](#-快速部署) · [本地开发](#-本地开发) · [技术文档](./docs/)
 </div>
 
-## 🌟 项目特点
+## ✨ 特色功能
 
-- **纯静态部署**: 基于 React + Vite 构建，你可以把它托管在 Cloudflare Pages、Vercel 等平台，无需服务器。
-- **GitHub 仓库存储**: 所有笔记数据存储在 GitHub 仓库中，永远不会丢失。
-- **无后端依赖**: 直接使用 GitHub API，无需维护服务器和数据库。
-- **静态展示优化**: 编辑笔记后自动生成静态 JSON 文件，浏览时减少 GitHub API 调用，提升加载速度。
-- **实时编辑**: 无需其他编辑器，只要有网，就可记录你的想法。
-- **权限控制**: 支持笔记公开 / 私密设置。
-- **快捷分享**: 你可以一键把想法分享给好友。
-- **现代化 UI**: 简洁美观的界面设计，支持亮色 / 暗色自动切换。
+- 🌐 **零成本部署** - 基于 GitHub + Cloudflare Pages，完全免费
+- 📝 **Web 端编辑** - 网页直接编辑 Markdown 笔记，支持实时预览
+- 🔒 **私密保护** - 支持公开/私密笔记，访问权限控制
+- ⚡ **极速加载** - 智能静态化，浏览时无需 GitHub API 调用
+- 🏷️ **标签管理** - 便捷的标签系统，快速分类和检索
+- 📱 **响应式** - 完美适配桌面和手机端
+- ☁️ **云端同步** - 数据存储在 GitHub，永不丢失
 
-## 🚀 快速开始
+## 🚀 快速部署
 
-### 环境要求
+### 1. 准备 GitHub 仓库
 
-- Node.js 18+
-- npm/yarn/pnpm
+1. **创建笔记仓库**: [创建一个 GitHub 私有仓库](https://github.com/new?name=sparklog-notes&private=true)
+2. **获取访问令牌**: [生成 Personal Access Token](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)，需要 `repo` 和`workflow` 权限
 
-请首先 [**创建一个 GitHub 私有仓库**](https://github.com/new?name=sparklog-notes&private=true) 用于笔记文件的存放。
+### 2. 一键部署到 Cloudflare Pages
 
-然后 [**获取 GitHub 个人访问令牌**](https://github.com/settings/tokens/new?description=SparkLog%20Notes&scopes=repo)（需要`repo`权限），  
-获取的令牌格式例如：`ghp_xxxxxxxx`。
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://dash.cloudflare.com/pages)
 
-### 一. 本地开发
+1. Fork 本项目到你的 GitHub 账户
+2. 在 Cloudflare Pages 中连接你的 fork 仓库
+3. 设置构建参数：
+   - **构建命令**: `npm run build`
+   - **输出目录**: `dist`
+4. 配置环境变量：
+
+| 环境变量              | 说明          | 示例             |
+| --------------------- | ------------- | ---------------- |
+| `VITE_REPO_OWNER`     | GitHub 用户名 | `linyuxuanlin`   |
+| `VITE_REPO_NAME`      | 笔记仓库名    | `sparklog-notes` |
+| `VITE_GITHUB_TOKEN`   | GitHub 令牌   | `ghp_xxxxxxxx`   |
+| `VITE_ADMIN_PASSWORD` | 管理密码      | `your-password`  |
+
+5. 点击部署，几分钟后即可访问你的专属笔记应用！
+
+### 3. 其他部署平台
+
+<details>
+<summary>部署到Vercel</summary>
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+1. 点击上面的按钮，导入你 fork 的仓库
+2. 在环境变量中配置上述 4 个变量
+3. 部署完成
+</details>
+
+<details>
+<summary>部署到Netlify</summary>
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start)
+
+1. 连接 GitHub 仓库
+2. 构建命令: `npm run build`
+3. 发布目录: `dist`
+4. 在 Site settings -> Environment variables 中配置变量
+</details>
+
+## 💻 本地开发
 
 ```bash
 # 克隆项目
@@ -44,157 +82,91 @@ cd sparklog
 # 安装依赖
 npm install
 
-# 创建环境变量文件
-cp .env.example .env  # 复制环境变量模板
-
-# 编辑.env文件，配置 GitHub 仓库信息
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，配置你的GitHub信息
 
 # 启动开发服务器
 npm run dev
 ```
 
-### 二、部署到 Cloudflare Pages
+## 🎯 核心功能
 
-1. **Fork 项目**
+### 📝 笔记管理
 
-   - 访问 [SparkLog GitHub 仓库](https://github.com/linyuxuanlin/sparklog)
-   - 点击右上角"Fork"按钮
+- **创建笔记**: 支持 Markdown 格式，实时预览
+- **编辑笔记**: Web 端直接编辑，自动同步到 GitHub
+- **删除笔记**: 安全删除，支持撤销操作
+- **草稿功能**: 本地暂存编辑内容，避免意外丢失
 
-2. **连接 Cloudflare Pages**
+### 🔍 智能检索
 
-   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-   - 进入"Pages" → "Create a project"
-   - 选择"Connect to Git"
-   - 选择你 Fork 的 SparkLog 仓库
+- **全文搜索**: 搜索标题、内容和标签
+- **标签筛选**: 多标签组合筛选
+- **快速导航**: 按时间、标签快速定位
 
-3. **配置构建设置**
+### 🌐 访问控制
 
-   - **Framework preset**: None
-   - **Build command**: `npm run build`
-   - **Build output directory**: `dist`
-   - **Root directory**: `/` (留空)
+- **公开模式**: 任何人都可以浏览公开笔记
+- **管理模式**: 输入管理密码后可编辑和查看私密笔记
+- **权限分离**: 公开内容和私密内容完全隔离
 
-4. **设置环境变量**
+### ⚡ 性能优化
 
-| 变量名                | 说明                  | 示例                   |
-| --------------------- | --------------------- | ---------------------- |
-| `VITE_REPO_OWNER`     | GitHub 用户名或组织名 | `linyuxuanlin`         |
-| `VITE_REPO_NAME`      | 笔记仓库名称          | `sparklog-notes`       |
-| `VITE_GITHUB_TOKEN`   | GitHub 个人访问令牌   | `ghp_xxxxxxxx`         |
-| `VITE_ADMIN_PASSWORD` | 管理员密码            | `your-secure-password` |
+- **静态化**: 公开笔记自动编译为静态 JSON 文件
+- **智能缓存**: 减少 GitHub API 调用，避免速率限制
+- **增量加载**: 分页加载，提升大量笔记时的性能
 
-5. **部署**
-   - 点击"Save and Deploy"
-   - 等待构建完成
-   - 访问你的部署地址，输入管理员密码
-   - 开始记录你的妙想。
+## 🏗️ 技术架构
 
-## 🎯 功能特性
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Web 前端      │    │  GitHub 仓库    │    │  静态文件缓存   │
+│  React + Vite   │◄──►│   Markdown      │◄──►│   JSON 文件     │
+│                 │    │   文件存储      │    │   快速加载      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-- **公开笔记分享**: 任何人都可以查看公开笔记
-- **私密笔记保护**: 只有通过管理员密码验证的用户才能管理私密笔记
-- **实时编辑**: 支持 Markdown 格式的笔记编辑
-- **静态展示**: 自动生成静态文件，浏览时优先使用静态内容，减少 API 调用
-- **智能搜索**: 快速搜索笔记标题、内容和标签
-- **标签系统**: 智能标签管理，支持筛选和搜索
-- **响应式设计**: 支持桌面和移动设备
-- **版本控制**: 所有更改都有 Git 提交记录
+- **前端**: React 18 + TypeScript + Tailwind CSS
+- **构建**: Vite 5 + 现代化工具链
+- **存储**: GitHub 仓库作为数据库
+- **部署**: 静态部署，支持各大 CDN 平台
+- **缓存**: 智能静态化，减少 API 调用
 
-### 静态展示功能
+## 📚 文档目录
 
-**SparkLog** 新增的静态展示功能是一个重要的性能优化特性：
+- **[部署指南](./docs/DEPLOYMENT.md)** - 详细部署步骤和故障排除
+- **[开发指南](./docs/DEVELOPMENT.md)** - 本地开发和贡献代码
+- **[架构设计](./docs/ARCHITECTURE.md)** - 技术架构和设计原理
 
-1. **自动编译**: 每次在网页上编辑笔记后，会自动触发编译，将公开笔记编译为单条静态 JSON 文件，存储在当前仓库的 `public/static-notes/` 目录下。
+## 🤝 参与贡献
 
-2. **减少 API 调用**: 用户仅浏览时，系统会优先使用静态文件，不会频繁调用 GitHub API，有效避免 API 限制问题。
+欢迎提交 Issue 和 Pull Request 来帮助改进 SparkLog！
 
-3. **编辑时实时性**: 当用户在网页上编辑笔记时，仍使用 GitHub API 直接拉取最新内容，确保编辑的实时性。
+```bash
+# 1. Fork项目
+# 2. 创建特性分支
+git checkout -b feature/amazing-feature
 
-4. **私密笔记保护**: 私密笔记不会生成静态文件，确保隐私安全。
+# 3. 提交更改
+git commit -m 'Add some amazing feature'
 
-5. **部署兼容**: 静态文件在本地开发（`npm run dev`）和 Cloudflare Pages 部署环境下都可正常工作。
+# 4. 推送分支
+git push origin feature/amazing-feature
 
-**静态文件结构**:
-- `public/static-notes/index.json`: 包含所有公开笔记的索引信息
-- `public/static-notes/{noteId}.json`: 每个笔记的完整内容和元数据
+# 5. 创建Pull Request
+```
 
-### 管理笔记
+## 📄 开源协议
 
-1. **查看笔记列表**
+本项目基于[MIT 协议](LICENSE)开源，你可以自由使用、修改和分发。
 
-   - 在首页查看所有可访问的笔记
-   - 按创建时间倒序排列（最新的在前）
-   - 支持按标签筛选和搜索功能
-   - 分页加载，提升性能体验
+---
 
-2. **搜索和筛选**
-
-   - 使用搜索框进行全文搜索（标题、内容、标签）
-   - 使用"按标签筛选"功能精确筛选
-   - 支持搜索和标签筛选的组合使用
-   - 实时显示筛选结果统计
-
-3. **编辑笔记**
-
-   - 点击笔记卡片打开笔记详情
-   - 在详情页面点击"编辑"按钮进入编辑模式
-   - 支持 Markdown 实时编辑和标签管理
-
-4. **删除笔记**
-   - 在笔记详情页面或编辑页面删除笔记
-   - 笔记将从 GitHub 仓库中同步删除
-
-### 上传图片和附件（待更新）
-
-1. **图片上传**
-
-   - 在编辑器中点击图片上传按钮
-   - 选择本地图片文件（支持 JPG、PNG、GIF、WebP）
-   - 图片将自动压缩和优化
-   - 上传到仓库的`assets/images/`目录
-
-2. **插入图片**
-
-   - 上传完成后自动插入图片链接
-   - 或手动插入：`![描述](图片链接)`
-   - 支持拖拽上传功能
-
-3. **附件管理**
-   - 支持上传 PDF、文档等附件
-   - 存储在`assets/attachments/`目录
-   - 在笔记中插入附件链接
-
-### 标签系统
-
-1. **添加标签**
-
-   - 编辑笔记时使用标签管理器添加标签
-   - 支持智能建议和快速输入
-
-2. **筛选和搜索**
-   - 使用"按标签筛选"按钮多选筛选
-   - 标签内容支持全文搜索
-   - 可与关键词搜索组合使用
-
-### 数据同步
-
-1. **自动同步**
-
-   - 所有更改会自动同步到 GitHub 仓库
-   - 支持离线编辑，重新连接后同步
-   - 显示同步状态和最后同步时间
-
-2. **版本控制**
-   - 所有更改都有 Git 提交记录
-   - 可以在 GitHub 上查看历史版本
-   - 支持回滚到之前的版本
-
-## 📚 详细文档
-
-- **[部署指南](./docs/DEPLOYMENT.md)** - 详细的部署说明和故障排除
-- **[架构原理](./docs/ARCHITECTURE.md)** - 技术架构和设计原理
-- **[开发指南](./docs/DEVELOPMENT.md)** - 开发环境搭建和贡献指南
-
-## 📄 许可证
-
-MIT License
+<div align="center">
+  如果这个项目对你有帮助，请给个⭐Star支持一下！
+  <br>
+  <a href="https://github.com/linyuxuanlin/sparklog/stargazers">⭐ Star</a> |
+  <a href="https://github.com/linyuxuanlin/sparklog/issues">🐛 反馈</a> |
+  <a href="https://github.com/linyuxuanlin/sparklog/discussions">💬 讨论</a>
+</div>
