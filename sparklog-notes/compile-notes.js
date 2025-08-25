@@ -329,6 +329,36 @@ function main() {
     }
   }
   
+  // 清理孤儿JSON文件（源markdown已删除的JSON文件）
+  console.log('\n🧹 清理孤儿JSON文件...');
+  let cleanedFiles = 0;
+  
+  // 确保输出目录存在
+  if (fs.existsSync(outputDir)) {
+    const jsonFiles = fs.readdirSync(outputDir).filter(f => f.endsWith('.json') && f !== 'index.json');
+    const mdFileNames = mdFiles.map(f => path.basename(f, '.md'));
+    
+    for (const jsonFile of jsonFiles) {
+      const mdFileName = jsonFile.replace('.md.json', '');
+      if (!mdFileNames.includes(mdFileName)) {
+        const jsonFilePath = path.join(outputDir, jsonFile);
+        try {
+          fs.unlinkSync(jsonFilePath);
+          console.log(`   🗑️  删除孤儿JSON文件: ${jsonFile}`);
+          cleanedFiles++;
+        } catch (error) {
+          console.error(`   ❌ 删除孤儿JSON文件失败: ${jsonFile}`, error.message);
+        }
+      }
+    }
+    
+    if (cleanedFiles > 0) {
+      console.log(`   ✅ 清理完成，删除了 ${cleanedFiles} 个孤儿JSON文件`);
+    } else {
+      console.log(`   ✅ 无需清理，所有JSON文件都有对应的源文件`);
+    }
+  }
+  
   // 生成索引文件
   console.log('\n📋 生成索引文件...');
   generateIndex(outputDir, mdFiles, compileStats);
@@ -343,6 +373,7 @@ function main() {
   console.log(`   总笔记数: ${mdFiles.length}`);
   console.log(`   本次编译: ${totalCompiled} 个`);
   console.log(`   本次跳过: ${totalSkipped} 个`);
+  console.log(`   清理孤儿文件: ${cleanedFiles} 个`);
   console.log(`   跳过原因: 内容未变化或已是最新版本`);
   console.log(`📝 编译的笔记将保存在: ${outputDir}`);
   console.log(`📋 所有笔记都扁平存放在 notes 文件夹下，无子文件夹结构`);
