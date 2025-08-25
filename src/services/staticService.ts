@@ -190,7 +190,7 @@ export class StaticService {
           }
         )
 
-        if (existingResponse.ok) {
+        if (existingResponse && existingResponse.ok) {
           const existingData = await existingResponse.json()
           sha = existingData.sha
         }
@@ -222,6 +222,10 @@ export class StaticService {
         }
       )
 
+      if (!response) {
+        throw new Error('网络请求失败')
+      }
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(`保存静态文件失败: ${errorData.message || response.statusText}`)
@@ -252,6 +256,10 @@ export class StaticService {
           }
         }
       )
+
+      if (!response) {
+        throw new Error('网络请求失败')
+      }
 
       if (!response.ok) {
         if (response.status === 404) {

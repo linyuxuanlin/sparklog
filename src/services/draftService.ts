@@ -1,5 +1,6 @@
 import { Note } from '@/types/Note'
 import { parseNoteContent } from '@/utils/noteUtils'
+import { isDevelopment } from '@/config/env'
 
 interface DraftNote extends Partial<Note> {
   id: string
@@ -218,7 +219,7 @@ export class DraftService {
   async checkStaticFileUpdated(noteId: string, draftTimestamp: number): Promise<boolean> {
     try {
       // 在开发环境中，静态文件不存在于本地服务器，直接返回false保持草稿状态
-      if (import.meta.env.DEV) {
+      if (isDevelopment()) {
         console.log(`🔧 开发环境，跳过静态文件检查: ${noteId}`)
         return false
       }
@@ -226,6 +227,12 @@ export class DraftService {
       // 检查静态文件是否存在且更新时间晚于草稿时间
       const response = await fetch(`/static-notes/${noteId}.md.json?t=${Date.now()}`)
       if (!response.ok) {
+        return false
+      }
+      
+      // 检查响应内容类型，确保是JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
         return false
       }
       
@@ -246,7 +253,7 @@ export class DraftService {
   async checkStaticFileDeleted(noteId: string): Promise<boolean> {
     try {
       // 在开发环境中，静态文件不存在于本地服务器，直接返回false保持草稿状态
-      if (import.meta.env.DEV) {
+      if (isDevelopment()) {
         console.log(`🔧 开发环境，跳过静态文件删除检查: ${noteId}`)
         return false
       }

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { DraftService } from '../draftService'
+import * as env from '@/config/env'
 
 // 模拟 localStorage
 const localStorageMock = (() => {
@@ -172,11 +173,13 @@ describe('DraftService', () => {
   describe('静态文件检查', () => {
     it('应该能检查静态文件是否已更新', async () => {
       // 模拟生产环境
-      const originalDev = import.meta.env.DEV
-      Object.defineProperty(import.meta.env, 'DEV', { value: false })
+      vi.spyOn(env, 'isDevelopment').mockReturnValue(false)
       
       const mockResponse = {
         ok: true,
+        headers: {
+          get: vi.fn().mockReturnValue('application/json')
+        },
         json: vi.fn().mockResolvedValue({
           compiledAt: new Date(Date.now() + 1000).toISOString()
         })
@@ -186,15 +189,11 @@ describe('DraftService', () => {
       
       const result = await draftService.checkStaticFileUpdated('note1', Date.now() - 1000)
       expect(result).toBe(true)
-      
-      // 恢复原始环境
-      Object.defineProperty(import.meta.env, 'DEV', { value: originalDev })
     })
 
     it('应该能检查静态文件是否已删除', async () => {
       // 模拟生产环境
-      const originalDev = import.meta.env.DEV
-      Object.defineProperty(import.meta.env, 'DEV', { value: false })
+      vi.spyOn(env, 'isDevelopment').mockReturnValue(false)
       
       const mockResponse = {
         ok: false,
@@ -205,9 +204,6 @@ describe('DraftService', () => {
       
       const result = await draftService.checkStaticFileDeleted('note1')
       expect(result).toBe(true)
-      
-      // 恢复原始环境
-      Object.defineProperty(import.meta.env, 'DEV', { value: originalDev })
     })
   })
 
