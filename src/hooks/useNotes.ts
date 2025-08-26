@@ -56,20 +56,25 @@ export const useNotes = () => {
           // 准备认证信息用于草稿的删除检查
           const defaultConfig = getDefaultRepoConfig()
           const currentLoginStatus = isLoggedIn()
-          let authData = undefined
+          let authData: { username: string; repo: string; accessToken: string } | undefined = undefined
           
           if (defaultConfig) {
-            authData = {
-              username: defaultConfig.owner,
-              repo: defaultConfig.repo,
-              accessToken: getDefaultGitHubToken()
-            }
+            let accessToken = getDefaultGitHubToken()
             
             // 如果已登录，使用管理员token
             if (currentLoginStatus) {
               const adminToken = getGitHubToken()
               if (adminToken) {
-                authData.accessToken = adminToken
+                accessToken = adminToken
+              }
+            }
+            
+            // 只有当accessToken不为null时才创建authData
+            if (accessToken) {
+              authData = {
+                username: defaultConfig.owner,
+                repo: defaultConfig.repo,
+                accessToken: accessToken
               }
             }
           }
