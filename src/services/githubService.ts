@@ -454,18 +454,8 @@ export class GitHubService {
         throw new Error(`删除失败: 无法获取文件SHA - ${error instanceof Error ? error.message : String(error)}`)
       }
     }
-    
-    // 如果启用草稿，先标记为删除草稿
-    if (saveAsDraft) {
-      const draftService = DraftService.getInstance()
-      draftService.saveDraft(noteId, '', 'delete', originalSha, { 
-        username: this.authData.username, 
-        repo: this.authData.repo 
-      })
-      console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
-    }
 
-    // 后台推送删除到GitHub
+    // 第一步：删除远程GitHub文件
     try {
       // 将绝对路径转换为相对路径
       const relativePath = this.convertToRelativePath(note.path)
@@ -490,11 +480,27 @@ export class GitHubService {
       }
 
       console.log(`✅ 笔记删除已推送到GitHub: ${noteId}`)
+    } catch (error) {
+      console.error('推送笔记删除到GitHub失败:', error)
+      throw error
+    }
 
-      // 删除对应的静态文件
-      if (!note.isPrivate) {
+    // 第二步：删除对应的静态文件（远程删除成功后才执行）
+    if (!note.isPrivate) {
+      try {
+        console.log('🗑️ 删除静态文件...')
+        const staticService = StaticService.getInstance()
+        const authData = {
+          username: this.authData.username,
+          repo: this.authData.repo,
+          accessToken: this.authData.accessToken
+        }
+        await staticService.deleteStaticNote(note.name || note.path.split('/').pop(), authData)
+        console.log('✅ 静态文件删除完成')
+      } catch (staticError) {
+        console.error('❌ 删除静态文件失败，尝试重试一次:', staticError)
+        // 根据要求，如果静态文件删除失败，再尝试一次
         try {
-          console.log('删除静态文件...')
           const staticService = StaticService.getInstance()
           const authData = {
             username: this.authData.username,
@@ -502,17 +508,24 @@ export class GitHubService {
             accessToken: this.authData.accessToken
           }
           await staticService.deleteStaticNote(note.name || note.path.split('/').pop(), authData)
-          console.log('静态文件删除完成')
-        } catch (staticError) {
-          console.error('删除静态文件失败:', staticError)
-          // 静态文件删除失败不影响主流程
+          console.log('✅ 静态文件删除重试成功')
+        } catch (retryError) {
+          console.error('❌ 静态文件删除重试仍然失败:', retryError)
+          // 静态文件删除失败不影响主流程，但要记录错误
         }
       }
-
-      return true
-    } catch (error) {
-      console.error('推送笔记删除到GitHub失败:', error)
-      throw error
     }
+
+    // 第三步：保存删除草稿（用于延迟清理机制）
+    if (saveAsDraft) {
+      const draftService = DraftService.getInstance()
+      draftService.saveDraft(noteId, '', 'delete', originalSha, { 
+        username: this.authData.username, 
+        repo: this.authData.repo 
+      })
+      console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
+    }
+
+    return true
   }
 } 

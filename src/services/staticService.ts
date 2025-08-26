@@ -398,7 +398,7 @@ export class StaticService {
   /**
    * 获取混合笔记数据（静态 + 草稿）
    */
-  async getMergedNotes(): Promise<Note[]> {
+  async getMergedNotes(authData?: { username: string; repo: string; accessToken: string }): Promise<Note[]> {
     try {
       console.log('🔄 开始获取混合笔记数据（静态 + 草稿）...')
       
@@ -437,9 +437,9 @@ export class StaticService {
 
       console.log(`📊 静态笔记数量: ${staticNotes.length}`)
 
-      // 使用草稿服务合并数据
+      // 使用草稿服务合并数据，传入认证信息用于删除检查
       const draftService = DraftService.getInstance()
-      const mergedNotes = await draftService.mergeWithStaticData(staticNotes)
+      const mergedNotes = await draftService.mergeWithStaticData(staticNotes, authData)
       
       console.log(`📊 合并后笔记数量: ${mergedNotes.length}`)
       

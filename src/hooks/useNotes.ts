@@ -53,14 +53,34 @@ export const useNotes = () => {
       // 创建请求函数，返回 Promise<boolean>
       const request = (async (): Promise<boolean> => {
         try {
-          // 使用新的混合数据获取方法
-          const mergedNotes = await staticService.getMergedNotes()
+          // 准备认证信息用于草稿的删除检查
+          const defaultConfig = getDefaultRepoConfig()
+          const currentLoginStatus = isLoggedIn()
+          let authData = undefined
+          
+          if (defaultConfig) {
+            authData = {
+              username: defaultConfig.owner,
+              repo: defaultConfig.repo,
+              accessToken: getDefaultGitHubToken()
+            }
+            
+            // 如果已登录，使用管理员token
+            if (currentLoginStatus) {
+              const adminToken = getGitHubToken()
+              if (adminToken) {
+                authData.accessToken = adminToken
+              }
+            }
+          }
+          
+          // 使用新的混合数据获取方法，传入认证信息
+          const mergedNotes = await staticService.getMergedNotes(authData)
           
           if (mergedNotes && mergedNotes.length > 0) {
             console.log(`✅ 混合数据加载成功，获取到 ${mergedNotes.length} 篇笔记`)
             
             // 根据登录状态过滤笔记
-            const currentLoginStatus = isLoggedIn()
             const filteredNotes = mergedNotes.filter((note: any) => {
               if (!currentLoginStatus) {
                 return !note.isPrivate // 未登录只显示公开笔记
@@ -105,7 +125,7 @@ export const useNotes = () => {
       // 清除请求引用
       indexRequestRef.current = null
     }
-  }, [isLoggedIn, isLoadingIndex])
+  }, [isLoggedIn, isLoadingIndex, getGitHubToken])
 
   // 预加载下一批笔记
   const preloadNextBatch = useCallback(async (markdownFiles: any[], startIndex: number, authData: any, currentLoginStatus: boolean) => {

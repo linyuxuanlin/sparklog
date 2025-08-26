@@ -293,9 +293,49 @@ export class DraftService {
   }
 
   /**
+   * 检查远程GitHub仓库中的文件是否已被删除
+   */
+  async checkRemoteFileDeleted(noteId: string, authData?: { username: string; repo: string; accessToken: string }): Promise<boolean> {
+    if (!authData) {
+      console.log('⚠️ 缺少认证信息，跳过远程文件删除检查')
+      return false
+    }
+
+    try {
+      const relativePath = `notes/${noteId}.md`
+      const response = await fetch(`https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${relativePath}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+
+      // 如果返回404，说明文件已被删除
+      if (response.status === 404) {
+        console.log(`✅ 远程文件已删除: ${noteId}`)
+        return true
+      }
+
+      // 如果响应成功，说明文件仍然存在
+      if (response.ok) {
+        console.log(`⚠️ 远程文件仍然存在: ${noteId}`)
+        return false
+      }
+
+      // 其他错误情况，假设文件仍存在
+      console.log(`⚠️ 检查远程文件状态失败 (${response.status}): ${noteId}`)
+      return false
+    } catch (error) {
+      console.error(`检查远程文件删除失败: ${noteId}`, error)
+      return false
+    }
+  }
+
+  /**
    * 智能合并草稿与静态数据（页面刷新时调用）
    */
-  async mergeWithStaticData(staticNotes: Note[]): Promise<Note[]> {
+  async mergeWithStaticData(staticNotes: Note[], authData?: { username: string; repo: string; accessToken: string }): Promise<Note[]> {
     const drafts = this.getAllDrafts()
     if (drafts.length === 0) {
       return staticNotes
@@ -355,19 +395,38 @@ export class DraftService {
           }
 
           case 'delete': {
-            // 检查是否已从静态文件中删除
-            const deleteStaticUpdated = await this.checkStaticFileDeleted(noteId)
-            if (deleteStaticUpdated) {
-              // 静态文件已删除，移除草稿
+            // 增强删除检查：同时检查静态文件和远程文件
+            const [staticDeleted, remoteDeleted] = await Promise.all([
+              this.checkStaticFileDeleted(noteId),
+              this.checkRemoteFileDeleted(noteId, authData)
+            ])
+            
+            // 如果静态文件已删除或远程文件已删除，移除草稿
+            if (staticDeleted || remoteDeleted) {
               this.removeDraft(noteId)
-              console.log(`✅ 删除笔记已完成，移除草稿: ${noteId}`)
+              console.log(`✅ 删除笔记已完成，移除草稿: ${noteId} (静态: ${staticDeleted}, 远程: ${remoteDeleted})`)
             } else {
-              // 静态文件未删除，从合并列表中移除
+              // 如果删除尚未完成，从合并列表中移除
               const existingIndex = mergedNotes.findIndex(n => n.id === noteId || n.sha === noteId)
               if (existingIndex >= 0) {
                 mergedNotes.splice(existingIndex, 1)
               }
               console.log(`🗑️ 应用删除笔记草稿: ${noteId}`)
+              
+              // 检查草稿年龄，如果草稿存在超过5分钟但删除仍未完成，清理草稿
+              const draftAge = Date.now() - (draft.draftTimestamp || 0)
+              const MAX_DELETE_DRAFT_AGE = 5 * 60 * 1000 // 5分钟
+              
+              if (draftAge > MAX_DELETE_DRAFT_AGE) {
+                console.log(`⏰ 删除草稿已存在超过5分钟，自动清理: ${noteId}`)
+                this.removeDraft(noteId)
+                // 如果草稿被清理，需要恢复笔记到列表中（如果静态版本存在）
+                const staticNote = staticNotes.find(n => n.id === noteId || n.sha === noteId)
+                if (staticNote) {
+                  mergedNotes.push(staticNote)
+                  console.log(`🔄 恢复笔记到列表: ${noteId}`)
+                }
+              }
             }
             break
           }
