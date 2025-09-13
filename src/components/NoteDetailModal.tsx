@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { X, Edit, Trash2, Github, Tag, Check } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
-import { Note } from '@/types/note'
+import { Note } from '../types/note'
 import { StaticService } from '@/lib/staticService'
 
 const removeFrontMatter = (content: string): string => {
@@ -84,4 +84,3 @@ export default function NoteDetailModal({ note, isOpen, onClose, onEdit, onDelet
     </div>
   )
 }
-

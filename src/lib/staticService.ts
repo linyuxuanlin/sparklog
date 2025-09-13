@@ -1,5 +1,5 @@
 import { parseNoteContent, decodeBase64Content } from './note-utils'
-import { Note } from '@/types/note'
+import { Note } from '../types/note'
 
 interface StaticNoteData {
   id: string
@@ -84,4 +84,3 @@ export class StaticService {
     return staticNotes
   }
 }
-

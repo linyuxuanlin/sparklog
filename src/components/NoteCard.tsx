@@ -3,7 +3,7 @@ import React, { useMemo } from 'react'
 import { Globe, Calendar, Tag } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
 import { useGitHub } from '@/lib/useGitHub'
-import { Note } from '@/types/note'
+import { Note } from '../types/note'
 
 const removeFrontMatter = (content: string): string => {
   const lines = content.split('\n')
@@ -67,4 +67,3 @@ export default function NoteCard({ note, onOpen, onTagClick }: { note: Note; onO
     </div>
   )
 }
-

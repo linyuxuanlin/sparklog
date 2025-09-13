@@ -7,7 +7,7 @@ import { useNotes } from '@/lib/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
 import TagFilter from '@/components/TagFilter'
-import { Note } from '@/types/note'
+import { Note } from '../../types/note'
 import { showMessage, filterNotes, filterNotesByTags, getAllTags } from '@/lib/note-utils'
 import { checkEnvVarsConfigured } from '@/lib/env'
 
@@ -86,4 +86,3 @@ export default function NotesPage() {
     </div>
   )
 }
-

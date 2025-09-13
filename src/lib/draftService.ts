@@ -1,4 +1,4 @@
-import { Note } from '@/types/note'
+import { Note } from '../types/note'
 import { parseNoteContent } from './note-utils'
 
 interface DraftNote extends Partial<Note> {
@@ -97,4 +97,3 @@ export class DraftService {
     return Array.from(byId.values())
   }
 }
-

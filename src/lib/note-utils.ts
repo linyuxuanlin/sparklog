@@ -1,4 +1,4 @@
-import { Note } from '@/types/note'
+import { Note } from '../types/note'
 
 export const decodeBase64Content = (base64Content: string): string => {
   try {
@@ -102,4 +102,3 @@ export const formatTagsForFrontMatter = (tags: string[]): string => {
   if (tags.length === 1) return tags[0]
   return `[${tags.join(', ')}]`
 }
-
