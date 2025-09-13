@@ -1,6 +1,6 @@
 "use client"
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Note } from '../types/note'
+import { Note } from '../types'
 import { useGitHub } from './useGitHub'
 import { getDefaultRepoConfig, getDefaultGitHubToken } from './defaultRepo'
 import { decodeBase64Content, parseNoteContent } from './note-utils'

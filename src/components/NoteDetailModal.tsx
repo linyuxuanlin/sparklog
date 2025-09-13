@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { X, Edit, Trash2, Github, Tag, Check } from 'lucide-react'
 import MarkdownRenderer from './MarkdownRenderer'
-import { Note } from '../types/note'
+import { Note } from '../types'
 import { StaticService } from '@/lib/staticService'
 
 const removeFrontMatter = (content: string): string => {

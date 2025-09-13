@@ -6,7 +6,7 @@ import { useGitHub } from '@/lib/useGitHub'
 import { useNotes } from '@/lib/useNotes'
 import NoteCard from '@/components/NoteCard'
 import NoteDetailModal from '@/components/NoteDetailModal'
-import { Note } from '../../types/note'
+import { Note } from '../../types'
 import { filterNotesByTags } from '@/lib/note-utils'
 import { checkEnvVarsConfigured } from '@/lib/env'
 

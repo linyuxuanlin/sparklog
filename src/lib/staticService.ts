@@ -1,5 +1,5 @@
 import { parseNoteContent, decodeBase64Content } from './note-utils'
-import { Note } from '../types/note'
+import { Note } from '../types'
 
 interface StaticNoteData {
   id: string

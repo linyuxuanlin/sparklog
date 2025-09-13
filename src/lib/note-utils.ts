@@ -1,4 +1,4 @@
-import { Note } from '../types/note'
+import { Note } from '../types'
 
 export const decodeBase64Content = (base64Content: string): string => {
   try {
