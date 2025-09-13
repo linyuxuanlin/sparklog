@@ -1,0 +1,27 @@
+{
+  "app.title": "SparkLog",
+  "app.subtitle": "",
+  "nav.all": "All Ideas",
+  "nav.wander": "Wander",
+  "nav.settings": "Settings",
+  "header.toggle.dark": "Switch to dark mode",
+  "header.toggle.light": "Switch to light mode",
+  "btn.create": "Create First Note",
+  "status.loading": "Loading...",
+  "status.checking": "Checking GitHub status...",
+  "status.retry": "Retry",
+  "status.login": "Go to Login",
+  "note.public": "Public",
+  "note.private": "Private",
+  "filter.byTags": "Filter by Tags",
+  "filter.clearAll": "Clear All",
+  "actions.cancel": "Cancel",
+  "actions.save": "Save Note",
+  "actions.edit": "Edit Note",
+  "actions.delete": "Delete Note",
+  "actions.confirm": "Confirm",
+  "modal.close": "Close",
+  "list.empty.title": "No notes yet",
+  "list.empty.desc": "Create your first note to start"
+}
+

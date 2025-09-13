@@ -1,0 +1,27 @@
+{
+  "app.title": "SparkLog",
+  "app.subtitle": "",
+  "nav.all": "所有想法",
+  "nav.wander": "漫游",
+  "nav.settings": "设置",
+  "header.toggle.dark": "切换到深色模式",
+  "header.toggle.light": "切换到浅色模式",
+  "btn.create": "创建第一篇笔记",
+  "status.loading": "加载中...",
+  "status.checking": "检查GitHub连接状态...",
+  "status.retry": "重试",
+  "status.login": "前往登录",
+  "note.public": "公开",
+  "note.private": "私密",
+  "filter.byTags": "按标签筛选",
+  "filter.clearAll": "清除所有",
+  "actions.cancel": "取消",
+  "actions.save": "保存笔记",
+  "actions.edit": "编辑笔记",
+  "actions.delete": "删除笔记",
+  "actions.confirm": "确认",
+  "modal.close": "关闭",
+  "list.empty.title": "还没有笔记",
+  "list.empty.desc": "创建你的第一篇笔记开始记录想法"
+}
+

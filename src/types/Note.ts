@@ -21,4 +21,5 @@ export interface Note {
   tags?: string[]
   isDraft?: boolean
   title?: string
-} 
+}
+
