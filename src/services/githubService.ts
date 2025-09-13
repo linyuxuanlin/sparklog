@@ -428,6 +428,45 @@ export class GitHubService {
 
     const noteId = note.name?.replace(/\.md$/, '') || note.id
     let originalSha = note.sha // 保存原始SHA，避免被草稿服务修改
+
+    // 总是获取一次最新 SHA，避免草稿/过期 SHA 导致 409 冲突
+    try {
+      // 统一计算相对路径（优先 path，其次 name，再次 id）
+      let relPath: string
+      if (note?.path) {
+        relPath = this.convertToRelativePath(note.path)
+      } else if (note?.name) {
+        const fileName = note.name.endsWith('.md') ? note.name : `${note.name}.md`
+        relPath = `notes/${fileName}`
+      } else if (noteId) {
+        relPath = `notes/${noteId}.md`
+      } else {
+        throw new Error('无法确定要删除的文件路径')
+      }
+
+      console.log('🔎 获取文件最新信息用于删除', { repo: `${this.authData.username}/${this.authData.repo}`, relPath })
+      const fileInfoResponse = await fetch(`https://api.github.com/repos/${this.authData.username}/${this.authData.repo}/contents/${relPath}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `token ${this.authData.accessToken}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      })
+
+      if (fileInfoResponse.ok) {
+        const fileInfo = await fileInfoResponse.json()
+        originalSha = fileInfo.sha
+        console.log('✅ 获取到文件 SHA', originalSha)
+      } else {
+        if (fileInfoResponse.status === 404) {
+          throw new Error(`文件不存在或已被删除: ${relPath}`)
+        }
+        throw new Error(`无法获取文件信息: ${fileInfoResponse.status} ${fileInfoResponse.statusText}`)
+      }
+    } catch (e) {
+      console.error('获取文件SHA失败:', e)
+      throw new Error(`删除失败: 无法获取文件SHA - ${e instanceof Error ? e.message : String(e)}`)
+    }
     
     // 如果没有SHA，需要先获取文件的当前SHA
     if (!originalSha) {
