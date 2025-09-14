@@ -71,3 +71,8 @@ export const isDevelopment = (): boolean => {
 export const getCurrentDomain = (): string => {
   return window.location.hostname
 } 
+
+// 获取用于存放静态内容的分支名（默认 main）
+export const getStaticBranch = (): string => {
+  return (import.meta.env.VITE_STATIC_BRANCH as string) || 'main'
+}

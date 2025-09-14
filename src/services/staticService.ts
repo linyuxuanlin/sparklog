@@ -1,6 +1,7 @@
 import { parseNoteContent, decodeBase64Content } from '@/utils/noteUtils'
 import { DraftService } from './draftService'
 import { Note } from '@/types/Note'
+import { getStaticBranch } from '@/config/env'
 
 interface StaticNoteData {
   id: string
@@ -198,7 +199,7 @@ export class StaticService {
       let sha = ''
       try {
         const existingResponse = await fetch(
-          `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}`,
+          `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}?ref=${getStaticBranch()}`,
           {
             headers: {
               'Authorization': `token ${authData.accessToken}`,
@@ -219,7 +220,7 @@ export class StaticService {
       const requestBody: any = {
         message: `更新静态文件: ${filename}`,
         content: encodedContent,
-        branch: 'main'
+        branch: getStaticBranch()
       }
 
       if (sha) {
@@ -265,7 +266,7 @@ export class StaticService {
     try {
       // 获取文件信息以获得 SHA
       const response = await fetch(
-        `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}`,
+        `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}?ref=${getStaticBranch()}`,
         {
           headers: {
             'Authorization': `token ${authData.accessToken}`,
@@ -301,7 +302,7 @@ export class StaticService {
           body: JSON.stringify({
             message: `删除静态文件: ${filename}`,
             sha: fileData.sha,
-            branch: 'main'
+            branch: getStaticBranch()
           })
         }
       )

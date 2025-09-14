@@ -1,4 +1,5 @@
 import { getDefaultRepoConfig, getDefaultGitHubToken, getStaticRepoConfig } from '@/config/defaultRepo'
+import { getStaticBranch } from '@/config/env'
 import { StaticService } from './staticService'
 import { DraftService } from './draftService'
 
@@ -600,7 +601,7 @@ export class GitHubService {
     const filePath = `public/static-notes/index.json`
     try {
       const getResp = await fetch(
-        `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}`,
+        `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}?ref=${getStaticBranch()}`,
         {
           method: 'GET',
           headers: {
@@ -643,7 +644,7 @@ export class GitHubService {
               message: `更新静态索引: 删除 ${fileNameWithMd}`,
               content: encoded,
               sha: obj.sha,
-              branch: 'main'
+              branch: getStaticBranch()
             })
           }
         )
