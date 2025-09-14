@@ -52,6 +52,9 @@ export const getRepoConfigFromEnv = (): RepoConfig | null => {
   return null
 }
 
+// 从环境变量获取静态部署仓库配置（用于 public/static-notes）
+// 静态仓库不单独配置，默认与当前仓库一致（VITE_REPO_OWNER / VITE_REPO_NAME）
+
 // 获取GitHub Access Token（用于未连接用户访问私有仓库）
 export const getGitHubToken = (): string | null => {
   return import.meta.env.VITE_GITHUB_TOKEN || 

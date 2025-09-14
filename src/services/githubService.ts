@@ -1,4 +1,4 @@
-import { getDefaultRepoConfig, getDefaultGitHubToken } from '@/config/defaultRepo'
+import { getDefaultRepoConfig, getDefaultGitHubToken, getStaticRepoConfig } from '@/config/defaultRepo'
 import { StaticService } from './staticService'
 import { DraftService } from './draftService'
 
@@ -555,6 +555,24 @@ export class GitHubService {
       }
     }
 
+    // 额外：在静态部署仓库执行删除与索引更新（若与笔记仓库不同）
+    try {
+      const staticConfig = getStaticRepoConfig()
+      if (staticConfig && !note.isPrivate) {
+        const staticAuth = {
+          username: staticConfig.owner,
+          repo: staticConfig.repo,
+          accessToken: this.authData.accessToken
+        }
+        const baseName = (note.name || note.path?.split('/').pop() || '').replace(/\.json$/, '')
+        const staticService = StaticService.getInstance()
+        await staticService.deleteStaticNote(baseName, staticAuth)
+        await this.updateStaticIndexAfterDelete(`${baseName.endsWith('.md') ? baseName : baseName + '.md'}`, staticAuth)
+      }
+    } catch (e) {
+      console.warn('静态部署仓库删除/索引更新失败', e)
+    }
+
     // 第三步：保存删除草稿（用于延迟清理机制）
     if (saveAsDraft) {
       const draftService = DraftService.getInstance()
@@ -573,4 +591,69 @@ export class GitHubService {
 
     return true
   }
-} 
+
+  // 更新静态索引（index.json）：删除指定条目
+  private async updateStaticIndexAfterDelete(
+    fileNameWithMd: string,
+    authData: { username: string; repo: string; accessToken: string }
+  ): Promise<void> {
+    const filePath = `public/static-notes/index.json`
+    try {
+      const getResp = await fetch(
+        `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `token ${authData.accessToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        }
+      )
+      if (!getResp.ok) {
+        return
+      }
+      const obj = await getResp.json()
+      const decoded = obj.content ? decodeURIComponent(escape(atob(obj.content))) : '{}'
+      let data: any
+      try { data = JSON.parse(decoded) } catch { data = { version: '1.0.0', notes: {} } }
+      if (!data.notes) data.notes = {}
+      if (data.notes[fileNameWithMd]) {
+        delete data.notes[fileNameWithMd]
+        const publicCount = Object.keys(data.notes).length
+        data.publicNotes = publicCount
+        if (typeof data.totalNotes === 'number' && data.totalNotes > 0) {
+          data.totalNotes = Math.max(publicCount, data.totalNotes - 1)
+        } else {
+          data.totalNotes = publicCount
+        }
+        data.compiledAt = new Date().toISOString()
+
+        const content = JSON.stringify(data, null, 2)
+        const encoded = btoa(unescape(encodeURIComponent(content)))
+        const putResp = await fetch(
+          `https://api.github.com/repos/${authData.username}/${authData.repo}/contents/${filePath}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${authData.accessToken}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: `更新静态索引: 删除 ${fileNameWithMd}`,
+              content: encoded,
+              sha: obj.sha,
+              branch: 'main'
+            })
+          }
+        )
+        if (!putResp.ok) {
+          const err = await putResp.json().catch(() => ({}))
+          console.warn('更新索引失败', err)
+        }
+      }
+    } catch (e) {
+      console.warn('更新静态索引异常', e)
+    }
+  }
+}
