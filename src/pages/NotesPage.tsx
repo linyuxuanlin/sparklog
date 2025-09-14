@@ -347,7 +347,7 @@ const NotesPage: React.FC = () => {
             )}
           </div>
         </div>
-      ) : isLoadingNotes ? (
+      ) : (isLoadingNotes && notes.length === 0) ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">加载笔记中...</p>
@@ -386,6 +386,7 @@ const NotesPage: React.FC = () => {
             {hasMoreNotes && selectedTags.length === 0 && !searchQuery && (
               <div className="text-center pt-6">
                 <button
+                  type="button"
                   onClick={loadMoreNotes}
                   disabled={isLoadingNotes}
                   className="btn-neomorphic inline-flex items-center"
@@ -406,7 +407,7 @@ const NotesPage: React.FC = () => {
             )}
            
            {/* 加载进度显示 */}
-           {isLoadingNotes && loadingProgress.total > 0 && (
+           {isLoadingNotes && notes.length > 0 && (
              <div className="text-center py-4">
                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
                  <div 
