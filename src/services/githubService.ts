@@ -564,6 +564,12 @@ export class GitHubService {
       })
       console.log(`📝 笔记删除已保存为草稿: ${noteId}`)
     }
+    
+    // 清理内部缓存，确保后续文件列表/内容为最新
+    try {
+      this.clearCacheByType('files')
+      this.clearCacheByType('content')
+    } catch {}
 
     return true
   }

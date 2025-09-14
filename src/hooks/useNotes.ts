@@ -567,6 +567,9 @@ export const useNotes = () => {
   }, [getGitHubToken, isLoggedIn])
   // 删除笔记（支持草稿）
   const deleteNote = useCallback(async (note: Note) => {
+    let __prevNotes: Note[] | undefined
+    let __prevPreloaded: Note[] | undefined
+    let __prevAllFiles: any[] | undefined
     try {
       const defaultConfig = getDefaultRepoConfig()
       if (!defaultConfig) {
@@ -591,8 +594,40 @@ export const useNotes = () => {
       // 使用GitHub服务删除笔记（默认启用草稿）
       const githubService = GitHubService.getInstance()
       githubService.setAuthData(authData)
-      
+
+      // 记录当前状态用于失败回滚
+      __prevNotes = notes
+      __prevPreloaded = preloadedNotes
+      __prevAllFiles = allMarkdownFiles
+
+      // 本地立即移除，避免需要手动刷新
+      setNotes(prev => prev.filter(n => {
+        const sameSha = n.sha && note.sha && n.sha === note.sha
+        const samePath = n.path && note.path && n.path === note.path
+        const sameName = n.name && note.name && n.name === note.name
+        const sameId = (n as any).id && (note as any).id && (n as any).id === (note as any).id
+        return !(sameSha || samePath || sameName || sameId)
+      }))
+      setPreloadedNotes(prev => prev.filter(n => {
+        const sameSha = n.sha && note.sha && n.sha === note.sha
+        const samePath = n.path && note.path && n.path === note.path
+        const sameName = n.name && note.name && n.name === note.name
+        const sameId = (n as any).id && (note as any).id && (n as any).id === (note as any).id
+        return !(sameSha || samePath || sameName || sameId)
+      }))
+      setAllMarkdownFiles(prev => prev.filter((f: any) => {
+        const samePath = f.path && note.path && f.path === note.path
+        const sameName = f.name && note.name && f.name === note.name
+        return !(samePath || sameName)
+      }))
+
       await githubService.deleteNote(note, true)
+
+      // 清理 GitHubService 缓存，防止后续请求拿到旧数据
+      try {
+        githubService.clearCacheByType('files')
+        githubService.clearCacheByType('content')
+      } catch {}
       
       // 立即刷新笔记列表（会隐藏被删除的笔记）
       if (loadNotesRef.current) {
@@ -601,6 +636,12 @@ export const useNotes = () => {
       
       return true
     } catch (error) {
+      // 回滚到删除前的状态
+      try {
+        if (__prevNotes) setNotes(__prevNotes)
+        if (__prevPreloaded) setPreloadedNotes(__prevPreloaded)
+        if (__prevAllFiles) setAllMarkdownFiles(__prevAllFiles)
+      } catch {}
       console.error('删除笔记失败:', error)
       throw error
     }
