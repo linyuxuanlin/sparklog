@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "compiledAt": "2025-09-14T14:23:34.277Z",
-  "totalNotes": 21,
+  "totalNotes": 20,
   "publicNotes": 21,
   "notes": {
     "2024-08-05-13-30-58-000.md": {
@@ -427,6 +427,6 @@
   "lastBuildStats": {
     "compiledNotes": 0,
     "skippedNotes": 0,
-    "buildTime": "2025-09-14T14:24:49.792Z"
+    "buildTime": "2025-09-14T14:25:13.547Z"
   }
 }
