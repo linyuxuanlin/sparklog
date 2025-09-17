@@ -105,7 +105,7 @@ const SettingsPage: React.FC = () => {
                 <div className="flex justify-between">
                   <span>VITE_REPO_OWNER</span>
                   <span className={envVars.VITE_REPO_OWNER ? "text-green-600" : "text-red-600"}>
-                    {envVars.VITE_REPO_OWNER ? "已配置" : "未配置"}
+                    {envVars.VITE_REPO_OWNER || "未配置"}
                   </span>
                 </div>
                 <div className="flex justify-between">
