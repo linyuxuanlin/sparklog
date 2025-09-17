@@ -134,6 +134,9 @@ const SettingsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
         {/* 管理员身份验证 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -279,4 +282,4 @@ const SettingsPage: React.FC = () => {
   )
 }
 
-export default SettingsPage 
+export default SettingsPage
