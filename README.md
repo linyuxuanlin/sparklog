@@ -1,9 +1,9 @@
 <div align="center">
   <img src="public/sparklog-favicon.svg" alt="SparkLog Logo" width="120" height="120">
   
-  # SparkLog 妙想笔记
+  # SparkLog 妙想
   
-  基于GitHub的免费个人笔记应用，不错过你的每一个奇思妙想
+  基于 GitHub 的免费个人笔记应用，不错过你的每一个奇思妙想
   
   [![GitHub License](https://img.shields.io/github/license/linyuxuanlin/sparklog)](LICENSE)
   [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
