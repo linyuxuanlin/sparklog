@@ -42,12 +42,13 @@
 
 | 环境变量              | 说明          | 示例             |
 | --------------------- | ------------- | ---------------- |
-| `VITE_REPO_OWNER`     | GitHub 用户名 | `linyuxuanlin`   |
-| `VITE_REPO_NAME`      | 笔记仓库名    | `sparklog-notes` |
-| `VITE_GITHUB_TOKEN`   | GitHub 令牌   | `ghp_xxxxxxxx`   |
-| `VITE_ADMIN_PASSWORD` | 管理密码      | `your-password`  |
+| `VITE_REPO_OWNER`     | GitHub 用户名      | `linyuxuanlin`   |
+| `VITE_REPO_DEPLOY`    | 部署仓库名称      | `sparklog`       |
+| `VITE_REPO_NOTES`     | 笔记仓库名称      | `sparklog-notes` |
+| `VITE_GITHUB_TOKEN`   | GitHub 令牌      | `ghp_xxxxxxxx`   |
+| `VITE_ADMIN_PASSWORD` | 管理密码          | `your-password`  |
 
-5. 点击部署，几分钟后即可访问你的专属笔记应用！
+1. 点击部署，几分钟后即可访问你的专属笔记应用！
 
 ### 3. 其他部署平台
 

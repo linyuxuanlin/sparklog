@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { User, Settings, LogOut, ChevronDown, Menu, Sun, Moon } from 'lucide-react'
+import { User, Settings, LogOut, ChevronDown, Menu, Sun, Moon, Github } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useGitHub } from '@/hooks/useGitHub'
 import { useTheme } from '@/hooks/useTheme'
+import { getDeployRepoUrl } from '@/config/env'
 
 interface HeaderProps {
   onMenuClick?: () => void
@@ -14,6 +15,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
+  const deployRepoUrl = getDeployRepoUrl()
 
   // 点击外部关闭菜单
   useEffect(() => {
@@ -62,6 +64,18 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               <Sun className="w-5 h-5" />
             )}
           </button>
+
+          {deployRepoUrl && (
+            <a
+              href={deployRepoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="查看部署仓库"
+            >
+              <Github className="w-5 h-5" />
+            </a>
+          )}
 
           <div className="relative" ref={menuRef}>
             <button 

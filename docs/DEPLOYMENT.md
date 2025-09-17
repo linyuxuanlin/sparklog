@@ -52,10 +52,13 @@
 
 ### 1. 配置环境变量
 
-- 设置 `VITE_REPO_OWNER`（GitHub用户名）
-- 设置 `VITE_REPO_NAME`（笔记仓库名称）
-- 设置 `VITE_GITHUB_TOKEN`（GitHub个人访问令牌）
+- 设置 `VITE_REPO_OWNER`（GitHub 用户名）
+- 设置 `VITE_REPO_DEPLOY`（部署仓库名称）
+- 设置 `VITE_REPO_NOTES`（笔记仓库名称）
+- 设置 `VITE_GITHUB_TOKEN`（GitHub 个人访问令牌）
 - 设置 `VITE_ADMIN_PASSWORD`（管理员密码）
+
+> 提示：部署仓库与笔记仓库的 GitHub 地址会由 `VITE_REPO_OWNER` 与对应的仓库名称自动组合。
 
 ### 2. 创建笔记仓库
 
@@ -161,7 +164,8 @@
 ```javascript
 // 在浏览器控制台中检查环境变量
 console.log('REPO_OWNER:', import.meta.env.VITE_REPO_OWNER)
-console.log('REPO_NAME:', import.meta.env.VITE_REPO_NAME)
+console.log('REPO_DEPLOY:', import.meta.env.VITE_REPO_DEPLOY)
+console.log('REPO_NOTES:', import.meta.env.VITE_REPO_NOTES || import.meta.env.VITE_REPO_NAME)
 console.log('ADMIN_PASSWORD:', import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置')
 ```
 

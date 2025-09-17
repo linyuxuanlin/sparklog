@@ -32,6 +32,6 @@ export const getDefaultGitHubToken = () => {
 
 // 获取静态部署仓库配置（public/static-notes 所在仓库）
 export const getStaticRepoConfig = () => {
-  // 静态仓库即当前部署/默认仓库（使用 VITE_REPO_OWNER / VITE_REPO_NAME）
+  // 静态仓库即当前部署/默认仓库（使用 VITE_REPO_OWNER / VITE_REPO_NOTES）
   return getDefaultRepoConfig()
 }

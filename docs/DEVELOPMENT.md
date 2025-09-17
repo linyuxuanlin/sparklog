@@ -32,10 +32,13 @@
    在 `.env` 文件中配置以下变量：
    ```env
    VITE_REPO_OWNER=your-github-username
-   VITE_REPO_NAME=your-notes-repository
+   VITE_REPO_DEPLOY=sparklog
+   VITE_REPO_NOTES=your-notes-repository
    VITE_GITHUB_TOKEN=your-github-token
    VITE_ADMIN_PASSWORD=your-admin-password
    ```
+
+   *提示：部署仓库和笔记仓库的完整地址会由 `VITE_REPO_OWNER` 与对应的仓库名称在运行时自动组合。*
 
 5. **启动开发服务器**
    ```bash
@@ -360,7 +363,8 @@ describe('Component Integration', () => {
 ```javascript
 // 在浏览器控制台中检查环境变量
 console.log('REPO_OWNER:', import.meta.env.VITE_REPO_OWNER)
-console.log('REPO_NAME:', import.meta.env.VITE_REPO_NAME)
+console.log('REPO_DEPLOY:', import.meta.env.VITE_REPO_DEPLOY)
+console.log('REPO_NOTES:', import.meta.env.VITE_REPO_NOTES || import.meta.env.VITE_REPO_NAME)
 ```
 
 ### 3. API调试

@@ -47,7 +47,8 @@ const SettingsPage: React.FC = () => {
   // 环境变量检查
   const envVars = {
     VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
-    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
+    VITE_REPO_DEPLOY: import.meta.env.VITE_REPO_DEPLOY || import.meta.env.VITE_DEPLOY_REPO_URL || import.meta.env.DEPLOY_REPO_URL,
+    VITE_REPO_NOTES: import.meta.env.VITE_REPO_NOTES || import.meta.env.VITE_REPO_NAME,
     VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
     VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置'
   }
@@ -55,7 +56,8 @@ const SettingsPage: React.FC = () => {
   // 调试信息
   console.log('环境变量调试信息:', {
     VITE_REPO_OWNER: import.meta.env.VITE_REPO_OWNER,
-    VITE_REPO_NAME: import.meta.env.VITE_REPO_NAME,
+    VITE_REPO_DEPLOY: import.meta.env.VITE_REPO_DEPLOY || import.meta.env.VITE_DEPLOY_REPO_URL || '未配置',
+    VITE_REPO_NOTES: import.meta.env.VITE_REPO_NOTES || import.meta.env.VITE_REPO_NAME || '未配置',
     VITE_GITHUB_TOKEN: import.meta.env.VITE_GITHUB_TOKEN ? '已设置' : '未设置',
     VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD ? '已设置' : '未设置',
     defaultConfig: getDefaultRepoConfig()
@@ -92,43 +94,46 @@ const SettingsPage: React.FC = () => {
             </p>
             
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前环境变量：</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">当前环境变量</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>GitHub 仓库</span>
                   <span className="font-mono text-blue-800 dark:text-blue-200">
-                    {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : '未配置'}
+                    {defaultConfig ? `${defaultConfig.owner}/${defaultConfig.repo}` : "未配置"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>VITE_REPO_OWNER</span>
-                  <span className={envVars.VITE_REPO_OWNER ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_REPO_OWNER ? '已配置' : '未配置'}
+                  <span className={envVars.VITE_REPO_OWNER ? "text-green-600" : "text-red-600"}>
+                    {envVars.VITE_REPO_OWNER ? "已配置" : "未配置"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>VITE_REPO_NAME</span>
-                  <span className={envVars.VITE_REPO_NAME ? 'text-green-600' : 'text-red-600'}>
-                    {envVars.VITE_REPO_NAME ? '已配置' : '未配置'}
+                  <span>VITE_REPO_DEPLOY</span>
+                  <span className={envVars.VITE_REPO_DEPLOY ? "text-green-600" : "text-red-600"}>
+                    {envVars.VITE_REPO_DEPLOY || "未配置"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>VITE_REPO_NOTES</span>
+                  <span className={envVars.VITE_REPO_NOTES ? "text-green-600" : "text-red-600"}>
+                    {envVars.VITE_REPO_NOTES || "未配置"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>VITE_GITHUB_TOKEN</span>
-                  <span className={envVars.VITE_GITHUB_TOKEN === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                  <span className={envVars.VITE_GITHUB_TOKEN === "已设置" ? "text-green-600" : "text-red-600"}>
                     {envVars.VITE_GITHUB_TOKEN}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>VITE_ADMIN_PASSWORD</span>
-                  <span className={envVars.VITE_ADMIN_PASSWORD === '已设置' ? 'text-green-600' : 'text-red-600'}>
+                  <span className={envVars.VITE_ADMIN_PASSWORD === "已设置" ? "text-green-600" : "text-red-600"}>
                     {envVars.VITE_ADMIN_PASSWORD}
                   </span>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
         {/* 管理员身份验证 */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between mb-4">
